@@ -88,6 +88,10 @@ class Environment:
                 building = Obstacle(position, obj["width"], obj["height"])
             elif obj["type"] == "deposit":
                 building = Deposit(position, obj["width"], obj["height"], obj["subtype"])
+            elif obj["type"] == "mine":
+                building = Mine(position, obj["subtype"])
+            elif obj["type"] == "combiner":
+                building = Combiner(position, obj["subtype"])
             elif obj["type"] == "factory":
                 building = Factory(position, obj["subtype"])
             elif obj["type"] == "conveyor":
