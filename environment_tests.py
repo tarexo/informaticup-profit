@@ -72,6 +72,29 @@ class Environment_Tests(unittest.TestCase):
         self.assertTrue(env3.add_building(factory))
         self.assertFalse(env3.add_building(factory))
 
+        #mine subtye
+        env3 = Environment.from_json('tasks\\003.task.json')
+        mine = buildings.Mine((8,2),0)
+        self.assertFalse(env3.add_building(mine))
+        env3 = Environment.from_json('tasks\\003.task.json')
+        mine = buildings.Mine((8,2),1)
+        self.assertTrue(env3.add_building(mine))
+
+    '''def test_building_constrains(self):
+        #mine next to combiner
+        env3 = Environment.from_json('tasks\\003.task.json')
+        mine = buildings.Mine((9,4),0)
+        self.assertTrue(env3.add_building(mine))
+        combiner = buildings.Combiner((9,7),0)
+        self.assertFalse(env3.add_building(combiner))
+
+        #mine next to mine
+        env3 = Environment.from_json('tasks\\003.task.json')
+        self.assertTrue(env3.add_building(mine))
+        mine2 = buildings.Mine((13,4),0)
+        self.assertFalse(env3.add_building(mine2))'''
+
+        
 
 
 
