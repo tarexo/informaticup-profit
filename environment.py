@@ -118,7 +118,7 @@ class Environment:
 
 
 if __name__ == "__main__":
-    # filename = os.path.join(".", "tasks", "001.task.json")
+    filename = os.path.join(".", "tasks", "001.task.json")
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
     env = Environment.from_json(filename)
     
