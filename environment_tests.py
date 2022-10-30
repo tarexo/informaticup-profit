@@ -1,7 +1,7 @@
 import unittest
 import os
 from environment import Environment
-import buildings
+import classes.buildings as buildings
 import numpy as np
 
 class Environment_Tests(unittest.TestCase):
