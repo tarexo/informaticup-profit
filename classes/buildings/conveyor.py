@@ -15,7 +15,7 @@ class Conveyor(Building):
     resources : list
         The resources currently held by the building
     subtype : int
-        The subtype of the combiner, determining its rotation (0-3)
+        The subtype of the conveyor, determining its rotation (0-7)
     """
     def __init__(self, position, subtype):
         self.subtype = subtype
