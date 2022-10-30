@@ -18,6 +18,12 @@ class Mine(Building):
         The subtype of the mine, determining its rotation (0-3)
     """
     def __init__(self, position, subtype):
+        """Init function to create an instance of the mine.
+
+        Args:
+            position (tuple): Position of the mine in (x,y)
+            subtype (int): The subtype of the mine, determining its rotation (0-7)
+        """
         self.subtype = subtype
 
         from helper.dicts.building_shapes import BUILDING_SHAPES

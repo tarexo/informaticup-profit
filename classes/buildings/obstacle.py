@@ -14,4 +14,11 @@ class Obstacle(Building):
         The shape of the building
     """
     def __init__(self, position, width, height):
+        """Init function to create an instance of the obstacle.
+
+        Args:
+            position (tuple): Position of the obstacle in (x,y)
+            width (int): The width of the obstacle
+            height (int): The height of the obstacle
+        """
         super().__init__(position, obstacle_shape(width, height))

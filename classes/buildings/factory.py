@@ -18,6 +18,12 @@ class Factory(Building):
         The subtype of the factory, determining the product (0-7)
     """
     def __init__(self, position, subtype):
+        """Init function to create an instance of the factory.
+
+        Args:
+            position (tuple): Position of the factory in (x,y)
+            subtype (int): The subtype of the factory, determining the product (0-7)
+        """
         super().__init__(position, FACTORY_SHAPE)
 
         self.subtype = subtype

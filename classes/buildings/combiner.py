@@ -18,6 +18,12 @@ class Combiner(Building):
         The subtype of the combiner, determining its rotation (0-3)
     """
     def __init__(self, position, subtype):
+        """Init function to create an instance of the combiner.
+
+        Args:
+            position (tuple): Position of the combiner in (x,y)
+            subtype (int): The subtype of the combiner, determining its rotation (0-3)
+        """
         self.subtype = subtype
 
         from helper.dicts.building_shapes import BUILDING_SHAPES

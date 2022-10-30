@@ -22,6 +22,14 @@ class Deposit(Building):
         The subtype of the deposit, determining its held resource (0-7)
     """
     def __init__(self, position, width, height, subtype):
+        """Init function to create an instance of the deposit.
+
+        Args:
+            position (tuple): Position of the deposit in (x,y)
+            width (int): Width of the deposit
+            height (int): Height of the deposit
+            subtype (int): The subtype of the deposit, determining its held resource (0-7)
+        """
         super().__init__(position, deposit_shape(width, height))
 
         self.width = width
