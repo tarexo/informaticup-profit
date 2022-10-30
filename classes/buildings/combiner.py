@@ -2,9 +2,9 @@ from .building import Building
 from shapes import *
 
 class Combiner(Building):
-    """The combiner has multiple inputs and combines them in one output
+    """The combiner has multiple inputs and combines them in one output.
 
-    Inhertis from class Building.
+    Inherits from class Building.
 
     Attributes
     ----------
