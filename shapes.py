@@ -4,6 +4,15 @@ import numpy as np
 
 @dataclass(frozen=True, order=True)
 class Shape:
+    """The shape function defines the position aswell as the shape (width, height) of any building.
+
+    Attributes
+    ----------
+    center : tuple
+        The position of the object in (x,y) (Is not neccessarily the center of the object!)
+    elements : np.ndarray
+        The shape of the object, how it is presented in the grid
+    """
     center: tuple
     elements: np.ndarray
     
