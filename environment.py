@@ -1,5 +1,5 @@
 from shapes import *
-from buildings import *
+from classes.buildings import *
 
 from dataclasses import dataclass
 import json
