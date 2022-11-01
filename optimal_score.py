@@ -39,13 +39,14 @@ def optimal_score(env):
     best_score = 0
     for combination in product_combinations:
         temp_score = 0
+        temp_env_resources = env_resources
         for i in range(turns):
             for p in combination:
-                n =np.subtract(env_resources,p.resources)
+                n =np.subtract(temp_env_resources,p.resources)
                 if is_resource_value_negative(n):
                     break
                 else:
-                    env_resources = n
+                    temp_env_resources = n
                     temp_score += p.points
         if temp_score>best_score:
             best_score = temp_score
@@ -70,6 +71,6 @@ def is_resource_value_negative(resources):
 
 
 if __name__ == '__main__':
-    filename = os.path.join(".", "tasks", "003.task.json")
+    filename = os.path.join(".", "tasks", "004.task.json")
     env = Environment.from_json(filename)
     print(optimal_score(env))
