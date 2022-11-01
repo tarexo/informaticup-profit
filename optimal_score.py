@@ -41,10 +41,11 @@ def optimal_score(env):
         temp_score = 0
         for i in range(turns):
             for p in combination:
-                env_resources =np.subtract(env_resources,p.resources)
-                if is_resource_value_negative(env_resources):
+                n =np.subtract(env_resources,p.resources)
+                if is_resource_value_negative(n):
                     break
                 else:
+                    env_resources = n
                     temp_score += p.points
         if temp_score>best_score:
             best_score = temp_score
