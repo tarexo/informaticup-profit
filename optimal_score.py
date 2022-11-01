@@ -1,8 +1,10 @@
 
 from environment import Environment
+import buildings
 import os
 import json
 import numpy as np
+import itertools
 
 class Product:
 
@@ -21,11 +23,45 @@ def optimal_score(env):
     products = []
     product_resoucres = np.empty((len(env.products),8))
     env_resources = np.array([])
+    turns = env.turns
     for i in range(len(env.products)) :#get products and fill product_resouces matrix
         new_product = Product.from_json(env.products[i])
         products.append(new_product)
         product_resoucres[i] = new_product.resources
-    
+    for building in env.buildings:
+        if building.__class__ == buildings.Deposit:
+            env_resources = building.resources
+            break
+    product_combinations = []
+    for i in range(len(products) + 1):#fill combinations
+        for subset in itertools.combinations(products, i):
+            product_combinations.append(subset)
+    best_score = 0
+    for combination in product_combinations:
+        temp_score = 0
+        for i in range(turns):
+            for p in combination:
+                env_resources =np.subtract(env_resources,p.resources)
+                if is_resource_value_negative(env_resources):
+                    break
+                else:
+                    temp_score += p.points
+        if temp_score>best_score:
+            best_score = temp_score
+    return best_score
+
+
+@staticmethod
+def is_resource_value_negative(resources):
+    for value in resources:
+        if value<0:
+            return True
+    return False
+
+
+
+
+
 
 
 
@@ -33,6 +69,6 @@ def optimal_score(env):
 
 
 if __name__ == '__main__':
-    filename = os.path.join(".", "tasks", "004.task.json")
+    filename = os.path.join(".", "tasks", "003.task.json")
     env = Environment.from_json(filename)
-    optimal_score(env)
+    print(optimal_score(env))
