@@ -46,10 +46,10 @@ class Environment:
             return False
 
         # iterate over non-empty elements of the building shape
-        for (x_offset, y_offset, element) in iter(building.shape):
+        for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the shape
-            x = building.position[0] + x_offset
-            y = building.position[1] + y_offset
+            x = building.position[0] + tile_offset_x
+            y = building.position[1] + tile_offset_y
             self.grid[y, x] = element
 
         self.buildings.append(building)
@@ -70,10 +70,10 @@ class Environment:
         """
 
         # iterate over non-empty elements of the building's shape
-        for (x_offset, y_offset, element) in iter(building.shape):
+        for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the building
-            x = building.position[0] + x_offset
-            y = building.position[1] + y_offset
+            x = building.position[0] + tile_offset_x
+            y = building.position[1] + tile_offset_y
 
             # check whether each individual element can be placed on an empty tile
             if not self.is_tile_empty(x, y):
