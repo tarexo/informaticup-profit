@@ -42,27 +42,19 @@ class Environment:
         Returns:
             bool: success
         """
-        # TODO @Leo: code cleanup
-        if self.is_legal_position(building):
-            self.buildings.append(building)
+        if not self.is_legal_position(building):
+            return False
 
-            # calculate building position relative to the center of the shape
-            shape_x = building.position[0] - building.shape.center[0]
-            shape_y = building.position[1] - building.shape.center[1]
+        # iterate over non-empty elements of the building shape
+        for (x_offset, y_offset, element) in iter(building.shape):
+            # calculate tile position on the grid relative to the center of the shape
+            x = building.position[0] + x_offset
+            y = building.position[1] + y_offset
+            self.grid[y, x] = element
 
-            height, width = building.shape.elements.shape
-            for y_offset in range(height):
-                for x_offset in range(width):
-                    # free space can be ignored
-                    if building.shape.elements[y_offset, x_offset] == " ":
-                        continue
+        self.buildings.append(building)
 
-                    x = shape_x + x_offset
-                    y = shape_y + y_offset
-                    self.grid[y, x] = building.shape.elements[y_offset, x_offset]
-
-            return True
-        return False
+        return True
 
     def is_legal_position(self, building: Building):
         """Check wether a building has a valid position:
@@ -76,23 +68,16 @@ class Environment:
         Returns:
             bool: validity of the position
         """
-        # calculate building position relative to the center of the shape
-        shape_x = building.position[0] - building.shape.center[0]
-        shape_y = building.position[1] - building.shape.center[1]
 
-        height, width = building.shape.elements.shape
-        for y_offset in range(height):
-            for x_offset in range(width):
-                # free space can be ignored
-                if building.shape.elements[y_offset, x_offset] == " ":
-                    continue
+        # iterate over non-empty elements of the building's shape
+        for (x_offset, y_offset, element) in iter(building.shape):
+            # calculate tile position on the grid relative to the center of the building
+            x = building.position[0] + x_offset
+            y = building.position[1] + y_offset
 
-                x = shape_x + x_offset
-                y = shape_y + y_offset
-
-                # check for empty positions of every individual element
-                if not self.is_tile_empty(x, y):
-                    return False
+            # check whether each individual element can be placed on an empty tile
+            if not self.is_tile_empty(x, y):
+                return False
 
                 # ToDo: check_constraints (mines cannot be placed next to other mines)
         return True
