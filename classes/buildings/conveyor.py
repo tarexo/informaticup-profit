@@ -1,11 +1,12 @@
 from .building import Building
 from shapes import *
 
+
 class Conveyor(Building):
     """The conveyor transports resources in a straight line.
 
     Inherits from the class Building.
-    
+
     Attributes
     ----------
     position : tuple
@@ -17,6 +18,7 @@ class Conveyor(Building):
     subtype : int
         The subtype of the conveyor, determining its rotation (0-7)
     """
+
     def __init__(self, position, subtype):
         """Init function to create an instance of the conveyor.
 
@@ -27,6 +29,16 @@ class Conveyor(Building):
         self.subtype = subtype
 
         from helper.dicts.building_shapes import BUILDING_SHAPES
+
         shape = BUILDING_SHAPES[type(self)][subtype]
 
         super().__init__(position, shape)
+
+    def to_json(self):
+        building_dict = {
+            "type": "conveyor",
+            "x": self.position[0],
+            "y": self.position[1],
+            "subtype": self.subtype,
+        }
+        return building_dict

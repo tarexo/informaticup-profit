@@ -147,14 +147,24 @@ class Environment:
         return env
 
     @staticmethod
-    def to_json(filename):
+    def to_json(env, filename):
         """parses an environment to a json file
 
         Args:
+            env (Environment): the environment that shall be parsed to a json file
             filename (str): path to where the file should be stored
         """
-        # TODO add environment as argument
-        pass
+        env_dict = {}
+        env_dict["width"] = env.width
+        env_dict["height"] = env.height
+        env_dict["objects"] = []
+        for building in env.buildings:
+            env_dict["objects"].append(building.to_json())
+        env_dict["turns"] = env.turns
+        env_dict["form"] = {"products": env.products}
+
+        with open(filename, "w") as jsonfile:
+            json.dump(env_dict, jsonfile)
 
     def __repr__(self):
         """printable representation;
@@ -167,8 +177,11 @@ class Environment:
 
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "001.task.json")
+    # filename = os.path.join(".", "tasks", "001.task.json")
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
     env = Environment.from_json(filename)
+
+    out_filename = os.path.join(".", "tasks", "json_test", "task_1.json")
+    Environment.to_json(env, out_filename)
 
     print(env)

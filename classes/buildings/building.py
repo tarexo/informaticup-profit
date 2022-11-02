@@ -1,7 +1,8 @@
 from shapes import *
 from dataclasses import dataclass
 
-@dataclass(frozen=True, order=True)   
+
+@dataclass(frozen=True, order=True)
 class Building:
     """The base class for all objects of the game (excluding the grid itself)
 
@@ -14,6 +15,10 @@ class Building:
     resources : list
         The resources currently held by the building
     """
+
     position: tuple
     shape: Shape
-    resources = [0]*8
+    resources = [0] * 8
+
+    def to_json(self):
+        raise NotImplementedError
