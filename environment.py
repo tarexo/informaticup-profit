@@ -16,7 +16,7 @@ class Environment:
     Profit Game Environment
     """
 
-    def __init__(self, width, height, turns, products: dict):
+    def __init__(self, width, height, turns, products: dict, _form: []):
         """initialize environment
 
         Args:
@@ -29,6 +29,7 @@ class Environment:
         self.height = height
         self.turns = turns
         self.products = products
+        self._form = _form
 
         self.buildings = []
         self.grid = np.full((height, width), " ")
@@ -116,7 +117,7 @@ class Environment:
             task = json.load(f)
 
         env = Environment(
-            task["width"], task["height"], task["turns"], task["products"]
+            task["width"], task["height"], task["turns"], task["products"], task["form"]
         )
         for obj in task["objects"]:
             position = (obj["x"], obj["y"])
@@ -160,11 +161,12 @@ class Environment:
         env_dict["objects"] = []
         for building in env.buildings:
             env_dict["objects"].append(building.to_json())
+        env_dict["products"] = env.products
         env_dict["turns"] = env.turns
-        env_dict["form"] = {"products": env.products}
+        env_dict["form"] = env._form  # duplicate of products?!
 
         with open(filename, "w") as jsonfile:
-            json.dump(env_dict, jsonfile)
+            json.dump(env_dict, jsonfile, separators=(",", ":"))
 
     def __repr__(self):
         """printable representation;
@@ -181,7 +183,4 @@ if __name__ == "__main__":
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
     env = Environment.from_json(filename)
 
-    out_filename = os.path.join(".", "tasks", "json_test", "task_1.json")
-    Environment.to_json(env, out_filename)
-
-    print(env)
+    # print(env)

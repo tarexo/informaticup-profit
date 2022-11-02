@@ -29,7 +29,7 @@ class Obstacle(Building):
 
     def to_json(self):
         building_dict = {
-            "type": "combiner",
+            "type": "obstacle",
             "x": self.position[0],
             "y": self.position[1],
             "width": self.width,

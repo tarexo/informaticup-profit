@@ -34,7 +34,7 @@ class Factory(Building):
 
     def to_json(self):
         building_dict = {
-            "type": "combiner",
+            "type": "factory",
             "x": self.position[0],
             "y": self.position[1],
             "subtype": self.subtype,

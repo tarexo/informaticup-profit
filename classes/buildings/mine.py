@@ -36,7 +36,7 @@ class Mine(Building):
 
     def to_json(self):
         building_dict = {
-            "type": "combiner",
+            "type": "mine",
             "x": self.position[0],
             "y": self.position[1],
             "subtype": self.subtype,
