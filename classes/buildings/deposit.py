@@ -1,6 +1,7 @@
 from .building import Building
 from shapes import *
 
+
 class Deposit(Building):
     """A deposit holds one of eight possible resources.
 
@@ -21,6 +22,9 @@ class Deposit(Building):
     subtype : int
         The subtype of the deposit, determining its held resource (0-7)
     """
+
+    NUM_SUBTYPES = 8
+
     def __init__(self, position, width, height, subtype):
         """Init function to create an instance of the deposit.
 
@@ -30,6 +34,8 @@ class Deposit(Building):
             height (int): Height of the deposit
             subtype (int): The subtype of the deposit, determining its held resource (0-7)
         """
+        from helper.dicts.building_shapes import deposit_shape
+
         super().__init__(position, deposit_shape(width, height))
 
         self.width = width
@@ -37,9 +43,3 @@ class Deposit(Building):
 
         self.subtype = subtype
         self.resources[subtype] = self.width * self.height * 5
-        
-    def __repr__(self):
-        #insert subtype and #resources
-        s = super().__repr__()
-        return s.replace(", shape=", f", subtype={self.subtype}, #resources={self.resources[self.subtype]}, shape=")
-   

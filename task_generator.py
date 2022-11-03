@@ -1,36 +1,66 @@
 from environment import Environment
 from classes.buildings import *
 
+from helper.dicts.building_shapes import BUILDING_SHAPES
 
-def place_mine(env: Environment, deposit: Deposit, factory: Factory):
+import random
+
+
+def best_building(env: Environment, start_building: Building, goal_building: Building):
+    allowed_building_classes = get_allowed_building_classes(start_building)
+
     min_distance = None
-    best_mine = None
-    for candidate_input_position in deposit.get_adjacent_output_positions():
-        for subtype in range(4):
-            # candidate_position = where to place mine of certain subtype so that its input is adjacent to the deposits output
-            candidate_position = (
-                candidate_input_position - shape.input_position + shape.center_position
-            )
-            mine = Mine(candidate_position, subtype)
-            if env.is_legal_position(mine):
-                mine_output_position = candidate_position - shape.output_position
-                distance = heuristic(mine_output_position, factory)
-                if min_distance is None or distance <= min_distance:
-                    min_distance = distance
-                    best_mine = mine
+    best_buildings = []
+    out_positions = start_building.get_output_positions()
+    for input_position in env.get_adjacent_positions(out_positions, empty_only=True):
+        for BuildingClass in allowed_building_classes:
+            for subtype in range(BuildingClass.NUM_SUBTYPES):
+                dummy_building = BuildingClass((0, 0), subtype)
+                # combiners have 3 different inputs!
+                for input_offset in dummy_building.get_input_positions():
+                    # candidate_position = where to place building of certain subtype so that its input is adjacent to the deposits output
+                    candidate_position = (
+                        input_position[0] - input_offset[0],
+                        input_position[1] - input_offset[1],
+                    )
+                    building = BuildingClass(candidate_position, subtype)
 
-    assert best_mine
-    env.add_building(best_mine)
+                    if env.is_legal_position(building):
+                        distance = env.distance(building, goal_building)
+                        if min_distance is None or distance == min_distance:
+                            min_distance = distance
+                            best_buildings.append(building)
+                        elif distance < min_distance:
+                            min_distance = distance
+                            best_buildings = [building]
+
+    if len(best_buildings) == 0:
+        print(env)
+    return random.choice(best_buildings)
+
+
+def get_allowed_building_classes(output_building):
+    if type(output_building) == Deposit:
+        return [Mine]
+    elif type(output_building) == Mine:
+        return [Conveyor, Combiner]
+    else:
+        return [Mine, Conveyor, Combiner]
 
 
 def connect_deposit_factory(env, deposit, factory):
-    place_mine(env, deposit, factory)
+    new_building = best_building(env, deposit, factory)
+    env.add_building(new_building)
+    while not env.is_connected(deposit, factory):
+        new_building = best_building(env, new_building, factory)
+        env.add_building(new_building)
+    print(env)
 
 
 if __name__ == "__main__":
     env = Environment(
-        100,
-        100,
+        30,
+        30,
         100,
         [
             {
