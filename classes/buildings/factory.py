@@ -1,6 +1,7 @@
 from .building import Building
 from shapes import *
 
+
 class Factory(Building):
     """A factory produces products using the resources it receives.
 
@@ -17,6 +18,9 @@ class Factory(Building):
     subtype : int
         The subtype of the factory, determining the product (0-7)
     """
+
+    NUM_SUBTYPES = 8
+
     def __init__(self, position, subtype):
         """Init function to create an instance of the factory.
 
@@ -24,7 +28,9 @@ class Factory(Building):
             position (tuple): Position of the factory in (x,y)
             subtype (int): The subtype of the factory, determining the product (0-7)
         """
-        super().__init__(position, FACTORY_SHAPE)
+        from helper.dicts.building_shapes import BUILDING_SHAPES
+
+        super().__init__(position, BUILDING_SHAPES[type(self)][subtype])
 
         self.subtype = subtype
 

@@ -52,6 +52,17 @@ class Environment:
             y = building.position[1] + tile_offset_y
             self.grid[y, x] = element
 
+        # add building connections
+        for pos in self.get_adjacent_positions(building.get_input_positions()):
+            for other_building in self.buildings:
+                if pos in other_building.get_output_positions():
+                    other_building.add_connection(building)
+
+        for pos in self.get_adjacent_positions(building.get_output_positions()):
+            for other_building in self.buildings:
+                if pos in other_building.get_input_positions():
+                    building.add_connection(other_building)
+
         self.buildings.append(building)
 
         return True
@@ -102,6 +113,37 @@ class Environment:
             return False
         return True
 
+    def get_adjacent_positions(self, positions, empty_only=False):
+        # works for single position as well as a list of positions
+        if type(positions) == tuple:
+            return self.get_adjacent_positions([positions])
+
+        adjacent_positions = []
+        for x, y in positions:
+            for x_offset, y_offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                adjacent_x = x + x_offset
+                adjacent_y = y + y_offset
+                if not empty_only or self.is_tile_empty(adjacent_x, adjacent_y):
+                    adjacent_positions.append((adjacent_x, adjacent_y))
+        return adjacent_positions
+
+    def is_connected(self, output_building: Building, input_building: Building):
+        for next_building in output_building.connections:
+            if next_building == input_building or self.is_connected(
+                next_building, input_building
+            ):
+                return True
+        return False
+
+    def distance(self, output_building: Building, input_building: Building):
+        min_distance = None
+        for out_pos in output_building.get_output_positions():
+            for in_pos in input_building.get_input_positions():
+                distance = abs(out_pos[0] - in_pos[0]) + abs(out_pos[1] - in_pos[1])
+                if min_distance is None or distance < min_distance:
+                    min_distance = distance
+        return min_distance
+
     @staticmethod
     def from_json(filename):
         """loads a task from file (json format) and automatically creates the described environment with all its buildings, products and #turns
@@ -140,8 +182,6 @@ class Environment:
 
             if env.is_legal_position(building):
                 env.add_building(building)
-                print(building)
-                print()
             else:
                 print(f"UNABLE TO PLACE {obj['type']} at position {position}\n")
         return env
@@ -171,4 +211,4 @@ if __name__ == "__main__":
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
     env = Environment.from_json(filename)
 
-    print(env)
+    # print(env)
