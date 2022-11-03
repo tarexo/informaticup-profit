@@ -21,13 +21,16 @@ Step 4: Remove all mines, conveyors, combiners
 
 ![](task_generator_imgs/3_remove_connection.png)
 
-## Goal
+## Goals
 The agents has to learn to navigate these tiny obstacles which hopefully generalizes well on real tasks.  
 We can use the naive (possibly non-optimal) solution of Step 2 as the target score + target #turns and even supervise our algorithm in the beginning phase.  
+By including the factory in the generated training tasks, a RL algorithm may try to place a factory first when encoutered with a real task without any factories (similar to a human player).  
 
 ## Extensions
 - Increase difficulty by using mutiple deposits and factories
 - Vary the free-tile-to-obstacle probability
+- Vary grid size
+- Remove factories 
 - Start with a non-empty grid, e.g. a "hole in the wall" scenario 
 
 ![](task_generator_imgs/4_hole_in_the_wall.png)
