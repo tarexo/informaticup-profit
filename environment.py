@@ -88,7 +88,7 @@ class Environment:
         assert not issubclass(BuildingClass, UnplacableBuilding)
 
         x, y = random.randint(0, self.width), random.randint(0, self.height)
-        building = BuildingClass(x, y, subtype)
+        building = BuildingClass((x, y), subtype)
         if not self.is_legal_position(building):
             return self.get_legal_building(BuildingClass, subtype)
         return building

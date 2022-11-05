@@ -12,7 +12,7 @@ class TaskGenerator:
 
     def generate_simple_task(self, save=False, output=False):
         self.env.empty()
-        deposit = self.env.add_building(Deposit(2, 2, 0, 3, 3))
+        deposit = self.env.add_building(Deposit((2, 2), 0, 3, 3))
         factory = task_gen.place_building_at_random_position(Factory, 0)
 
         self.connect_deposit_factory(deposit, factory)

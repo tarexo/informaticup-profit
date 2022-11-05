@@ -68,7 +68,7 @@ class Building:
             if element == "+":
                 center_x = x - x_offset
                 center_y = y - y_offset
-                return BuildingClass(center_x, center_y, subtype)
+                return BuildingClass((center_x, center_y), subtype)
 
         raise RuntimeError("Unexpected Behavior in 'Building.from_input_position()'")
 
