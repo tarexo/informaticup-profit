@@ -4,6 +4,7 @@ from classes.buildings import *
 from dataclasses import dataclass
 import json
 import os
+import random
 
 # create a nice output when displaying the entire grid
 np.set_printoptions(
@@ -30,8 +31,11 @@ class Environment:
         self.turns = turns
         self.products = products
 
+        self.empty()
+
+    def empty(self):
         self.buildings = []
-        self.grid = np.full((height, width), " ")
+        self.grid = np.full((self.height, self.width), " ")
 
     def add_building(self, building: Building):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
@@ -40,16 +44,16 @@ class Environment:
             building (Building): Factory, Deposit, Obstacle, ...
 
         Returns:
-            bool: success
+            Building: returns building object or None if building could not be added
         """
         if not self.is_legal_position(building):
-            return False
+            return None
 
         # iterate over non-empty elements of the building shape
         for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the shape
-            x = building.position[0] + tile_offset_x
-            y = building.position[1] + tile_offset_y
+            x = building.x + tile_offset_x
+            y = building.y + tile_offset_y
             self.grid[y, x] = element
 
         # add building connections
@@ -65,7 +69,29 @@ class Environment:
 
         self.buildings.append(building)
 
-        return True
+        return building
+
+    def get_legal_building(self, BuildingClass, subtype):
+        """suggests a random (but legal) building position.
+        simple brute_force approach for now: pick a random position and test it's legality
+
+        Args:
+            BuildingClass (class): the class of the building that is supposed to be placed
+            subtype (int): subtype of the building
+
+        Returns:
+            Building: a building object at random (but legal) position that has not yet been placed inside the environment
+
+        Throws:
+            MaxRecursionError
+        """
+        assert not issubclass(BuildingClass, UnplacableBuilding)
+
+        x, y = random.randint(0, self.width), random.randint(0, self.height)
+        building = BuildingClass(x, y, subtype)
+        if not self.is_legal_position(building):
+            return self.get_legal_building(BuildingClass, subtype)
+        return building
 
     def is_legal_position(self, building: Building):
         """Check wether a building has a valid position:
@@ -83,8 +109,8 @@ class Environment:
         # iterate over non-empty elements of the building's shape
         for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the building
-            x = building.position[0] + tile_offset_x
-            y = building.position[1] + tile_offset_y
+            x = building.x + tile_offset_x
+            y = building.y + tile_offset_y
 
             # check whether each individual element can be placed on an empty tile
             if not self.is_tile_empty(x, y):
@@ -161,29 +187,22 @@ class Environment:
             task["width"], task["height"], task["turns"], task["products"]
         )
         for obj in task["objects"]:
-            position = (obj["x"], obj["y"])
-            if obj["type"] == "obstacle":
-                building = Obstacle(position, obj["width"], obj["height"])
-            elif obj["type"] == "deposit":
-                building = Deposit(
-                    position, obj["width"], obj["height"], obj["subtype"]
-                )
-            elif obj["type"] == "mine":
-                building = Mine(position, obj["subtype"])
-            elif obj["type"] == "combiner":
-                building = Combiner(position, obj["subtype"])
-            elif obj["type"] == "factory":
-                building = Factory(position, obj["subtype"])
-            elif obj["type"] == "conveyor":
-                building = Conveyor(position, obj["subtype"])
+            classname = obj["type"].capitalize()
+            args = [obj["x"], obj["y"]]
+
+            if "subtype" not in obj:
+                args.append(0)
             else:
-                print(f"UNKNOWN BUILDING TYPE: {obj['type']}\n")
-                continue
+                args.append(obj["subtype"])
+            if "width" in obj:
+                args.extend([obj["width"], obj["height"]])
+
+            building = globals()[classname](*args)
 
             if env.is_legal_position(building):
                 env.add_building(building)
             else:
-                print(f"UNABLE TO PLACE {obj['type']} at position {position}\n")
+                print(f"UNABLE TO PLACE {obj['type']} at ({obj['x']}, {obj['y']})\n")
         return env
 
     @staticmethod
@@ -211,4 +230,4 @@ if __name__ == "__main__":
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
     env = Environment.from_json(filename)
 
-    # print(env)
+    print(env)
