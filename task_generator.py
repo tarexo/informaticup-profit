@@ -16,6 +16,8 @@ class TaskGenerator:
         factory = task_gen.place_building_at_random_position(Factory, 0)
 
         self.connect_deposit_factory(deposit, factory)
+        self.add_obstacles(p=0.3)
+        self.env.remove_connected_buildings(deposit, factory)
         if output:
             print(self.env)
 
@@ -25,6 +27,13 @@ class TaskGenerator:
             best_buildings = self.get_best_buildings(new_building, factory)
             new_building = random.choice(best_buildings)
             env.add_building(new_building)
+
+    def add_obstacles(self, p=0.1):
+        for y in range(self.env.height):
+            for x in range(self.env.width):
+                if self.env.is_tile_empty(x, y) and random.random() < p:
+                    obstacle = Obstacle((x, y), 0, 1, 1)
+                    self.env.add_building(obstacle)
 
     def place_building_at_random_position(self, BuildingClass, subtype):
         building = self.env.get_legal_building(BuildingClass, subtype)

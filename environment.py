@@ -71,6 +71,35 @@ class Environment:
 
         return building
 
+    def remove_building(self, building):
+        """Removes the individual tiles of a new building from the grid;
+
+        Args:
+            building (Building): Factory, Deposit, Obstacle, ...
+
+        Returns:
+            Building: returns removed building object
+        """
+
+        # iterate over non-empty elements of the building shape
+        for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
+            # calculate tile position on the grid relative to the center of the shape
+            x = building.x + tile_offset_x
+            y = building.y + tile_offset_y
+            self.grid[y, x] = " "
+
+        # remove building connections
+        for pos in self.get_adjacent_positions(building.get_input_positions()):
+            for other_building in self.buildings:
+                if pos in other_building.get_output_positions():
+                    other_building.remove_connection(building)
+
+        building.clear_connections()
+
+        self.buildings.remove(building)
+
+        return building
+
     def get_legal_building(self, BuildingClass, subtype):
         """suggests a random (but legal) building position.
         simple brute_force approach for now: pick a random position and test it's legality
@@ -153,7 +182,28 @@ class Environment:
                     adjacent_positions.append((adjacent_x, adjacent_y))
         return adjacent_positions
 
-    def is_connected(self, output_building: Building, input_building: Building):
+    def remove_connected_buildings(self, output_building, input_building):
+        if not self.is_connected(output_building, input_building):
+            print(
+                f"WARNING: unable to remove connection as {output_building} and {input_building} are not connected."
+            )
+            return None
+
+        removed_buildings = []
+        for next_building in output_building.connections:
+            if next_building == input_building:
+                return []
+            if self.is_connected(next_building, input_building):
+                connected_buildings = self.remove_connected_buildings(
+                    next_building, input_building
+                )
+                self.remove_building(next_building)
+                removed_buildings.append(next_building)
+                removed_buildings.extend(connected_buildings)
+
+        return removed_buildings
+
+    def is_connected(self, output_building, input_building):
         for next_building in output_building.connections:
             if next_building == input_building or self.is_connected(
                 next_building, input_building

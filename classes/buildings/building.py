@@ -24,7 +24,7 @@ class Building:
 
         self.shape = shape
         self.resources = [0] * 8
-        self.connections = []
+        self.clear_connections()
 
     def get_output_positions(self):
         return self.get_element_positions("-")
@@ -41,9 +41,14 @@ class Building:
 
         return element_positions
 
-    def add_connection(self, building):
-        self.connections.append(building)
-        # print(f"connecting {building} to {self}")
+    def clear_connections(self):
+        self.connections = []
+
+    def add_connection(self, other_building):
+        self.connections.append(other_building)
+
+    def remove_connection(self, other_building):
+        self.connections.remove(other_building)
 
     @classmethod
     def from_input_position(BuildingClass, x, y, subtype):
