@@ -163,9 +163,9 @@ class Environment:
 
     def distance(self, output_building: Building, input_building: Building):
         min_distance = None
-        for out_pos in output_building.get_output_positions():
-            for in_pos in input_building.get_input_positions():
-                distance = abs(out_pos[0] - in_pos[0]) + abs(out_pos[1] - in_pos[1])
+        for out_x, out_y in output_building.get_output_positions():
+            for in_x, in_y in input_building.get_input_positions():
+                distance = abs(out_x - in_x) + abs(out_y - in_y)
                 if min_distance is None or distance < min_distance:
                     min_distance = distance
         return min_distance
