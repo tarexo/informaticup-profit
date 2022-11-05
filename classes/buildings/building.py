@@ -12,9 +12,9 @@ class Building:
     """
 
     # PlacableBuilding Constructor
-    def __init__(self, x, y, subtype, shape=None):
-        self.x = x
-        self.y = y
+    def __init__(self, position, subtype, shape=None):
+        self.x = position[0]
+        self.y = position[1]
         self.subtype = subtype
 
         if shape is None:

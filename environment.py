@@ -188,7 +188,8 @@ class Environment:
         )
         for obj in task["objects"]:
             classname = obj["type"].capitalize()
-            args = [obj["x"], obj["y"]]
+            args = []
+            args.append((obj["x"], obj["y"]))
 
             if "subtype" not in obj:
                 args.append(0)
@@ -202,7 +203,7 @@ class Environment:
             if env.is_legal_position(building):
                 env.add_building(building)
             else:
-                print(f"UNABLE TO PLACE {obj['type']} at ({obj['x']}, {obj['y']})\n")
+                print(f"UNABLE TO PLACE {classname} at {args[0]}\n")
         return env
 
     @staticmethod
