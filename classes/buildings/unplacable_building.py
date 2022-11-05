@@ -19,7 +19,7 @@ class UnplacableBuilding(Building):
         The resources currently held by the building
     """
 
-    def __init__(self, x, y, subtype, width, height):
+    def __init__(self, position, subtype, width, height):
         self.width = width
         self.height = height
 
@@ -36,7 +36,7 @@ class UnplacableBuilding(Building):
         elif type(self) == Obstacle:
             shape = create_obstacle_shape(width, height)
 
-        super().__init__(x, y, subtype, shape=shape)
+        super().__init__(position, subtype, shape=shape)
 
     @classmethod
     def from_input_position(cls, x, y, subtype):
