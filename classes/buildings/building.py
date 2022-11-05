@@ -1,6 +1,3 @@
-from shapes import *
-
-
 class Building:
     """The base class for all objects of the game (excluding the grid itself)
 
@@ -14,8 +11,17 @@ class Building:
         The resources currently held by the building
     """
 
-    def __init__(self, position, shape):
-        self.position = position
+    # PlacableBuilding Constructor
+    def __init__(self, x, y, subtype, shape=None):
+        self.x = x
+        self.y = y
+        self.subtype = subtype
+
+        if shape is None:
+            from helper.dicts.building_shapes import BUILDING_SHAPES
+
+            shape = BUILDING_SHAPES[type(self)][subtype]
+
         self.shape = shape
         self.resources = [0] * 8
         self.connections = []
@@ -30,7 +36,7 @@ class Building:
         element_positions = []
         for (x_offset, y_offset, element) in iter(self.shape):
             if element == target_element:
-                pos = (self.position[0] + x_offset, self.position[1] + y_offset)
+                pos = (self.x + x_offset, self.y + y_offset)
                 element_positions.append(pos)
 
         return element_positions

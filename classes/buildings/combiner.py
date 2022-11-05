@@ -1,5 +1,4 @@
 from .building import Building
-from shapes import *
 
 
 class Combiner(Building):
@@ -20,18 +19,3 @@ class Combiner(Building):
     """
 
     NUM_SUBTYPES = 4
-
-    def __init__(self, position, subtype):
-        """Init function to create an instance of the combiner.
-
-        Args:
-            position (tuple): Position of the combiner in (x,y)
-            subtype (int): The subtype of the combiner, determining its rotation (0-3)
-        """
-        self.subtype = subtype
-
-        from helper.dicts.building_shapes import BUILDING_SHAPES
-
-        shape = BUILDING_SHAPES[type(self)][subtype]
-
-        super().__init__(position, shape)
