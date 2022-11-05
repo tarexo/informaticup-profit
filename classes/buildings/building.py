@@ -44,3 +44,33 @@ class Building:
     def add_connection(self, building):
         self.connections.append(building)
         # print(f"connecting {building} to {self}")
+
+    @classmethod
+    def from_input_position(BuildingClass, x, y, subtype):
+        """Create a Building using its input position (not its center)
+        This function is invalid for Obstacles and Deposits as they do not have an input element
+        TODO multiple combiner/factory inputs possible (only the very first one is used for now)
+
+        Args:
+            BuildingClass (cls): the class of the building that shall be placed
+            x (int): x-position where the input element shall be placed
+            y (int): y-position where the input element shall be placed
+            subtype (int): its subtype
+
+        Returns:
+            building: a building placed at input position x and y
+        """
+        from helper.dicts.building_shapes import BUILDING_SHAPES
+
+        shape = BUILDING_SHAPES[BuildingClass][subtype]
+
+        for (x_offset, y_offset, element) in iter(shape):
+            if element == "+":
+                center_x = x - x_offset
+                center_y = y - y_offset
+                return BuildingClass(center_x, center_y, subtype)
+
+        raise RuntimeError("Unexpected Behavior in 'Building.from_input_position()'")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}_{self.subtype} at x={self.x}, y={self.y}, \n{self.shape}\n"
