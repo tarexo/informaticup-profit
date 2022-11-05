@@ -16,7 +16,11 @@ class TaskGenerator:
         factory = task_gen.place_building_at_random_position(Factory, 0)
 
         self.connect_deposit_factory(deposit, factory)
+        if output:
+            print(self.env)
         self.add_obstacles(p=0.3)
+        if output:
+            print(self.env)
         self.env.remove_connected_buildings(deposit, factory)
         if output:
             print(self.env)
@@ -98,5 +102,5 @@ if __name__ == "__main__":
 
     task_gen = TaskGenerator(env)
 
-    for i in range(10):
-        task_gen.generate_simple_task(output=True)
+    # for i in range(10):
+    task_gen.generate_simple_task(output=True)
