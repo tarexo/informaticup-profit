@@ -8,13 +8,16 @@ class Shape:
 
     Attributes
     ----------
-    center : tuple
-        The position of the object in (x,y) (Is not neccessarily the center of the object!)
+    center_x : int
+        The x position of the object (Is not neccessarily the center of the object!)
+    center_y : int
+        The y position of the object (Is not neccessarily the center of the object!)
     elements : np.ndarray
         The shape of the object, how it is presented in the grid
     """
 
-    center: tuple
+    center_x: int
+    center_y: int
     elements: np.ndarray
 
     def __iter__(self):
@@ -42,8 +45,8 @@ class Shape:
 
         # current tile position and element
         tile = (
-            self.x_offset - self.center[0],
-            self.y_offset - self.center[1],
+            self.x_offset - self.center_x,
+            self.y_offset - self.center_y,
             self.elements[self.y_offset, self.x_offset],
         )
 
@@ -61,4 +64,4 @@ class Shape:
         return tile
 
     def __repr__(self):
-        return f"\n{self.elements}"
+        return f"{self.elements}"
