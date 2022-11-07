@@ -1,7 +1,8 @@
 from shapes import *
 from classes.buildings import *
+from helper.dicts.convert_actions import *
+from task_generator import TaskGenerator
 
-from dataclasses import dataclass
 import json
 import os
 import random
@@ -36,6 +37,8 @@ class Environment(gym.Env):
         self.turns = turns
         self.products = products
 
+        self.task_generator = TaskGenerator(self)
+
         self.empty()
         self.setup_gym(render_mode)
 
@@ -46,13 +49,6 @@ class Environment(gym.Env):
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((16, 4))
 
-        self._positional_action_to_direction = {
-            0: np.array([1, 0]),
-            1: np.array([0, 1]),
-            2: np.array([-1, 0]),
-            3: np.array([0, -1]),
-        }
-
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
@@ -60,16 +56,50 @@ class Environment(gym.Env):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
 
-        observation = self.task_generator
-        info = None
+        # task generator modifies self (this environment!)
+        deposit, factory = self.task_generator.generate_simple_task()
+        self.current_building = deposit
+        self.target_building = factory
+
+        observation = self.grid_to_observation()
+        info = {}
 
         if self.render_mode == "human":
             self.render()
 
         return observation, info
 
+    def step(self, action):
+        building_action, positional_action = action
+
+        x, y = self.current_building.get_output_positions()[0]
+        x_offset, y_offset = POSITIONAL_ACTION_TO_DIRECTION[positional_action]
+        position = (x + x_offset, y + y_offset)
+
+        BuildingClass, subtype = BUILDING_ACTION_TO_CLASS_SUBTYPE[building_action]
+        new_building = BuildingClass(position, subtype)
+
+        print(new_building)
+        assert self.is_legal_position(new_building)
+        self.add_building(new_building)
+
+        # An episode is done iff the agent has reached the target
+        terminated = self.is_connected(new_building, self.target_building)
+        reward = 1 if terminated else 0  # Binary sparse rewards
+
+        observation = self.grid_to_observation()
+        info = {}
+
+        if self.render_mode == "human":
+            self.render()
+
+        return observation, reward, terminated, False, info
+
     def render(self):
         print(self)
+
+    def grid_to_observation(self):
+        return self.grid
 
     def empty(self):
         self.buildings = []
