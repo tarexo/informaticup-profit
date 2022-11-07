@@ -4,6 +4,7 @@ from classes.buildings import *
 from dataclasses import dataclass
 import json
 import os
+import random
 
 # create a nice output when displaying the entire grid
 np.set_printoptions(
@@ -30,8 +31,11 @@ class Environment:
         self.turns = turns
         self.products = products
 
+        self.empty()
+
+    def empty(self):
         self.buildings = []
-        self.grid = np.full((height, width), " ")
+        self.grid = np.full((self.height, self.width), " ")
 
     def add_building(self, building: Building):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
@@ -40,21 +44,54 @@ class Environment:
             building (Building): Factory, Deposit, Obstacle, ...
 
         Returns:
-            bool: success
+            Building: returns building object or None if building could not be added
         """
         if not self.is_legal_position(building):
-            return False
+            return None
 
         # iterate over non-empty elements of the building shape
         for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the shape
-            x = building.position[0] + tile_offset_x
-            y = building.position[1] + tile_offset_y
+            x = building.x + tile_offset_x
+            y = building.y + tile_offset_y
             self.grid[y, x] = element
+
+        # add building connections
+        for pos in self.get_adjacent_positions(building.get_input_positions()):
+            for other_building in self.buildings:
+                if pos in other_building.get_output_positions():
+                    other_building.add_connection(building)
+
+        for pos in self.get_adjacent_positions(building.get_output_positions()):
+            for other_building in self.buildings:
+                if pos in other_building.get_input_positions():
+                    building.add_connection(other_building)
 
         self.buildings.append(building)
 
-        return True
+        return building
+
+    def get_legal_building(self, BuildingClass, subtype):
+        """suggests a random (but legal) building position.
+        simple brute_force approach for now: pick a random position and test it's legality
+
+        Args:
+            BuildingClass (class): the class of the building that is supposed to be placed
+            subtype (int): subtype of the building
+
+        Returns:
+            Building: a building object at random (but legal) position that has not yet been placed inside the environment
+
+        Throws:
+            MaxRecursionError
+        """
+        assert not issubclass(BuildingClass, UnplacableBuilding)
+
+        x, y = random.randint(0, self.width), random.randint(0, self.height)
+        building = BuildingClass(x, y, subtype)
+        if not self.is_legal_position(building):
+            return self.get_legal_building(BuildingClass, subtype)
+        return building
 
     def is_legal_position(self, building: Building):
         """Check wether a building has a valid position:
@@ -72,8 +109,8 @@ class Environment:
         # iterate over non-empty elements of the building's shape
         for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
             # calculate tile position on the grid relative to the center of the building
-            x = building.position[0] + tile_offset_x
-            y = building.position[1] + tile_offset_y
+            x = building.x + tile_offset_x
+            y = building.y + tile_offset_y
 
             # check whether each individual element can be placed on an empty tile
             if not self.is_tile_empty(x, y):
@@ -102,6 +139,37 @@ class Environment:
             return False
         return True
 
+    def get_adjacent_positions(self, positions, empty_only=False):
+        # works for single position as well as a list of positions
+        if type(positions) == tuple:
+            return self.get_adjacent_positions([positions])
+
+        adjacent_positions = []
+        for x, y in positions:
+            for x_offset, y_offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                adjacent_x = x + x_offset
+                adjacent_y = y + y_offset
+                if not empty_only or self.is_tile_empty(adjacent_x, adjacent_y):
+                    adjacent_positions.append((adjacent_x, adjacent_y))
+        return adjacent_positions
+
+    def is_connected(self, output_building: Building, input_building: Building):
+        for next_building in output_building.connections:
+            if next_building == input_building or self.is_connected(
+                next_building, input_building
+            ):
+                return True
+        return False
+
+    def distance(self, output_building: Building, input_building: Building):
+        min_distance = None
+        for out_x, out_y in output_building.get_output_positions():
+            for in_x, in_y in input_building.get_input_positions():
+                distance = abs(out_x - in_x) + abs(out_y - in_y)
+                if min_distance is None or distance < min_distance:
+                    min_distance = distance
+        return min_distance
+
     @staticmethod
     def from_json(filename):
         """loads a task from file (json format) and automatically creates the described environment with all its buildings, products and #turns
@@ -119,31 +187,23 @@ class Environment:
             task["width"], task["height"], task["turns"], task["products"]
         )
         for obj in task["objects"]:
-            position = (obj["x"], obj["y"])
-            if obj["type"] == "obstacle":
-                building = Obstacle(position, obj["width"], obj["height"])
-            elif obj["type"] == "deposit":
-                building = Deposit(
-                    position, obj["width"], obj["height"], obj["subtype"]
-                )
-            elif obj["type"] == "mine":
-                building = Mine(position, obj["subtype"])
-            elif obj["type"] == "combiner":
-                building = Combiner(position, obj["subtype"])
-            elif obj["type"] == "factory":
-                building = Factory(position, obj["subtype"])
-            elif obj["type"] == "conveyor":
-                building = Conveyor(position, obj["subtype"])
+            classname = obj["type"].capitalize()
+            args = []
+            args.append((obj["x"], obj["y"]))
+
+            if "subtype" not in obj:
+                args.append(0)
             else:
-                print(f"UNKNOWN BUILDING TYPE: {obj['type']}\n")
-                continue
+                args.append(obj["subtype"])
+            if "width" in obj:
+                args.extend([obj["width"], obj["height"]])
+
+            building = globals()[classname](*args)
 
             if env.is_legal_position(building):
                 env.add_building(building)
-                print(building)
-                print()
             else:
-                print(f"UNABLE TO PLACE {obj['type']} at position {position}\n")
+                print(f"UNABLE TO PLACE {classname} at {args[0]}\n")
         return env
 
     @staticmethod

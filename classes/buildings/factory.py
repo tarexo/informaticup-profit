@@ -1,5 +1,5 @@
 from .building import Building
-from shapes import *
+
 
 class Factory(Building):
     """A factory produces products using the resources it receives.
@@ -17,15 +17,5 @@ class Factory(Building):
     subtype : int
         The subtype of the factory, determining the product (0-7)
     """
-    def __init__(self, position, subtype):
-        """Init function to create an instance of the factory.
 
-        Args:
-            position (tuple): Position of the factory in (x,y)
-            subtype (int): The subtype of the factory, determining the product (0-7)
-        """
-        super().__init__(position, FACTORY_SHAPE)
-
-        self.subtype = subtype
-
-        # product_recipe, points --> should be managed by environment or factory class?!
+    NUM_SUBTYPES = 8

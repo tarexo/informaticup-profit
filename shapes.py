@@ -8,13 +8,16 @@ class Shape:
 
     Attributes
     ----------
-    center : tuple
-        The position of the object in (x,y) (Is not neccessarily the center of the object!)
+    center_x : int
+        The x position of the object (Is not neccessarily the center of the object!)
+    center_y : int
+        The y position of the object (Is not neccessarily the center of the object!)
     elements : np.ndarray
         The shape of the object, how it is presented in the grid
     """
 
-    center: tuple
+    center_x: int
+    center_y: int
     elements: np.ndarray
 
     def __iter__(self):
@@ -42,8 +45,8 @@ class Shape:
 
         # current tile position and element
         tile = (
-            self.x_offset - self.center[0],
-            self.y_offset - self.center[1],
+            self.x_offset - self.center_x,
+            self.y_offset - self.center_y,
             self.elements[self.y_offset, self.x_offset],
         )
 
@@ -61,52 +64,4 @@ class Shape:
         return tile
 
     def __repr__(self):
-        return f"\n{self.elements}"
-
-
-# ' ' = free space
-# '+' = input element
-# '-' = output element
-# 'd', 'f', 'm', 'c', 'x', '<', '>', '^', 'v' = neural element
-
-FACTORY_SHAPE = Shape(
-    (0, 0),
-    np.array(
-        [
-            ["+", "+", "+", "+", "+"],
-            ["+", "f", "f", "f", "+"],
-            ["+", "f", "f", "f", "+"],
-            ["+", "f", "f", "f", "+"],
-            ["+", "+", "+", "+", "+"],
-        ]
-    ),
-)
-
-
-def obstacle_shape(width, height):
-    """Generate the shape of the obstacle class.
-
-    Args:
-        width (int): Width of the obstacle
-        height (int): Height of the obstacle
-
-    Returns:
-        np.ndarray: The shape of the obstacle, how it will be presented on the grid.
-    """
-    array = np.full((height, width), "x")
-    return Shape((0, 0), array)
-
-
-def deposit_shape(width, height):
-    """Generate the shape of the deposit class.
-
-    Args:
-        width (int): Width of the deposit
-        height (int): Height of the deposit
-
-    Returns:
-        np.ndarray: The shape of the deposit, how it will be presented on the grid.
-    """
-    array = np.full((height, width), "-")
-    array[1 : (height - 1), 1 : (width - 1)] = "d"
-    return Shape((0, 0), array)
+        return f"{self.elements}"
