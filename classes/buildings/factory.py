@@ -1,6 +1,7 @@
 from .building import Building
 from shapes import *
 
+
 class Factory(Building):
     """A factory produces products using the resources it receives.
 
@@ -17,6 +18,7 @@ class Factory(Building):
     subtype : int
         The subtype of the factory, determining the product (0-7)
     """
+
     def __init__(self, position, subtype):
         """Init function to create an instance of the factory.
 
@@ -29,3 +31,12 @@ class Factory(Building):
         self.subtype = subtype
 
         # product_recipe, points --> should be managed by environment or factory class?!
+
+    def to_json(self):
+        building_dict = {
+            "type": "factory",
+            "x": self.position[0],
+            "y": self.position[1],
+            "subtype": self.subtype,
+        }
+        return building_dict

@@ -1,6 +1,7 @@
 from .building import Building
 from shapes import *
 
+
 class Mine(Building):
     """A mine is the only way extracting resources from a deposit.
 
@@ -17,6 +18,7 @@ class Mine(Building):
     subtype : int
         The subtype of the mine, determining its rotation (0-3)
     """
+
     def __init__(self, position, subtype):
         """Init function to create an instance of the mine.
 
@@ -27,6 +29,16 @@ class Mine(Building):
         self.subtype = subtype
 
         from helper.dicts.building_shapes import BUILDING_SHAPES
+
         shape = BUILDING_SHAPES[type(self)][subtype]
-            
+
         super().__init__(position, shape)
+
+    def to_json(self):
+        building_dict = {
+            "type": "mine",
+            "x": self.position[0],
+            "y": self.position[1],
+            "subtype": self.subtype,
+        }
+        return building_dict
