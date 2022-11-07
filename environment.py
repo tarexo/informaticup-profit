@@ -6,18 +6,23 @@ import json
 import os
 import random
 
+import gym
+from gym import spaces
+
 # create a nice output when displaying the entire grid
 np.set_printoptions(
     edgeitems=30, linewidth=100000, formatter=dict(float=lambda x: "%.3g" % x)
 )
 
 
-class Environment:
+class Environment(gym.Env):
     """
     Profit Game Environment
     """
 
-    def __init__(self, width, height, turns, products: dict):
+    metadata = {"render_modes": ["human"], "render_fps": 2}
+
+    def __init__(self, width, height, turns, products: dict, render_mode=None):
         """initialize environment
 
         Args:
@@ -32,6 +37,39 @@ class Environment:
         self.products = products
 
         self.empty()
+        self.setup_gym(render_mode)
+
+    def setup_gym(self, render_mode):
+        # [empty, obstacle, input, output] in a 100x100 grid
+        self.observation_space = spaces.MultiBinary((4, 100, 100))
+
+        # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
+        self.action_space = spaces.MultiDiscrete((16, 4))
+
+        self._positional_action_to_direction = {
+            0: np.array([1, 0]),
+            1: np.array([0, 1]),
+            2: np.array([-1, 0]),
+            3: np.array([0, -1]),
+        }
+
+        assert render_mode is None or render_mode in self.metadata["render_modes"]
+        self.render_mode = render_mode
+
+    def reset(self, seed=None, options=None):
+        # We need the following line to seed self.np_random
+        super().reset(seed=seed)
+
+        observation = self.task_generator
+        info = None
+
+        if self.render_mode == "human":
+            self.render()
+
+        return observation, info
+
+    def render(self):
+        print(self)
 
     def empty(self):
         self.buildings = []
