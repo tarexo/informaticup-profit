@@ -77,5 +77,5 @@ class Building:
 
         raise RuntimeError("Unexpected Behavior in 'Building.from_input_position()'")
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return f"{type(self).__name__}_{self.subtype} at x={self.x}, y={self.y}, \n{self.shape}\n"

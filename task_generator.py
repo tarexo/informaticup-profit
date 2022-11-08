@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import environment
 from classes.buildings import *
+from helper.constants.settings import *
 
 import random
 
@@ -15,18 +16,25 @@ class TaskGenerator:
         deposit = self.env.add_building(Deposit((2, 2), 0, 3, 3))
         factory = self.place_building_at_random_position(Factory, 0)
 
-        self.connect_deposit_factory(deposit, factory)
-        self.add_obstacles(p=0.3)
-        self.env.remove_connected_buildings(deposit, factory)
+        connections = self.connect_deposit_factory(deposit, factory)
+        self.add_obstacles(p=0.05)
 
-        return deposit, factory
+        assert len(connections) >= 1
+        mine = connections[0]
+        self.env.remove_connected_buildings(mine, factory)
+
+        return mine, factory
 
     def connect_deposit_factory(self, deposit, factory):
+        connections = []
         new_building = deposit
         while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
             new_building = random.choice(best_buildings)
             self.env.add_building(new_building)
+            connections.append(new_building)
+
+        return connections
 
     def add_obstacles(self, p=0.1):
         for y in range(self.env.height):
@@ -83,9 +91,9 @@ class TaskGenerator:
 
 if __name__ == "__main__":
     env = environment.Environment(
-        30,
-        30,
-        100,
+        MAX_WIDTH,
+        MAX_HEIGHT,
+        50,
         [
             {
                 "type": "product",

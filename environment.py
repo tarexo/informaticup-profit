@@ -1,7 +1,8 @@
 from shapes import *
 from classes.buildings import *
 from helper.dicts.convert_actions import *
-from task_generator import TaskGenerator
+from helper.constants.settings import *
+import task_generator
 
 import json
 import os
@@ -21,7 +22,7 @@ class Environment(gym.Env):
     Profit Game Environment
     """
 
-    metadata = {"render_modes": ["human"], "render_fps": 2}
+    metadata = {"render_modes": ["human"], "render_fps": 1}
 
     def __init__(self, width, height, turns, products: dict, render_mode=None):
         """initialize environment
@@ -37,14 +38,14 @@ class Environment(gym.Env):
         self.turns = turns
         self.products = products
 
-        self.task_generator = TaskGenerator(self)
+        self.task_generator = task_generator.TaskGenerator(self)
 
         self.empty()
         self.setup_gym(render_mode)
 
     def setup_gym(self, render_mode):
-        # [empty, obstacle, input, output] in a 100x100 grid
-        self.observation_space = spaces.MultiBinary((4, 100, 100))
+        # [obstacles, inputs, agent's single output] each in a 100x100 grid
+        self.observation_space = spaces.MultiBinary((3, MAX_HEIGHT, MAX_WIDTH))
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((16, 4))
@@ -57,8 +58,8 @@ class Environment(gym.Env):
         super().reset(seed=seed)
 
         # task generator modifies self (this environment!)
-        deposit, factory = self.task_generator.generate_simple_task()
-        self.current_building = deposit
+        mine, factory = self.task_generator.generate_simple_task()
+        self.current_building = mine
         self.target_building = factory
 
         observation = self.grid_to_observation()
@@ -74,32 +75,49 @@ class Environment(gym.Env):
 
         x, y = self.current_building.get_output_positions()[0]
         x_offset, y_offset = POSITIONAL_ACTION_TO_DIRECTION[positional_action]
-        position = (x + x_offset, y + y_offset)
+        input_x, input_y = x + x_offset, y + y_offset
 
         BuildingClass, subtype = BUILDING_ACTION_TO_CLASS_SUBTYPE[building_action]
-        new_building = BuildingClass(position, subtype)
+        new_building = BuildingClass.from_input_position(input_x, input_y, subtype)
 
-        print(new_building)
-        assert self.is_legal_position(new_building)
-        self.add_building(new_building)
+        terminated = False
+        truncated = True
 
-        # An episode is done iff the agent has reached the target
-        terminated = self.is_connected(new_building, self.target_building)
-        reward = 1 if terminated else 0  # Binary sparse rewards
+        legal_action = self.is_adjacent_to(self.current_building, new_building)
+        if self.is_legal_position(new_building) and legal_action:
+            self.add_building(new_building)
+
+            if not self.has_connection_loop(self.current_building, new_building):
+                truncated = False
+                terminated = self.is_connected(new_building, self.target_building)
+
+        # sparse rewards for now
+        reward = 1 if terminated else (-1 if truncated else 0)
 
         observation = self.grid_to_observation()
         info = {}
-
         if self.render_mode == "human":
             self.render()
 
-        return observation, reward, terminated, False, info
+        self.current_building = new_building
+
+        return observation, reward, terminated, truncated, info
 
     def render(self):
         print(self)
 
     def grid_to_observation(self):
-        return self.grid
+        obstacles = np.where(self.grid != " ", True, False).astype(bool)
+
+        target_input_positions = self.target_building.get_input_positions()
+        inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
+        inputs[np.array(target_input_positions)] = True
+
+        agent_output = self.current_building.get_output_positions()[0]
+        output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
+        output[agent_output] = True
+
+        return np.stack([obstacles, inputs, output])
 
     def empty(self):
         self.buildings = []
@@ -128,11 +146,15 @@ class Environment(gym.Env):
         for pos in self.get_adjacent_positions(building.get_input_positions()):
             for other_building in self.buildings:
                 if pos in other_building.get_output_positions():
+                    # if self.is_connected(building, other_building):
+                    #     print("WARNING: connection loop detected")
                     other_building.add_connection(building)
 
         for pos in self.get_adjacent_positions(building.get_output_positions()):
             for other_building in self.buildings:
                 if pos in other_building.get_input_positions():
+                    # if self.is_connected(other_building, building):
+                    #     print("WARNING: connection loop detected")
                     building.add_connection(other_building)
 
         self.buildings.append(building)
@@ -217,7 +239,7 @@ class Environment(gym.Env):
         return True
 
     def is_tile_empty(self, x, y):
-        """Checks wether a tile is empty
+        """Checks wether a tile is empty.
         (!) returns False if position is out of grid bounds
 
         Args:
@@ -227,6 +249,7 @@ class Environment(gym.Env):
         Returns:
             bool: empty_tile?
         """
+
         # check whether tile is out of grid bounds
         if y < 0 or y >= self.height or x < 0 or x >= self.width:
             return False
@@ -251,6 +274,17 @@ class Environment(gym.Env):
         return adjacent_positions
 
     def remove_connected_buildings(self, output_building, input_building):
+        """Removes all buildings connecting output_building to input_building.
+        output_building and input_building will be kept.
+
+        Args:
+            output_building (building): building with outgoing connections
+            input_building (building): building with incoming connections
+
+        Returns:
+            building[]: a list of all removed buildings
+        """
+
         if not self.is_connected(output_building, input_building):
             print(
                 f"WARNING: unable to remove connection as {output_building} and {input_building} are not connected."
@@ -271,7 +305,36 @@ class Environment(gym.Env):
 
         return removed_buildings
 
+    def is_adjacent_to(self, output_building, input_building):
+        """tests wether output_building's outputs can connect to input_building's inputs
+
+        Args:
+            output_building (building):  building with outgoing connections
+            input_building (building):  building with incoming connections
+
+        Returns:
+            bool: True iff buildings are adjacent
+        """
+        return self.distance(output_building, input_building) == 1
+
+    def has_connection_loop(self, building_1, building_2):
+        return self.is_connected(building_1, building_2) and self.is_connected(
+            building_2, building_1
+        )
+
     def is_connected(self, output_building, input_building):
+        """tests wether output_building is connected to input_building via other buildings
+
+        Args:
+            output_building (building):  building with outgoing connections
+            input_building (building):  building with incoming connections
+
+        Returns:
+            bool: True iff buildings are connected
+        """
+
+        # BUG:
+
         for next_building in output_building.connections:
             if next_building == input_building or self.is_connected(
                 next_building, input_building
@@ -334,14 +397,14 @@ class Environment(gym.Env):
         # TODO add environment as argument
         pass
 
-    def __repr__(self):
+    def __str__(self):
         """printable representation;
         displayed as a ASCII grid and possibly additional information like #turns, products, ...
 
         Returns:
             str: string repesentation of the environment
         """
-        return f"\nCOMPLETE ENVIRONMENT:\n\n{self.grid}\n".replace("'", "")
+        return f"\n{self.grid}\n".replace("'", "")
 
 
 if __name__ == "__main__":
