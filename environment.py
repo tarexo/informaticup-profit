@@ -117,7 +117,9 @@ class Environment:
         assert not issubclass(BuildingClass, UnplacableBuilding)
 
         x, y = random.randint(0, self.width), random.randint(0, self.height)
+
         building = BuildingClass((x, y), subtype)
+
         if not self.is_legal_position(building):
             return self.get_legal_building(BuildingClass, subtype)
         return building
@@ -203,7 +205,8 @@ class Environment:
 
         return removed_buildings
 
-    def is_connected(self, output_building, input_building):
+    def is_connected(self, output_building: Building, input_building: Building):
+
         for next_building in output_building.connections:
             if next_building == input_building or self.is_connected(
                 next_building, input_building
