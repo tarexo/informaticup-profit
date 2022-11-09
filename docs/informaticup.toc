@@ -1,0 +1,8 @@
+\babel@toc {ngerman}{}\relax 
+\contentsline {section}{\numberline {1}Einleitung}{2}{}%
+\contentsline {section}{\numberline {2}Profit}{3}{}%
+\contentsline {subsection}{\numberline {2.1}Spielregel}{3}{}%
+\contentsline {subsection}{\numberline {2.2}Implementierung}{3}{}%
+\contentsline {subsection}{\numberline {2.3}Tests}{3}{}%
+\contentsline {section}{\numberline {3}Reinforcement Learning}{4}{}%
+\contentsline {section}{Literaturverzeichnis}{5}{}%
