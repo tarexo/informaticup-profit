@@ -61,7 +61,7 @@ class Environment(gym.Env):
         super().reset(seed=seed)
 
         # task generator modifies self (this environment!)
-        mine, factory = self.task_generator.generate_simple_task()
+        mine, factory = self.task_generator.generate_simple_task(seed)
         self.current_building = mine
         self.target_building = factory
 

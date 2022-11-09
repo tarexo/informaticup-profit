@@ -29,7 +29,7 @@ def run_gym(env, seed=None):
 
     observation, info = env.reset(seed=seed)
 
-    for _ in range(1000):
+    for _ in range(100):
         action = env.action_space.sample()
         observation, reward, terminated, truncated, info = env.step(action)
 

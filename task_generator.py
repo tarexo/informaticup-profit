@@ -11,7 +11,9 @@ class TaskGenerator:
     def __init__(self, env: environment.Environment):
         self.env = env
 
-    def generate_simple_task(self, save=False):
+    def generate_simple_task(self, seed=None, save=False):
+        random.seed(seed)
+
         self.env.empty()
         deposit = self.env.add_building(Deposit((2, 2), 0, 3, 3))
         factory = self.place_building_at_random_position(Factory, 0)
