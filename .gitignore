@@ -129,10 +129,10 @@ dmypy.json
 .pyre/
 
 #docs
-.aux
-.toc
-.syntex.gz
-.blg
-.bbl
+docs/*.aux
+docs/*.toc
+docs/*.syntex.gz
+docs/*.blg
+docs/*.bbl
 
 
