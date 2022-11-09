@@ -27,7 +27,7 @@ class Environment(gym.Env):
 
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    def __init__(self, width, height, turns, products: dict, render_mode=None):
+    def __init__(self, width, height, turns, products: dict, _form=[], render_mode=None):
         """initialize environment
 
         Args:
@@ -40,6 +40,7 @@ class Environment(gym.Env):
         self.height = height
         self.turns = turns
         self.products = products
+        self._form = _form
 
         self.task_generator = task_generator.TaskGenerator(self)
 
@@ -402,7 +403,7 @@ class Environment(gym.Env):
             task = json.load(f)
 
         env = Environment(
-            task["width"], task["height"], task["turns"], task["products"]
+            task["width"], task["height"], task["turns"], task["products"], task["form"]
         )
         for obj in task["objects"]:
             classname = obj["type"].capitalize()
@@ -425,14 +426,25 @@ class Environment(gym.Env):
         return env
 
     @staticmethod
-    def to_json(filename):
+    def to_json(env, filename):
         """parses an environment to a json file
 
         Args:
+            env (Environment): the environment that shall be parsed to a json file
             filename (str): path to where the file should be stored
         """
-        # TODO add environment as argument
-        pass
+        env_dict = {}
+        env_dict["width"] = env.width
+        env_dict["height"] = env.height
+        env_dict["objects"] = []
+        for building in env.buildings:
+            env_dict["objects"].append(building.to_json())
+        env_dict["products"] = env.products
+        env_dict["turns"] = env.turns
+        env_dict["form"] = env._form  # duplicate of products?!
+
+        with open(filename, "w") as jsonfile:
+            json.dump(env_dict, jsonfile, separators=(",", ":"))
 
     def __str__(self):
         """printable representation;
