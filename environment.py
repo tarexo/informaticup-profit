@@ -214,9 +214,6 @@ class Environment(gym.Env):
 
     def is_legal_position(self, building: Building):
         """Check wether a building has a valid position:
-        --> is inside grid bounds?
-        --> no intersection with other buildings?
-        --> TODO no violation of constraints?
 
         Args:
             building (Building): Factory, Deposit, Obstacle, ...
@@ -225,38 +222,35 @@ class Environment(gym.Env):
             bool: validity of the position
         """
 
-        # iterate over non-empty elements of the building's shape
-        for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
-            # calculate tile position on the grid relative to the center of the building
-            x = building.x + tile_offset_x
-            y = building.y + tile_offset_y
-
-            # check whether each individual element can be placed on an empty tile
-            if not self.is_tile_empty(x, y):
-                return False
-
-                # ToDo: check_constraints (mines cannot be placed next to other mines)
+        if not self.is_out_off_bounds(building):
+            return False
+        if self.intersects_with_building(building):
+            return False
+        if self.violates_placement_rules(building):
+            return False
         return True
 
-    def is_tile_empty(self, x, y):
-        """Checks wether a tile is empty.
-        (!) returns False if position is out of grid bounds
-
-        Args:
-            x (int): x grid coordinate
-            y (int): y grid coordinate
-
-        Returns:
-            bool: empty_tile?
-        """
-
-        # check whether tile is out of grid bounds
+    def is_tile_out_off_bounds(self, x, y):
         if y < 0 or y >= self.height or x < 0 or x >= self.width:
             return False
 
-        # check for other buildings
+    def is_tile_empty(self, x, y):
         if self.grid[y, x] != " ":
             return False
+        return True
+
+    def is_out_off_bounds(self, building):
+        # iterate over non-empty elements of the building
+        for (tile_x, tile_y, element) in iter(building):
+            if self.is_tile_out_off_bounds(tile_x, tile_y):
+                return True
+        return False
+
+    def intersects_with_building(self, building):
+        # iterate over non-empty elements of the building
+        for (tile_x, tile_y, element) in iter(building):
+            if not self.is_tile_empty(tile_x, tile_y):
+                return False
         return True
 
     def get_adjacent_positions(self, positions, empty_only=False):
@@ -405,11 +399,3 @@ class Environment(gym.Env):
             str: string repesentation of the environment
         """
         return f"\n{self.grid}\n".replace("'", "")
-
-
-if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "001.task.json")
-    filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
-    env = Environment.from_json(filename)
-
-    print(env)
