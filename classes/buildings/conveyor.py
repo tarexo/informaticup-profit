@@ -1,6 +1,7 @@
 from .building import Building
 
 
+
 class Conveyor(Building):
     """The conveyor transports resources in a straight line.
 

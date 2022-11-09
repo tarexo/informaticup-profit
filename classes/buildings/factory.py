@@ -1,6 +1,7 @@
 from .building import Building
 
 
+
 class Factory(Building):
     """A factory produces products using the resources it receives.
 

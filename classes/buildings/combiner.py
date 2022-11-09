@@ -1,6 +1,7 @@
 from .building import Building
 
 
+
 class Combiner(Building):
     """The combiner has multiple inputs and combines them in one output.
 
