@@ -7,26 +7,12 @@ from helper.constants.settings import *
 
 def register_env(name):
     register(
-        id="Profit-v0",
-        entry_point="environment:Environment",
-        max_episode_steps=300,
-    )
-
-
-def make_env(name, width, height, turns=50, products={}, render_mode=None):
-    return gym.make(
-        name,
-        width=width,
-        height=height,
-        turns=turns,
-        products=products,
-        render_mode=render_mode,
+        id="Profit-v0", entry_point="environment:Environment", max_episode_steps=300
     )
 
 
 def run_gym(env, seed=None):
     env.action_space.seed(seed)
-
     observation, info = env.reset(seed=seed)
 
     for _ in range(100):
@@ -44,6 +30,13 @@ def run_gym(env, seed=None):
 if __name__ == "__main__":
     name = "Profit-v0"
     register_env(name)
-    env = make_env(name, MAX_WIDTH, MAX_HEIGHT)
+    env = gym.make(
+        name,
+        width=MAX_WIDTH,
+        height=MAX_HEIGHT,
+        turns=50,
+        products={},
+        render_mode=None,
+    )
     # check_env(env)
     run_gym(env)
