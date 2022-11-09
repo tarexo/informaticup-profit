@@ -333,6 +333,8 @@ class Environment(gym.Env):
     def get_adjacent_elements(self, x, y, element):
         adjacent_positions = []
         for adjacent_x, adjacent_y in self.get_coords_around_position(x, y):
+            if self.coords_out_off_bounds(adjacent_x, adjacent_y):
+                continue
             if self.grid[adjacent_y, adjacent_x] == element:
                 adjacent_positions.append((adjacent_x, adjacent_y))
 
