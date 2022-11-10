@@ -1,13 +1,12 @@
-
 from environment import Environment
-import buildings
+import classes.buildings as buildings
 import os
 import json
 import numpy as np
 import itertools
 
-class Product:
 
+class Product:
     def __init__(self, subtype, resources, points):
         self.subtype = subtype
         self.resources = resources
@@ -15,16 +14,17 @@ class Product:
 
     @staticmethod
     def from_json(product_json):
-        return Product(product_json['subtype'],product_json['resources'],product_json['points'])
-
+        return Product(
+            product_json["subtype"], product_json["resources"], product_json["points"]
+        )
 
 
 def optimal_score(env):
     products = []
-    product_resoucres = np.empty((len(env.products),8))
+    product_resoucres = np.empty((len(env.products), 8))
     env_resources = np.array([])
     turns = env.turns
-    for i in range(len(env.products)) :#get products and fill product_resouces matrix
+    for i in range(len(env.products)):  # get products and fill product_resouces matrix
         new_product = Product.from_json(env.products[i])
         products.append(new_product)
         product_resoucres[i] = new_product.resources
@@ -33,7 +33,7 @@ def optimal_score(env):
             env_resources = building.resources
             break
     product_combinations = []
-    for i in range(len(products) + 1):#fill combinations
+    for i in range(len(products) + 1):  # fill combinations
         for subset in itertools.combinations(products, i):
             product_combinations.append(subset)
     best_score = 0
@@ -42,13 +42,13 @@ def optimal_score(env):
         temp_env_resources = env_resources
         for i in range(turns):
             for p in combination:
-                n =np.subtract(temp_env_resources,p.resources)
+                n = np.subtract(temp_env_resources, p.resources)
                 if is_resource_value_negative(n):
                     break
                 else:
                     temp_env_resources = n
                     temp_score += p.points
-        if temp_score>best_score:
+        if temp_score > best_score:
             best_score = temp_score
     return best_score
 
@@ -56,21 +56,12 @@ def optimal_score(env):
 @staticmethod
 def is_resource_value_negative(resources):
     for value in resources:
-        if value<0:
+        if value < 0:
             return True
     return False
 
 
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     filename = os.path.join(".", "tasks", "004.task.json")
     env = Environment.from_json(filename)
     print(optimal_score(env))
