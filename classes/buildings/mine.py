@@ -20,3 +20,12 @@ class Mine(Building):
     """
 
     NUM_SUBTYPES = 4
+
+    def to_json(self):
+        building_dict = {
+            "type": "mine",
+            "x": self.x,
+            "y": self.y,
+            "subtype": self.subtype,
+        }
+        return building_dict
