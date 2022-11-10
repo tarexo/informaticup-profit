@@ -2,17 +2,14 @@ from typing import List
 
 from shapes import *
 from classes.buildings import *
-from helper.dicts.placement_rules import *
-from helper.dicts.convert_actions import *
-from helper.constants.settings import *
 import task_generator
 
-import json
+from helper.dicts.placement_rules import *
+from helper.constants.settings import *
+from helper.functions.file_handler import *
+
 import os
 import random
-
-import gym
-from gym import spaces
 
 # create a nice output when displaying the entire grid
 np.set_printoptions(
@@ -20,14 +17,12 @@ np.set_printoptions(
 )
 
 
-class Environment(gym.Env):
+class Environment:
     """
     Profit Game Environment
     """
 
-    metadata = {"render_modes": ["human"], "render_fps": 1}
-
-    def __init__(self, width, height, turns, products: dict, _form=[], render_mode=None):
+    def __init__(self, width, height, turns, products: dict):
         """initialize environment
 
         Args:
@@ -40,88 +35,10 @@ class Environment(gym.Env):
         self.height = height
         self.turns = turns
         self.products = products
-        self._form = _form
 
         self.task_generator = task_generator.TaskGenerator(self)
 
         self.empty()
-        self.setup_gym(render_mode)
-
-    def setup_gym(self, render_mode):
-        # [obstacles, inputs, agent's single output] each in a 100x100 grid
-        self.observation_space = spaces.MultiBinary((3, MAX_HEIGHT, MAX_WIDTH))
-
-        # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
-        self.action_space = spaces.MultiDiscrete((16, 4))
-
-        assert render_mode is None or render_mode in self.metadata["render_modes"]
-        self.render_mode = render_mode
-
-    def reset(self, seed=None, options=None):
-        # We need the following line to seed self.np_random
-        super().reset(seed=seed)
-
-        # task generator modifies self (this environment!)
-        mine, factory = self.task_generator.generate_simple_task(seed)
-        self.current_building = mine
-        self.target_building = factory
-
-        observation = self.grid_to_observation()
-        info = {}
-
-        if self.render_mode == "human":
-            self.render()
-
-        return observation, info
-
-    def step(self, action):
-        building_action, positional_action = action
-
-        x, y = self.current_building.get_output_positions()[0]
-        x_offset, y_offset = POSITIONAL_ACTION_TO_DIRECTION[positional_action]
-        input_x, input_y = x + x_offset, y + y_offset
-
-        BuildingClass, subtype = BUILDING_ACTION_TO_CLASS_SUBTYPE[building_action]
-        new_building = BuildingClass.from_input_position(input_x, input_y, subtype)
-
-        terminated = False
-        truncated = True
-
-        legal_action = self.would_connect_to(self.current_building, new_building)
-        if self.is_legal_position(new_building) and legal_action:
-            self.add_building(new_building)
-
-            if not self.has_connection_loop(self.current_building, new_building):
-                truncated = False
-                terminated = self.is_connected(new_building, self.target_building)
-
-        # sparse rewards for now
-        reward = 1 if terminated else (-1 if truncated else 0)
-
-        observation = self.grid_to_observation()
-        info = {}
-        if self.render_mode == "human":
-            self.render()
-
-        self.current_building = new_building
-
-        return observation, reward, terminated, truncated, info
-
-    def render(self):
-        print(self)
-
-    def grid_to_observation(self):
-        obstacles = np.where(self.grid != " ", True, False).astype(bool)
-
-        target_input_positions = self.target_building.get_input_positions()
-        inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
-        inputs[np.array(target_input_positions)] = True
-
-        agent_output = self.current_building.get_output_positions()[0]
-        output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
-        output[agent_output] = True
-
-        return np.stack([obstacles, inputs, output])
 
     def empty(self):
         self.buildings: List(Building) = []
@@ -140,25 +57,18 @@ class Environment(gym.Env):
             return None
 
         # iterate over non-empty elements of the building shape
-        for (tile_offset_x, tile_offset_y, element) in iter(building.shape):
-            # calculate tile position on the grid relative to the center of the shape
-            x = building.x + tile_offset_x
-            y = building.y + tile_offset_y
+        for (x, y, element) in iter(building):
             self.grid[y, x] = element
 
         # add building connections
         for pos in self.get_adjacent_positions(building.get_input_positions()):
             for other_building in self.buildings:
                 if pos in other_building.get_output_positions():
-                    # if self.is_connected(building, other_building):
-                    #     print("WARNING: connection loop detected")
                     other_building.add_connection(building)
 
         for pos in self.get_adjacent_positions(building.get_output_positions()):
             for other_building in self.buildings:
                 if pos in other_building.get_input_positions():
-                    # if self.is_connected(other_building, building):
-                    #     print("WARNING: connection loop detected")
                     building.add_connection(other_building)
 
         self.buildings.append(building)
@@ -389,63 +299,6 @@ class Environment(gym.Env):
                     min_distance = distance
         return min_distance
 
-    @staticmethod
-    def from_json(filename):
-        """loads a task from file (json format) and automatically creates the described environment with all its buildings, products and #turns
-
-        Args:
-            filename (str): path to the json-file
-
-        Returns:
-            Environment: environemnt object
-        """
-        with open(filename) as f:
-            task = json.load(f)
-
-        env = Environment(
-            task["width"], task["height"], task["turns"], task["products"], task["form"]
-        )
-        for obj in task["objects"]:
-            classname = obj["type"].capitalize()
-            args = []
-            args.append((obj["x"], obj["y"]))
-
-            if "subtype" not in obj:
-                args.append(0)
-            else:
-                args.append(obj["subtype"])
-            if "width" in obj:
-                args.extend([obj["width"], obj["height"]])
-
-            building = globals()[classname](*args)
-
-            if env.is_legal_position(building):
-                env.add_building(building)
-            else:
-                print(f"UNABLE TO PLACE {classname} at {args[0]}\n")
-        return env
-
-    @staticmethod
-    def to_json(env, filename):
-        """parses an environment to a json file
-
-        Args:
-            env (Environment): the environment that shall be parsed to a json file
-            filename (str): path to where the file should be stored
-        """
-        env_dict = {}
-        env_dict["width"] = env.width
-        env_dict["height"] = env.height
-        env_dict["objects"] = []
-        for building in env.buildings:
-            env_dict["objects"].append(building.to_json())
-        env_dict["products"] = env.products
-        env_dict["turns"] = env.turns
-        env_dict["form"] = env._form  # duplicate of products?!
-
-        with open(filename, "w") as jsonfile:
-            json.dump(env_dict, jsonfile, separators=(",", ":"))
-
     def __str__(self):
         """printable representation;
         displayed as a ASCII grid and possibly additional information like #turns, products, ...
@@ -465,5 +318,6 @@ if __name__ == "__main__":
 
     # load and display sample task
     filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
-    env = Environment.from_json(filename)
+    env = environment_from_json(filename)
+
     print(env)
