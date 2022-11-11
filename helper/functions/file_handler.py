@@ -60,8 +60,9 @@ def enviornment_to_json(env, filename):
         json.dump(env_dict, jsonfile, separators=(",", ":"))
 
 
-def environment_to_buildings(env, filename):
-    """parses only placable buildings of an environment to a json file
+def environment_to_placeable_buildings_list(env, filename):
+    """parses only placable buildings of an environment to a json file.
+    This is our final output for the Informaticup Profit Challenge.
 
     Args:
         env (Environment): the environment that shall be parsed to a json file
