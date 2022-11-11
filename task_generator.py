@@ -9,6 +9,8 @@ import random
 
 
 class TaskGenerator:
+    """Manipulates a given envionment in order to automatically generate tasks."""
+
     def __init__(self, env: environment.Environment):
         self.env = env
 
@@ -21,7 +23,6 @@ class TaskGenerator:
 
         connections = self.connect_deposit_factory(deposit, factory)
         self.add_obstacles(p=0.05)
-        print(env)
 
         assert len(connections) >= 1
         mine = connections[0]
@@ -42,6 +43,11 @@ class TaskGenerator:
         return connections
 
     def add_obstacles(self, p=0.1):
+        """adds 1x1 obstacles at empty tiles with some probability p
+
+        Args:
+            p (float, optional): probability for turning empty tile into obstacle. Defaults to 0.1.
+        """
         for y in range(self.env.height):
             for x in range(self.env.width):
                 if self.env.is_tile_empty(x, y) and random.random() < p:
@@ -149,4 +155,4 @@ if __name__ == "__main__":
 
     task_gen = TaskGenerator(env)
     task_gen.generate_simple_task()
-    # print(task_gen.env)
+    print(task_gen.env)
