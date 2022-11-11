@@ -162,19 +162,17 @@ class Environment:
 
     def intersects_with_building(self, building):
         for (tile_x, tile_y, element) in iter(building):
-            if self.coords_out_off_bounds(tile_x, tile_y):
-                return True
             if not self.is_tile_empty(tile_x, tile_y):
                 return True
         return False
 
     def violates_legal_connection(self, building):
         for other_building in self.buildings:
-            if type(other_building) not in LEGAL_CONNECTIONS[type(building)]:
-                if self.would_connect_to(building, other_building):
+            if self.would_connect_to(building, other_building):
+                if type(other_building) not in LEGAL_CONNECTIONS[type(building)]:
                     return True
-            if type(building) not in LEGAL_CONNECTIONS[type(other_building)]:
-                if self.would_connect_to(other_building, building):
+            if self.would_connect_to(other_building, building):
+                if type(building) not in LEGAL_CONNECTIONS[type(other_building)]:
                     return True
         return False
 
@@ -186,6 +184,7 @@ class Environment:
         for in_x, in_y in building.get_input_positions():
             for out_x, out_y in self.get_adjacent_outputs(in_x, in_y):
                 # assume building has not been placed yet!
+                assert building not in self.buildings
                 if len(self.get_adjacent_inputs(out_x, out_y)) > 0:
                     return True
         return False
@@ -215,8 +214,8 @@ class Environment:
                     min_distance = distance
         return min_distance
 
-    def get_tile_distance(self, x_1, y_1, x_2, y_2):
-        return abs(x_1 - x_2) + abs(y_1 - y_2)
+    def get_tile_distance(self, x1, y1, x2, y2):
+        return abs(x1 - x2) + abs(y1 - y2)
 
     def would_connect_to(self, output_building, input_building):
         """tests whether output_building's outputs can connect to input_building's inputs.
@@ -242,15 +241,12 @@ class Environment:
             bool: True iff buildings are connected
         """
 
-        try:
-            for next_building in output_building.connections:
-                if next_building == input_building or self.is_connected(
-                    next_building, input_building
-                ):
-                    return True
-            return False
-        except:
-            print(self)
+        for next_building in output_building.connections:
+            if next_building == input_building:
+                return True
+            elif self.is_connected(next_building, input_building):
+                return True
+        return False
 
     def has_connection_loop(self, building_1, building_2):
         forward_connection = self.is_connected(building_1, building_2)
