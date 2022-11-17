@@ -1,9 +1,8 @@
-from environment import Environment
 import classes.buildings as buildings
 import os
-import json
 import numpy as np
 import itertools
+import helper.functions.file_handler as fh
 
 
 class Product:
@@ -22,7 +21,7 @@ class Product:
 def optimal_score(env):
     products = []
     product_resoucres = np.empty((len(env.products), 8))
-    env_resources = np.array([])
+    env_resources = np.zeros(8)
     turns = env.turns
     for i in range(len(env.products)):  # get products and fill product_resouces matrix
         new_product = Product.from_json(env.products[i])
@@ -30,8 +29,7 @@ def optimal_score(env):
         product_resoucres[i] = new_product.resources
     for building in env.buildings:
         if building.__class__ == buildings.Deposit:
-            env_resources = building.resources
-            break
+            env_resources[building.subtype] += building.width * building.height * 5
     product_combinations = []
     for i in range(len(products) + 1):  # fill combinations
         for subset in itertools.combinations(products, i):
@@ -62,6 +60,6 @@ def is_resource_value_negative(resources):
 
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "004.task.json")
-    env = Environment.from_json(filename)
+    filename = os.path.join(".", "tasks", "001.task.json")
+    env = fh.environment_from_json(filename)
     print(optimal_score(env))
