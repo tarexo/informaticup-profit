@@ -23,3 +23,14 @@ class Deposit(UnplacableBuilding):
     """
 
     NUM_SUBTYPES = 8
+
+    def to_json(self):
+        building_dict = {
+            "type": "deposit",
+            "x": self.x,
+            "y": self.y,
+            "subtype": self.subtype,
+            "width": self.width,
+            "height": self.height,
+        }
+        return building_dict

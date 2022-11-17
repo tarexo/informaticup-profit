@@ -15,3 +15,13 @@ class Obstacle(UnplacableBuilding):
     """
 
     NUM_SUBTYPES = 1
+
+    def to_json(self):
+        building_dict = {
+            "type": "obstacle",
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+        }
+        return building_dict
