@@ -1,36 +1,42 @@
-from environment import Environment
-from classes.buildings import *
+from __future__ import annotations
 
-from helper.dicts.building_shapes import BUILDING_SHAPES
+import environment
+from classes.buildings import *
+from helper.constants.settings import *
 
 import random
 
 
 class TaskGenerator:
-    def __init__(self, env: Environment):
+    def __init__(self, env: environment.Environment):
         self.env = env
 
-    def generate_simple_task(self, save=False, output=False):
+    def generate_simple_task(self, seed=None, save=False):
+        random.seed(seed)
+
         self.env.empty()
         deposit = self.env.add_building(Deposit((2, 2), 0, 3, 3))
-        factory = task_gen.place_building_at_random_position(Factory, 0)
+        factory = self.place_building_at_random_position(Factory, 0)
 
-        self.connect_deposit_factory(deposit, factory)
-        if output:
-            print(self.env)
-        self.add_obstacles(p=0.3)
-        if output:
-            print(self.env)
-        self.env.remove_connected_buildings(deposit, factory)
-        if output:
-            print(self.env)
+        connections = self.connect_deposit_factory(deposit, factory)
+        self.add_obstacles(p=0.05)
+
+        assert len(connections) >= 1
+        mine = connections[0]
+        self.env.remove_connecting_buildings(mine, factory)
+
+        return mine, factory
 
     def connect_deposit_factory(self, deposit, factory):
+        connections = []
         new_building = deposit
-        while not env.is_connected(new_building, factory):
+        while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
             new_building = random.choice(best_buildings)
-            env.add_building(new_building)
+            self.env.add_building(new_building)
+            connections.append(new_building)
+
+        return connections
 
     def add_obstacles(self, p=0.1):
         for y in range(self.env.height):
@@ -66,7 +72,7 @@ class TaskGenerator:
                 for subtype in range(BuildingClass.NUM_SUBTYPES):
                     building = BuildingClass.from_input_position(x, y, subtype)
                     if self.env.is_legal_position(building):
-                        distance = env.distance(building, goal_building)
+                        distance = self.env.get_min_distance(building, goal_building)
                         if min_distance is None or distance <= min_distance:
                             if min_distance and distance < min_distance:
                                 best_buildings = []
@@ -86,10 +92,10 @@ class TaskGenerator:
 
 
 if __name__ == "__main__":
-    env = Environment(
-        30,
-        30,
-        100,
+    env = environment.Environment(
+        MAX_WIDTH,
+        MAX_HEIGHT,
+        50,
         [
             {
                 "type": "product",
@@ -103,4 +109,4 @@ if __name__ == "__main__":
     task_gen = TaskGenerator(env)
 
     # for i in range(10):
-    task_gen.generate_simple_task(output=True)
+    task_gen.generate_simple_task()

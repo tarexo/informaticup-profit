@@ -77,5 +77,26 @@ class Building:
 
         raise RuntimeError("Unexpected Behavior in 'Building.from_input_position()'")
 
-    def __repr__(self) -> str:
+    def __iter__(self):
+        """iterate over the individual non-empty shape elements starting from the left upper corner
+
+        Returns:
+            Iterator(Shape): shape iterator
+        """
+        self._shape_iterator = iter(self.shape)
+        return self
+
+    def __next__(self):
+        """return the next non-empty(!) element of the shape iterator and increment the offsets according to the next element's position
+
+        Raises:
+            StopIteration: stops after all elements have been iterated over
+
+        Returns:
+            tuple: (x, y, element) tile position in the grid
+        """
+        (x_offset, y_offset, element) = next(self._shape_iterator)
+        return (self.x + x_offset, self.y + y_offset, element)
+
+    def __str__(self) -> str:
         return f"{type(self).__name__}_{self.subtype} at x={self.x}, y={self.y}, \n{self.shape}\n"
