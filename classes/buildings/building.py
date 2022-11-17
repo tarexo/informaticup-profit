@@ -26,6 +26,9 @@ class Building:
         self.resources = [0] * 8
         self.clear_connections()
 
+    def is_placeable(self):
+        return True
+
     def get_output_positions(self):
         return self.get_element_positions("-")
 
@@ -100,3 +103,6 @@ class Building:
 
     def __str__(self) -> str:
         return f"{type(self).__name__}_{self.subtype} at x={self.x}, y={self.y}, \n{self.shape}\n"
+
+    def to_json(self):
+        raise NotImplementedError

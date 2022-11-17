@@ -6,9 +6,7 @@ from helper.constants.settings import *
 
 
 def register_env(name):
-    register(
-        id="Profit-v0", entry_point="environment:Environment", max_episode_steps=300
-    )
+    register(id="Profit-v0", entry_point="profit_gym:ProfitGym", max_episode_steps=300)
 
 
 def run_gym(env, seed=None):

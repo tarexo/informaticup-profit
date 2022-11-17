@@ -38,6 +38,9 @@ class UnplacableBuilding(Building):
 
         super().__init__(position, subtype, shape=shape)
 
+    def is_placeable(self):
+        return False
+
     @classmethod
     def from_input_position(cls, x, y, subtype):
         raise PermissionError("Unplacable buildings have no inputs!")

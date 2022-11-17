@@ -1,7 +1,6 @@
 from .building import Building
 
 
-
 class Combiner(Building):
     """The combiner has multiple inputs and combines them in one output.
 
@@ -20,3 +19,12 @@ class Combiner(Building):
     """
 
     NUM_SUBTYPES = 4
+
+    def to_json(self):
+        building_dict = {
+            "type": "combiner",
+            "x": self.x,
+            "y": self.y,
+            "subtype": self.subtype,
+        }
+        return building_dict

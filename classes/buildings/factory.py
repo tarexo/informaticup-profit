@@ -1,7 +1,6 @@
 from .building import Building
 
 
-
 class Factory(Building):
     """A factory produces products using the resources it receives.
 
@@ -20,3 +19,12 @@ class Factory(Building):
     """
 
     NUM_SUBTYPES = 8
+
+    def to_json(self):
+        building_dict = {
+            "type": "factory",
+            "x": self.x,
+            "y": self.y,
+            "subtype": self.subtype,
+        }
+        return building_dict
