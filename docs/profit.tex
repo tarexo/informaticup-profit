@@ -1,14 +1,46 @@
 \section{Profit}
+Beim Spiel Profit werden Ressourcen von Depots abgebaut und in Fabriken zu Produkten verarbeitet. Für diese Produkte gibt es eine gewisse Anzahl an Punkten. Ziel des Spiels ist es so viele Punkte wie möglich zu erreichen, wobei die Rundenzahl sowie die vorhandenen Ressourcen begrenzt sind.
 
 \subsection{Spielregel}
+Das Spielfeld ist ein beliebig großes Rastergitter. Ein Raster ist entweder oder durch ein Objekt besetzt.
+Die Abbildung \ref{fig:task1} zeigt ein mögliches Spielfeld.
+\bild{1}{task1.jpg}{Beispiel eines Spielfeldes der GrÖße 30x30}{fig:task1}
+Das linke obere Raster befindet sich an der Stelle (0,0), die rechte untere an (Breite-1, Höhe-1). Die Größe des Spielfeldes ist pro Spiel vorgegeben. \\
+
+Zu Beginn des Spiels sind bereits Hindernisse (Obstacle) und Depots (Deposits) mit Ressourcen vorhanden.
+Ebenso sind die Produkte die produziert werden können definiert.
+
+Die Menge an Ressourcen eines Deposits werden durch die Größe des Deposits festgelegt, diese wird durch die Menge an Rastern~x~5 festgelegt. Ist also ein Deposit $3 \cdot 3$  dann enthält es $3 \cdot 3\cdot 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7).\\
+
+Obstacle im Spielfeld stellen Felder dar, in denen kein anderes Gebäude gebaut werden kann. Diese sind beliebig groß. 
+
+\subsubsection*{Produkte}
+Für jedes Spiel ist mindestens ein Produkt definiert, maximal acht. Ein Produkt benötigt eine festgelegte Anzahl an mindesten einer maximal acht Ressourcen. Wie viel von dieser Ressource gebraucht wird ist ebenfalls definiert. Beispielsweise kann das Produkt 0 dreimal die Ressource 0 und einmal die Ressource 1 brauchen. Jedes Produkt gibt eine bestimmte Anzahl an Punkte.
+
+\subsubsection*{Mine}
+Um die Ressourcen in den Deposits abzubauen gibt es Minen. Sie ist $4\cdot 2$ oder  $2\cdot 4$ Felder Groß und hat vier Subtypen, die je unterschiedlich ausgerichtet sind. Die Abbildung \ref{fig:mine} zeigt die 4 verschiedenen Subtypen von Minen.
+\bild{0.5}{mines.jpg}{Minen in unterschiedlichen Ausrichtungen}{fig:mine}
+Jede Mine hat einen Eingang (+) und einen Ausgang (-). Der Eingang muss an das Deposit angebracht werden um die Ressourcen abzubauen. An den Ausgang können Eingänge von Conveyor, Combiner oder Factories angebracht werden. 
+
+\subsubsection*{Conveyor}
+\subsubsection*{Combiner}
+\subsubsection*{Factory}
 
 
 \subsection{Implementierung}
 
-\subsubsection{Environment}
-\subsubsection{Buildings}
-\subsubsection{Game ruels}
+\subsubsection*{Environment}
+
+\subsubsection*{Buildings}
+
+\subsubsection*{Game ruels}
 
 
 
 \subsection{Tests}
+
+\subsubsection*{Environment}
+
+\subsubsection*{Buildings}
+
+\subsubsection*{Game ruels}
