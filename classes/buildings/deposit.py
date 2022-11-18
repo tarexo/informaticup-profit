@@ -22,6 +22,10 @@ class Deposit(UnplacableBuilding):
         The subtype of the deposit, determining its held resource (0-7)
     """
 
+    def __init__(self, position, subtype, width, height):
+        super().__init__(position, subtype, width, height)
+        self.resources[subtype] += 5 * width * height
+
     NUM_SUBTYPES = 8
 
     def to_json(self):

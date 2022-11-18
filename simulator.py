@@ -19,10 +19,7 @@ class Simulator:
         self.time = time
 
     def run(self):
-        # TODO: Check if rounds is set and limit game loop accordingly
-
-        # TODO: Check if time is set and limit game loop accordingly
-
+        # NOTE: This implementation will for now always run the number of rounds given by rounds (will not abort if no more points are possible)
         # TODO: Start game loop
 
         # TODO: Execute round start actions for each building

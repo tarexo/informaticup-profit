@@ -271,7 +271,7 @@ if __name__ == "__main__":
     assert env.add_building(Mine((4, 1), 0)) is None
 
     # load and display sample task
-    filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
+    filename = os.path.join(".", "tasks", "json_test", "minimal.json")
     env = environment_from_json(filename)
 
     print(env)
