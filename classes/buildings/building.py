@@ -27,6 +27,7 @@ class Building:
 
         self.shape = shape
         self.resources = np.array([0] * 8)
+        self.resource_cache = np.array([0] * 8)
         self.clear_connections()
 
     def is_placeable(self):
