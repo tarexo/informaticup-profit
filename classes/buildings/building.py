@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Building:
     """The base class for all objects of the game (excluding the grid itself)
 
@@ -23,7 +26,7 @@ class Building:
             shape = BUILDING_SHAPES[type(self)][subtype]
 
         self.shape = shape
-        self.resources = [0] * 8
+        self.resources = np.array([0] * 8)
         self.clear_connections()
 
     def is_placeable(self):
