@@ -18,5 +18,15 @@ class Simulator:
         self.rounds = rounds
         self.time = time
 
-    def run():
-        return
+    def run(self):
+        # TODO: Check if rounds is set and limit game loop accordingly
+
+        # TODO: Check if time is set and limit game loop accordingly
+
+        # TODO: Start game loop
+
+        # TODO: Execute round start actions for each building
+        # TODO: Execute round end actions for each building
+        # TODO: Check if points were generated and add them to overall score
+
+        return  # TODO: Return overall score
