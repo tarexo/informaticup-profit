@@ -41,18 +41,20 @@ class Simulator:
 
             # COMMENT: Round end
             for i in buildings_indices:
-                if type(buildings[i]) == Factory:
-                    product = self.get_product_by_subtype(buildings[i].subtype)
-                    num_products = buildings[i].end_of_round_action(
-                        recipe=product["resources"],
-                        points=product["points"],
-                        round=round,
-                    )
-                    if num_products * product["points"] > 0:
-                        total_points += num_products * product["points"]
-                        total_rounds = round
+                if type(buildings[i]) != Factory:
+                    buildings[i].end_of_round_action(round)
                     continue
-                buildings[i].end_of_round_action(round)
+
+                product = self.get_product_by_subtype(buildings[i].subtype)
+                num_products = buildings[i].end_of_round_action(
+                    recipe=product["resources"],
+                    points=product["points"],
+                    round=round,
+                )
+
+                if num_products * product["points"] > 0:
+                    total_points += num_products * product["points"]
+                    total_rounds = round
 
         return (total_points, total_rounds)
 
