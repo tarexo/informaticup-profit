@@ -21,14 +21,13 @@ class Simulator:
 
     def run(self):
         # NOTE: This implementation will for now always run the number of rounds given by <rounds> (will not abort if no more points are possible)
+        total_points = 0
+        total_rounds = 0
 
         rng = np.random.default_rng()
 
         buildings = self.env.buildings
         buildings_indices = np.array([i for i in range(len(buildings))])
-        # Connections = buildings[i].connections
-        total_points = 0
-        total_rounds = 0
 
         for round in range(1, self.rounds + 1):
             rng.shuffle(buildings_indices)
