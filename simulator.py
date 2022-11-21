@@ -30,12 +30,12 @@ class Simulator:
         total_points = 0
         total_rounds = 0
 
-        for round in range(self.rounds):
+        for round in range(1, self.rounds + 1):
             rng.shuffle(buildings_indices)
 
             # COMMENT: Round start
             for i in buildings_indices:
-                buildings[i].start_of_round_action(round + 1)
+                buildings[i].start_of_round_action(round)
 
             rng.shuffle(buildings_indices)
 
@@ -53,13 +53,13 @@ class Simulator:
                     num_products = buildings[i].end_of_round_action(
                         recipe=product["resources"],
                         points=product["points"],
-                        round=round + 1,
+                        round=round,
                     )
                     if num_products * product["points"] > 0:
                         total_points += num_products * product["points"]
-                        total_rounds = round + 1
+                        total_rounds = round
                     continue
 
-                buildings[i].end_of_round_action(round + 1)
+                buildings[i].end_of_round_action(round)
 
         return (total_points, total_rounds)
