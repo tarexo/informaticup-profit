@@ -2,6 +2,7 @@ from typing import List
 
 from shapes import *
 from classes.buildings import *
+from simulator import Simulator
 import task_generator
 
 from helper.dicts.placement_rules import *
@@ -271,7 +272,10 @@ if __name__ == "__main__":
     assert env.add_building(Mine((4, 1), 0)) is None
 
     # load and display sample task
-    filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
+    filename = os.path.join(".", "tasks", "json_test", "simplemax.json")
     env = environment_from_json(filename)
-
     print(env)
+
+    sim = Simulator(env)
+    points, rounds = sim.run()
+    print(f"Score: {points} at turn {rounds}")

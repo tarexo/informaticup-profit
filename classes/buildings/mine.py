@@ -1,5 +1,6 @@
 from .building import *
 from shapes import *
+import numpy as np
 
 
 class Mine(Building):
@@ -29,3 +30,20 @@ class Mine(Building):
             "subtype": self.subtype,
         }
         return building_dict
+
+    def start_of_round_action(self, round):
+        indices = np.where(self.resource_cache > 0)[0]
+        for i in indices:
+            self.resources[i] += self.resource_cache[i]
+            print(
+                f"{round} (start): ({self.x},{self.y}) accepts {self.resource_cache[i]}x{i}, holds {self.resources[i]}x{i}"
+            )
+            self.resource_cache[i] = 0
+        return
+
+    def end_of_round_action(self, round):
+        indices = np.where(self.resources > 0)[0]
+        for i in indices:
+            self.connections[0].resource_cache[i] += self.resources[i]
+        self.resources = np.array([0] * 8)
+        return
