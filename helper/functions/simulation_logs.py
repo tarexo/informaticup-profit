@@ -1,4 +1,9 @@
+from helper.constants.settings import PRINT_ROUND_LOG
+
+
 def log_start_round(building, round, store_indices, cache_indices):
+    if not PRINT_ROUND_LOG:
+        return
     str = f"{round} (start): ({building.x},{building.y}) accepts ["
     for i in cache_indices:
         str += f"{building.resource_cache[i]}x{i}, "
@@ -12,10 +17,14 @@ def log_start_round(building, round, store_indices, cache_indices):
 
 
 def log_factory_end_round(building, round, points):
+    if not PRINT_ROUND_LOG:
+        return
     str = f"{round} (end): ({building.x},{building.y}) produces {building.subtype} ({points} points)"
     print(str)
 
 
 def log_deposit_end_round(building, round, takes_out):
+    if not PRINT_ROUND_LOG:
+        return
     str = f"{round} (end): ({building.x},{building.y}) takes [{takes_out}x{building.subtype}], [{building.resources[building.subtype] - takes_out}x{building.subtype}] available"
     print(str)
