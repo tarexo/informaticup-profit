@@ -52,6 +52,9 @@ class Simulator:
                     buildings[i].end_of_round_action(round)
                     continue
 
+                if buildings[i].subtype not in products_dict:
+                    continue
+
                 product = products_dict[buildings[i].subtype]
                 num_products = buildings[i].end_of_round_action(product, round)
 
