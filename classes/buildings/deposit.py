@@ -1,5 +1,6 @@
 from .unplacable_building import UnplacableBuilding
 import numpy as np
+import helper.functions.simulation_logs as simlog
 
 
 class Deposit(UnplacableBuilding):
@@ -52,12 +53,10 @@ class Deposit(UnplacableBuilding):
             self.connections[i].resource_cache[self.subtype] += (
                 3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
             )
-            took = (
+            takes_out = (
                 3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
             )
-            print(
-                f"{round} (end): ({self.x},{self.y}) takes [{took}x{self.subtype}], [{self.resources[self.subtype] - took}x{self.subtype}] available"
-            )
+            simlog.log_deposit_end_round(self, round, takes_out)
             self.resources[self.subtype] -= 3
             if self.resources[self.subtype] <= 0:
                 break
