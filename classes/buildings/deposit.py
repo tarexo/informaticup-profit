@@ -56,7 +56,7 @@ class Deposit(UnplacableBuilding):
                 3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
             )
             print(
-                f"{round} (end): ({self.x},{self.y}) takes {took}x{i}, {self.resources[self.subtype] - took}x{i} available"
+                f"{round} (end): ({self.x},{self.y}) takes [{took}x{self.subtype}], [{self.resources[self.subtype] - took}x{self.subtype}] available"
             )
             self.resources[self.subtype] -= 3
             if self.resources[self.subtype] <= 0:

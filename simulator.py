@@ -1,5 +1,5 @@
 # from environment import Environment
-from classes.buildings import Factory
+from classes.buildings import Factory, Obstacle
 import numpy as np
 
 
@@ -34,12 +34,18 @@ class Simulator:
 
             # COMMENT: Round start
             for i in buildings_indices:
+                if type(buildings[i]) == Obstacle:
+                    continue
+
                 buildings[i].start_of_round_action(round)
 
             rng.shuffle(buildings_indices)
 
             # COMMENT: Round end
             for i in buildings_indices:
+                if type(buildings[i]) == Obstacle:
+                    continue
+
                 if type(buildings[i]) != Factory:
                     buildings[i].end_of_round_action(round)
                     continue

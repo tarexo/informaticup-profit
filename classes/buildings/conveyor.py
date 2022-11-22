@@ -30,14 +30,28 @@ class Conveyor(Building):
         }
         return building_dict
 
+    def resource_string_builder(self, round, store_indices, cache_indices):
+        str = f"{round} (start): ({self.x},{self.y}) accepts ["
+        for i in cache_indices:
+            str += f"{self.resource_cache[i]}x{i}, "
+        str = str[:-2]
+        str += "], holds ["
+        for i in store_indices:
+            str += f"{self.resources[i]}x{i}, "
+        str = str[:-2]
+        str += "]"
+        return str
+
     def start_of_round_action(self, round):
-        indices = np.where(self.resource_cache > 0)[0]
-        for i in indices:
+        cache_indices = np.where(self.resource_cache > 0)[0]
+        if len(cache_indices) == 0:
+            return
+
+        for i in cache_indices:
             self.resources[i] += self.resource_cache[i]
-            print(
-                f"{round} (start): ({self.x},{self.y}) accepts {self.resource_cache[i]}x{i}, holds {self.resources[i]}x{i}"
-            )
-            self.resource_cache[i] = 0
+        store_indices = np.where(self.resources > 0)[0]
+        print(f"{self.resource_string_builder(round, store_indices, cache_indices)}")
+        self.resource_cache = np.array([0] * 8)
         return
 
     def end_of_round_action(self, round):
