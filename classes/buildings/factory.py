@@ -44,14 +44,14 @@ class Factory(Building):
         simlog.log_start_round(self, round, store_indices, cache_indices)
         self.resource_cache = np.array([0] * 8)
 
-    def end_of_round_action(self, recipe, points, round):
-        recipe = np.array(recipe)
+    def end_of_round_action(self, product, round):
+        recipe = np.array(product["resources"])
         t = self.resources - recipe
 
         num_products = 0
         while np.min(self.resources - recipe) >= 0:
             self.resources = self.resources - recipe
-            simlog.log_factory_end_round(self, round, points)
+            simlog.log_factory_end_round(self, round, product["points"])
             num_products += 1
 
         return num_products

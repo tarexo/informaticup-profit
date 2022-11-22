@@ -29,6 +29,12 @@ class Simulator:
         buildings = self.env.buildings
         buildings_indices = np.array([i for i in range(len(buildings))])
 
+        products_dict = {}
+        for i in range(8):
+            for product in self.env.products:
+                if product["subtype"] == i:
+                    products_dict[i] = product
+
         for round in range(1, self.rounds + 1):
             rng.shuffle(buildings_indices)
 
@@ -50,20 +56,11 @@ class Simulator:
                     buildings[i].end_of_round_action(round)
                     continue
 
-                product = self.get_product_by_subtype(buildings[i].subtype)
-                num_products = buildings[i].end_of_round_action(
-                    recipe=product["resources"],
-                    points=product["points"],
-                    round=round,
-                )
+                product = products_dict[buildings[i].subtype]
+                num_products = buildings[i].end_of_round_action(product, round)
 
                 if num_products * product["points"] > 0:
                     total_points += num_products * product["points"]
                     total_rounds = round
 
         return (total_points, total_rounds)
-
-    def get_product_by_subtype(self, subtype):
-        for product in self.env.products:
-            if product["subtype"] == subtype:
-                return product
