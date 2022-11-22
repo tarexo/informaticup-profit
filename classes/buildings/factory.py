@@ -32,6 +32,11 @@ class Factory(Building):
         return building_dict
 
     def start_of_round_action(self, round):
+        """Executes the start of round action, adding all resources from the cache to the resources array.
+
+        Args:
+            round (int): Current round.
+        """
         cache_indices = np.where(self.resource_cache > 0)[0]
 
         if len(cache_indices) == 0:
@@ -45,6 +50,15 @@ class Factory(Building):
         self.resource_cache = np.array([0] * 8)
 
     def end_of_round_action(self, product, round):
+        """Executes the end of round action, produces as many products as possible with the currently available resources.
+
+        Args:
+            product (dictionary): Information about the product given by the environment class.
+            round (int): Current round.
+
+        Returns:
+            int: Number of products produces.
+        """
         recipe = np.array(product["resources"])
         t = self.resources - recipe
 

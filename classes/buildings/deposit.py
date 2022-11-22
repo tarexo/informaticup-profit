@@ -42,9 +42,19 @@ class Deposit(UnplacableBuilding):
         return building_dict
 
     def start_of_round_action(self, round):
+        """Empty function for cleaner code in simulator.py.
+
+        Args:
+            round (int): Current round.
+        """
         return
 
     def end_of_round_action(self, round):
+        """Executes end of round action, pushing 3 items of the resource given by self.subtype to all connected mines.
+
+        Args:
+            round (int): Current round.
+        """
         if np.max(self.resources) == 0 or len(self.connections) == 0:
             return
 

@@ -20,6 +20,11 @@ class Simulator:
         self.rounds = env.turns
 
     def run(self):
+        """Run a simulation on the envrionment.
+
+        Returns:
+            tuple: A tuple containing the total points achieved and total rounds it took.
+        """
         # NOTE: This implementation will for now always run the number of rounds given by <rounds> (will not abort if no more points are possible)
         total_points = 0
         total_rounds = 0
@@ -65,6 +70,11 @@ class Simulator:
         return (total_points, total_rounds)
 
     def generate_product_dict(self):
+        """Generates a dictionary containing the possible products, accessible by subtype.
+
+        Returns:
+            dictionary: All possible products, accessible by key.
+        """
         pd = {}
         for i in range(8):
             for product in self.env.products:

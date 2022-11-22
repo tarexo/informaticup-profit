@@ -32,6 +32,11 @@ class Conveyor(Building):
         return building_dict
 
     def start_of_round_action(self, round):
+        """Executes the start of round action, adding all resources from the cache to the resources array.
+
+        Args:
+            round (int): Current round.
+        """
         cache_indices = np.where(self.resource_cache > 0)[0]
 
         if len(cache_indices) == 0:
@@ -45,6 +50,11 @@ class Conveyor(Building):
         self.resource_cache = np.array([0] * 8)
 
     def end_of_round_action(self, round):
+        """Executes the end of round action pushing all resources to the cache of the next building.
+
+        Args:
+            round (int): Current round.
+        """
         indices = np.where(self.resources > 0)[0]
         for i in indices:
             self.connections[0].resource_cache[i] += self.resources[i]
