@@ -1,4 +1,6 @@
 from .unplacable_building import UnplacableBuilding
+import numpy as np
+import helper.functions.simulation_logs as simlog
 
 
 class Deposit(UnplacableBuilding):
@@ -22,6 +24,10 @@ class Deposit(UnplacableBuilding):
         The subtype of the deposit, determining its held resource (0-7)
     """
 
+    def __init__(self, position, subtype, width, height):
+        super().__init__(position, subtype, width, height)
+        self.resources[subtype] += 5 * width * height
+
     NUM_SUBTYPES = 8
 
     def to_json(self):
@@ -34,3 +40,34 @@ class Deposit(UnplacableBuilding):
             "height": self.height,
         }
         return building_dict
+
+    def start_of_round_action(self, round):
+        """Empty function for cleaner code in simulator.py.
+
+        Args:
+            round (int): Current round.
+        """
+        return
+
+    def end_of_round_action(self, round):
+        """Executes end of round action, pushing 3 items of the resource given by self.subtype to all connected mines.
+
+        Args:
+            round (int): Current round.
+        """
+        if np.max(self.resources) == 0 or len(self.connections) == 0:
+            return
+
+        indices = np.array([i for i in range(len(self.connections))])
+        for i in indices:
+            self.connections[i].resource_cache[self.subtype] += (
+                3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
+            )
+            takes_out = (
+                3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
+            )
+            simlog.log_deposit_end_round(self, round, takes_out)
+            self.resources[self.subtype] -= 3
+            if self.resources[self.subtype] <= 0:
+                break
+        return
