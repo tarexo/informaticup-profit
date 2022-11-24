@@ -157,12 +157,12 @@ class TaskGenerator:
 
         return best_buildings
 
-    @staticmethod
-    def distance_constraint(distances, other_building):
+    def distance_constraint(self, distances, other_building):
         if distances is None:
             return lambda building: True
         return (
-            lambda building: env.get_min_distance(other_building, building) in distances
+            lambda building: self.env.get_min_distance(other_building, building)
+            in distances
         )
 
 
