@@ -11,18 +11,36 @@ import random
 class TaskGenerator:
     """Manipulates a given envionment in order to automatically generate tasks."""
 
-    def __init__(self, env: environment.Environment):
+    def __init__(self, env: environment.Environment, seed=None):
+        random.seed(seed)
         self.env = env
 
-    def generate_simple_task(self, seed=None, save=False):
-        random.seed(seed)
+    def generate_simple_task(self, obstacle_probability=0.0):
+        # one building missing
+        return self.generate_task(obstacle_probability, distance_range=[6, 7, 8, 9])
 
+    def generate_easy_task(self, obstacle_probability=0.05):
+        # two buildings missing
+        return self.generate_task(obstacle_probability, distance_range=[10, 11, 12, 13])
+
+    def generate_medium_task(self, obstacle_probability=0.10):
+        # at least three buildings missing, more obstacles
+        return self.generate_task(obstacle_probability, distance_range=[14, 15, 16, 17])
+
+    def generate_hard_task(self, obstacle_probability=0.15):
+        # multiple buildings missing, many obstacles
+        assert MAX_WIDTH > 40
+        distance_range = range(18, MAX_WIDTH)
+        return self.generate_task(obstacle_probability, distance_range)
+
+    def generate_task(self, obstacle_probability, distance_range=None):
         self.env.empty()
-        deposit = self.env.add_building(Deposit((2, 2), 0, 3, 3))
-        factory = self.place_building_at_random_position(Factory, 0)
+        deposit = self.env.add_building(Deposit((10, 10), 0, 3, 3))
+        constraint = self.distance_constraint(distance_range, deposit)
+        factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
-        self.add_obstacles(p=0.05)
+        self.add_obstacles(p=obstacle_probability)
 
         assert len(connections) >= 1
         mine = connections[0]
@@ -54,8 +72,10 @@ class TaskGenerator:
                     obstacle = Obstacle((x, y), 0, 1, 1)
                     self.env.add_building(obstacle)
 
-    def place_building_at_random_position(self, BuildingClass, subtype):
+    def place_at_random_position(self, BuildingClass, subtype, constraint):
         building = self.get_random_legal_building(BuildingClass, subtype)
+        if not constraint(building):
+            return self.place_at_random_position(BuildingClass, subtype, constraint)
         self.env.add_building(building)
         return building
 
@@ -137,6 +157,14 @@ class TaskGenerator:
 
         return best_buildings
 
+    @staticmethod
+    def distance_constraint(distances, other_building):
+        if distances is None:
+            return lambda building: True
+        return (
+            lambda building: env.get_min_distance(other_building, building) in distances
+        )
+
 
 if __name__ == "__main__":
     env = environment.Environment(
@@ -154,5 +182,5 @@ if __name__ == "__main__":
     )
 
     task_gen = TaskGenerator(env)
-    task_gen.generate_simple_task()
+    task_gen.generate_medium_task(obstacle_probability=0.0)
     print(task_gen.env)
