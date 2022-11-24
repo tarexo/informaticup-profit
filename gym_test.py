@@ -5,8 +5,19 @@ from gym.utils.env_checker import check_env
 from helper.constants.settings import *
 
 
-def register_env(name):
+def register_gym(name):
     register(id="Profit-v0", entry_point="profit_gym:ProfitGym", max_episode_steps=300)
+
+
+def make_gym(name):
+    return gym.make(
+        name,
+        width=MAX_WIDTH,
+        height=MAX_HEIGHT,
+        turns=50,
+        products={},
+        render_mode=None,
+    )
 
 
 def run_gym(env, seed=None):
@@ -27,14 +38,7 @@ def run_gym(env, seed=None):
 
 if __name__ == "__main__":
     name = "Profit-v0"
-    register_env(name)
-    env = gym.make(
-        name,
-        width=MAX_WIDTH,
-        height=MAX_HEIGHT,
-        turns=50,
-        products={},
-        render_mode=None,
-    )
+    register_gym(name)
+    env = make_gym(name)
     # check_env(env)
     run_gym(env)
