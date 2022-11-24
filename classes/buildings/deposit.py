@@ -1,5 +1,6 @@
 from .unplacable_building import UnplacableBuilding
 import numpy as np
+import helper.functions.simulation_logs as simlog
 
 
 class Deposit(UnplacableBuilding):
@@ -41,9 +42,19 @@ class Deposit(UnplacableBuilding):
         return building_dict
 
     def start_of_round_action(self, round):
+        """Empty function for cleaner code in simulator.py.
+
+        Args:
+            round (int): Current round.
+        """
         return
 
     def end_of_round_action(self, round):
+        """Executes end of round action, pushing 3 items of the resource given by self.subtype to all connected mines.
+
+        Args:
+            round (int): Current round.
+        """
         if np.max(self.resources) == 0 or len(self.connections) == 0:
             return
 
@@ -52,12 +63,10 @@ class Deposit(UnplacableBuilding):
             self.connections[i].resource_cache[self.subtype] += (
                 3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
             )
-            took = (
+            takes_out = (
                 3 if self.resources[self.subtype] >= 3 else self.resources[self.subtype]
             )
-            print(
-                f"{round} (end): ({self.x},{self.y}) takes {took}x{i}, {self.resources[self.subtype] - took}x{i} available"
-            )
+            simlog.log_deposit_end_round(self, round, takes_out)
             self.resources[self.subtype] -= 3
             if self.resources[self.subtype] <= 0:
                 break

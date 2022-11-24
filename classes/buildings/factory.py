@@ -1,5 +1,6 @@
 from .building import Building
 import numpy as np
+import helper.functions.simulation_logs as simlog
 
 
 class Factory(Building):
@@ -31,25 +32,40 @@ class Factory(Building):
         return building_dict
 
     def start_of_round_action(self, round):
-        indices = np.where(self.resource_cache > 0)[0]
-        for i in indices:
-            self.resources[i] += self.resource_cache[i]
-            print(
-                f"{round} (start): ({self.x},{self.y}) accepts {self.resource_cache[i]}x{i}, holds {self.resources[i]}x{i}"
-            )
-            self.resource_cache[i] = 0
-        return
+        """Executes the start of round action, adding all resources from the cache to the resources array.
 
-    def end_of_round_action(self, recipe, points, round):
-        recipe = np.array(recipe)
+        Args:
+            round (int): Current round.
+        """
+        cache_indices = np.where(self.resource_cache > 0)[0]
+
+        if len(cache_indices) == 0:
+            return
+
+        for i in cache_indices:
+            self.resources[i] += self.resource_cache[i]
+
+        store_indices = np.where(self.resources > 0)[0]
+        simlog.log_start_round(self, round, store_indices, cache_indices)
+        self.resource_cache = np.array([0] * 8)
+
+    def end_of_round_action(self, product, round):
+        """Executes the end of round action, produces as many products as possible with the currently available resources.
+
+        Args:
+            product (dictionary): Information about the product given by the environment class.
+            round (int): Current round.
+
+        Returns:
+            int: Number of products produces.
+        """
+        recipe = np.array(product["resources"])
         t = self.resources - recipe
 
         num_products = 0
         while np.min(self.resources - recipe) >= 0:
             self.resources = self.resources - recipe
-            print(
-                f"{round} (end): ({self.x},{self.y}) produces {self.subtype} ({points} points)"
-            )
+            simlog.log_factory_end_round(self, round, product["points"])
             num_products += 1
 
         return num_products

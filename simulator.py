@@ -1,5 +1,5 @@
 # from environment import Environment
-from classes.buildings import Factory
+from classes.buildings import Factory, Obstacle
 import numpy as np
 
 
@@ -20,6 +20,11 @@ class Simulator:
         self.rounds = env.turns
 
     def run(self):
+        """Run a simulation on the envrionment.
+
+        Returns:
+            tuple: A tuple containing the total points achieved and total rounds it took.
+        """
         # NOTE: This implementation will for now always run the number of rounds given by <rounds> (will not abort if no more points are possible)
         total_points = 0
         total_rounds = 0
@@ -29,27 +34,34 @@ class Simulator:
         buildings = self.env.buildings
         buildings_indices = np.array([i for i in range(len(buildings))])
 
+        products_dict = self.generate_product_dict()
+
         for round in range(1, self.rounds + 1):
             rng.shuffle(buildings_indices)
 
             # COMMENT: Round start
             for i in buildings_indices:
+                if type(buildings[i]) == Obstacle:
+                    continue
+
                 buildings[i].start_of_round_action(round)
 
             rng.shuffle(buildings_indices)
 
             # COMMENT: Round end
             for i in buildings_indices:
+                if type(buildings[i]) == Obstacle:
+                    continue
+
                 if type(buildings[i]) != Factory:
                     buildings[i].end_of_round_action(round)
                     continue
 
-                product = self.get_product_by_subtype(buildings[i].subtype)
-                num_products = buildings[i].end_of_round_action(
-                    recipe=product["resources"],
-                    points=product["points"],
-                    round=round,
-                )
+                if buildings[i].subtype not in products_dict:
+                    continue
+
+                product = products_dict[buildings[i].subtype]
+                num_products = buildings[i].end_of_round_action(product, round)
 
                 if num_products * product["points"] > 0:
                     total_points += num_products * product["points"]
@@ -57,7 +69,15 @@ class Simulator:
 
         return (total_points, total_rounds)
 
-    def get_product_by_subtype(self, subtype):
-        for product in self.env.products:
-            if product["subtype"] == subtype:
-                return product
+    def generate_product_dict(self):
+        """Generates a dictionary containing the possible products, accessible by subtype.
+
+        Returns:
+            dictionary: All possible products, accessible by key.
+        """
+        pd = {}
+        for i in range(8):
+            for product in self.env.products:
+                if product["subtype"] == i:
+                    pd[i] = product
+        return pd
