@@ -75,14 +75,14 @@ class ProfitGym(Environment, gym.Env):
         print(self)
 
     def grid_to_observation(self):
-        obstacles = np.where(self.grid != " ", True, False).astype(bool)
+        obstacles = np.where(self.grid != " ", 1, 0)
 
         target_input_positions = self.target_building.get_input_positions()
-        inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
-        inputs[np.array(target_input_positions)] = True
+        inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=int)
+        inputs[np.array(target_input_positions)] = 1
 
         agent_output = self.current_building.get_output_positions()[0]
-        output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=bool)
-        output[agent_output] = True
+        output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=int)
+        output[agent_output] = 1
 
         return np.stack([obstacles, inputs, output])

@@ -11,7 +11,7 @@ def compile_model(model):
 
 
 def build_model(conv_size, conv_depth):
-    board3d = layers.Input(shape=(3, MAX_WIDTH, MAX_HEIGHT))
+    board3d = layers.Input(shape=(MAX_WIDTH, MAX_HEIGHT, 3))
 
     # adding the convolutional layers
     x = board3d
@@ -21,7 +21,7 @@ def build_model(conv_size, conv_depth):
             kernel_size=3,
             padding="same",
             activation="relu",
-            data_format="channels_first",
+            data_format="channels_last",
         )(x)
     x = layers.Flatten()(x)
     x = layers.Dense(64, "relu")(x)

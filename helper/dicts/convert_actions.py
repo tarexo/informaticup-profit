@@ -24,5 +24,4 @@ BUILDING_ACTION_TO_CLASS_SUBTYPE = {
     13: (Conveyor, 5),
     14: (Conveyor, 6),
     15: (Conveyor, 7),
-    16: (Conveyor, 8),
 }
