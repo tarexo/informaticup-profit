@@ -1,31 +1,39 @@
-import tensorflow.keras.models as models
-import tensorflow.keras.layers as layers
-import tensorflow.keras.utils as utils
-import tensorflow.keras.optimizers as optimizers
+import tensorflow as tf
+from tensorflow.keras import layers
+
 from helper.constants.settings import *
 
 
-def compile_model(model):
-    optimizer = optimizers.Adam(learning_rate=0.01)
-    model.compile(optimizer=optimizer, loss="mean_squared_loss")
+class ActorCritic(tf.keras.Model):
+    """Combined actor-critic network."""
 
+    def __init__(self, conv_size, conv_depth, dense_size, dense_depth):
+        """Initialize."""
+        super().__init__()
 
-def build_model(conv_size, conv_depth):
-    board3d = layers.Input(shape=(MAX_WIDTH, MAX_HEIGHT, 3))
+        self.hidden_layers = []
+        for _ in range(conv_depth):
+            conv_layer = layers.Conv2D(
+                filters=conv_size,
+                kernel_size=3,
+                padding="same",
+                activation="relu",
+                data_format="channels_last",
+            )
+            self.hidden_layers.append(conv_layer)
 
-    # adding the convolutional layers
-    x = board3d
-    for _ in range(conv_depth):
-        x = layers.Conv2D(
-            filters=conv_size,
-            kernel_size=3,
-            padding="same",
-            activation="relu",
-            data_format="channels_last",
-        )(x)
-    x = layers.Flatten()(x)
-    x = layers.Dense(64, "relu")(x)
-    actor = layers.Dense(64, activation="softmax")(x)
-    critic = layers.Dense(1, "sigmoid")(x)
+        flattened_layer = layers.Flatten()
+        self.hidden_layers.append(flattened_layer)
 
-    return models.Model(inputs=board3d, outputs=[actor, critic])
+        for _ in range(dense_depth):
+            dense_layer = layers.Dense(dense_size, activation="relu")
+            self.hidden_layers.append(dense_layer)
+
+        self.actor = layers.Dense(NUM_ACTIONS)
+        self.critic = layers.Dense(1)
+
+    def call(self, inputs):
+        x = inputs
+        for layer in self.hidden_layers:
+            x = layer(x)
+        return self.actor(x), self.critic(x)

@@ -37,7 +37,7 @@ class Environment:
         self.turns = turns
         self.products = products
 
-        self.task_generator = task_generator.TaskGenerator(self)
+        self.task_generator = task_generator.TaskGenerator(self, seed=42)
 
         self.empty()
 
@@ -231,8 +231,9 @@ class Environment:
         """
         return self.get_min_distance(output_building, input_building) == 1
 
-    def is_connected(self, output_building, input_building):
+    def is_connected(self, output_building, input_building, visited_buildings=[]):
         """tests whether output_building is connected to input_building via other buildings
+        Automatically checks for connection loops
 
         Args:
             output_building (building):  building with outgoing connections
@@ -245,14 +246,11 @@ class Environment:
         for next_building in output_building.connections:
             if next_building == input_building:
                 return True
-            elif self.is_connected(next_building, input_building):
+            elif next_building not in visited_buildings and self.is_connected(
+                next_building, input_building, visited_buildings + [output_building]
+            ):
                 return True
         return False
-
-    def has_connection_loop(self, building_1, building_2):
-        forward_connection = self.is_connected(building_1, building_2)
-        backward_connection = self.is_connected(building_2, building_1)
-        return forward_connection and backward_connection
 
     def __str__(self):
         """printable representation;

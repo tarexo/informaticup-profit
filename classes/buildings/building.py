@@ -46,7 +46,7 @@ class Building:
                 pos = (self.x + x_offset, self.y + y_offset)
                 element_positions.append(pos)
 
-        return element_positions
+        return np.array(element_positions)
 
     def clear_connections(self):
         self.connections = []

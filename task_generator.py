@@ -17,10 +17,12 @@ class TaskGenerator:
 
     def generate_simple_task(self, obstacle_probability=0.0):
         # one building missing
+        # random.seed(42)
         return self.generate_task(obstacle_probability, distance_range=[6, 7, 8, 9])
 
     def generate_easy_task(self, obstacle_probability=0.05):
         # two buildings missing
+        # random.seed(42)
         return self.generate_task(obstacle_probability, distance_range=[10, 11, 12, 13])
 
     def generate_medium_task(self, obstacle_probability=0.10):
@@ -35,7 +37,7 @@ class TaskGenerator:
 
     def generate_task(self, obstacle_probability, distance_range=None):
         self.env.empty()
-        deposit = self.env.add_building(Deposit((10, 10), 0, 3, 3))
+        deposit = self.env.add_building(Deposit((13, 0), 0, 3, 3))
         constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
