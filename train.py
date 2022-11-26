@@ -31,13 +31,13 @@ def run_episode(env, model, max_steps):
         action = tf.random.categorical(action_logits_t, 1)[0, 0]
         action_probs_t = tf.nn.softmax(action_logits_t)
 
-        state, reward, done, legal, info = env.step(action)
+        state, reward, done, legal, _info = env.step(action)
 
         values = values.write(t, tf.squeeze(value_prediction))
         action_probs = action_probs.write(t, action_probs_t[0, action])
         rewards = rewards.write(t, reward)
 
-        if done or legal:
+        if done or not legal:
             break
 
     action_probs = action_probs.stack()
@@ -131,8 +131,11 @@ def test_model_sanity(env, model):
 def train():
     register_gym("Profit-v0")
     env = make_gym("Profit-v0")
-    model = ActorCritic(CONV_SIZE, CONV_DEPTH, DENSE_SIZE, DENSE_DEPTH)
-    # model.summary()
+
+    model = ActorCritic()
+    input = layers.Input(shape=(MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS))
+    model(input)
+    model.summary()
 
     # for some reason eager execution is not enabled in my (Leo's) installation
     tf.config.run_functions_eagerly(True)
@@ -141,16 +144,14 @@ def train():
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
     min_episodes_criterion = 100
-    max_episodes = 1000
-    max_steps_per_episode = 1
+    max_episodes = 100000
+    max_steps_per_episode = 10
 
-    reward_threshold = 0.99
+    reward_threshold = 0.9 * SUCCESS_REWARD
     running_reward = 0
 
-    gamma = 0.99
-    episodes_reward: collections.deque = collections.deque(
-        maxlen=min_episodes_criterion
-    )
+    gamma = 0.95
+    episodes_reward = collections.deque(maxlen=min_episodes_criterion)
 
     t = tqdm.trange(max_episodes)
     for i in t:
@@ -167,8 +168,6 @@ def train():
     print(f"\nSolved at episode {i}: average reward: {running_reward:.2f}!")
 
     test_model_sanity(env, model)
-    # test_model_sanity(env, model)
-    # test_model_sanity(env, model)
 
 
 if __name__ == "__main__":
