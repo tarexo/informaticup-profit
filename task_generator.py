@@ -15,6 +15,11 @@ class TaskGenerator:
         random.seed(seed)
         self.env = env
 
+    def generate_super_simple_task(self, obstacle_probability=0.0):
+        # one building missing
+        # random.seed(42)
+        return self.generate_task(obstacle_probability, distance_range=[8])
+
     def generate_simple_task(self, obstacle_probability=0.0):
         # one building missing
         # random.seed(42)
