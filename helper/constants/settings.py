@@ -2,21 +2,24 @@ PRINT_ROUND_LOG = False
 
 MAX_WIDTH = 30
 MAX_HEIGHT = 15
-NUM_CHANNELS = 4  # should match channel-dimension of profit_gym.grid_to_observation()
+# NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
+NUM_CHANNELS = 4
 
+# NUM_SUBBUILDINGS may be reduced to 8 (instead of 16). mine/combiners not crucial (at least for now)
 NUM_SUBBUILDINGS = 16
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
 
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.01
+GAMMA = 0.95
 
 
-COMMON_CONV_SIZE = 32
-COMMON_CONV_DEPTH = 6
+COMMON_CONV_SIZE = 128
+COMMON_CONV_DEPTH = 4
 COMMON_DENSE_SIZE = 128
-COMMON_DENSE_DEPTH = 0
-UNIQUE_DENSE_SIZE = 128
+COMMON_DENSE_DEPTH = 1
+UNIQUE_DENSE_SIZE = 64
 
-SUCCESS_REWARD = 1000
+SUCCESS_REWARD = 100
 LEGAL_REWARD = 1
 ILLEGAL_REWARD = -10

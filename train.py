@@ -106,26 +106,31 @@ def train_step(env, model, optimizer, gamma, max_steps_per_episode):
     return int(episode_reward)
 
 
-def test_model_sanity(env, model):
+def test_model_sanity(env, model, num_steps=2):
     state, _ = env.reset()
-    state = tf.convert_to_tensor(state)
-    state = tf.expand_dims(state, 0)
-    action_logits_t, value_pred = model(state)
-    action_distribution = tf.nn.softmax(action_logits_t)
-    greedy_action = np.argmax(action_distribution.numpy())
-
-    best_building = env.get_building_from_action(greedy_action)
-
-    print("action distribution:", action_distribution.numpy())
-    print("value prediction:", value_pred.numpy())
-
     env.render()
-    if env.is_legal_position(best_building):
-        env.add_building(best_building)
-        env.render()
-    else:
-        print("illegal building predicted: ")
-        print(best_building)
+
+    for _ in range(num_steps):
+        state = tf.convert_to_tensor(state)
+        state = tf.expand_dims(state, 0)
+        action_logits_t, value_pred = model(state)
+        action_distribution = tf.nn.softmax(action_logits_t)
+        greedy_action = np.argmax(action_distribution.numpy())
+
+        best_building = env.get_building_from_action(greedy_action)
+
+        print(
+            "action distribution:\n",
+            action_distribution.numpy().reshape((NUM_DIRECTIONS, NUM_SUBBUILDINGS)),
+        )
+        print("value prediction:", value_pred.numpy())
+
+        state, done, reward, legal, info = env.step(greedy_action)
+        if legal:
+            env.render()
+        else:
+            print("illegal building predicted: ")
+            print(best_building)
 
 
 def train():
@@ -137,25 +142,30 @@ def train():
     model(input)
     model.summary()
 
+    np.set_printoptions(precision=4, suppress=True)
+    tf.random.set_seed(42)
     # for some reason eager execution is not enabled in my (Leo's) installation
     tf.config.run_functions_eagerly(True)
 
-    tf.random.set_seed(42)
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
     min_episodes_criterion = 100
-    max_episodes = 100000
-    max_steps_per_episode = 10
+    max_episodes = 10000
+    max_steps_per_episode = 1
+
+    model_sanity_check_frequency = 100
 
     reward_threshold = 0.9 * SUCCESS_REWARD
     running_reward = 0
 
-    gamma = 0.95
     episodes_reward = collections.deque(maxlen=min_episodes_criterion)
 
     t = tqdm.trange(max_episodes)
     for i in t:
-        episode_reward = train_step(env, model, optimizer, gamma, max_steps_per_episode)
+        if i % model_sanity_check_frequency == 0:
+            test_model_sanity(env, model)
+
+        episode_reward = train_step(env, model, optimizer, GAMMA, max_steps_per_episode)
 
         episodes_reward.append(episode_reward)
         running_reward = statistics.mean(episodes_reward)
@@ -167,6 +177,11 @@ def train():
 
     print(f"\nSolved at episode {i}: average reward: {running_reward:.2f}!")
 
+    # get a couple of examples to see whether the model has learnt what it was supposed to
+    test_model_sanity(env, model)
+    test_model_sanity(env, model)
+    test_model_sanity(env, model)
+    test_model_sanity(env, model)
     test_model_sanity(env, model)
 
 

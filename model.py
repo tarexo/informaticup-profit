@@ -13,12 +13,11 @@ class ActorCritic(tf.keras.Model):
 
         self.common_hidden_layers = []
         for i in range(COMMON_CONV_DEPTH):
-            # switch betweeen stride of 1 and stride of 2
-            stride = 1 + ((i + 1) % 2)
+            # decrease CONV_SIZE by half each layer (should be in adjustable in settings.py)
             conv_layer = layers.Conv2D(
-                filters=COMMON_CONV_SIZE,
-                kernel_size=3,
-                strides=(stride, stride),
+                filters=COMMON_CONV_SIZE / (2 ** i),
+                kernel_size=2,
+                strides=(1, 1),
                 padding="same",
                 activation="relu",
                 data_format="channels_last",
