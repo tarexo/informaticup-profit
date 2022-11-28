@@ -211,6 +211,18 @@ class Environment_Tests(unittest.TestCase):
             "combiners are allowed to be connected with a combiner exit",
         )
 
+    def test_conveyor_overlapping(self):
+        env3 = fh.environment_from_json(filename3)
+        conveyor = buildings.Combiner((3, 11), 6)
+        self.assertEqual(
+            env3.add_building(conveyor),
+            conveyor,
+        )
+        conveyor2 = buildings.Combiner((5, 10), 5)
+        self.assertEqual(
+            env3.add_building(conveyor2), conveyor2, "Conveyors are allowed to overlap"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
