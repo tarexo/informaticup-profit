@@ -41,30 +41,9 @@ def test_model_sanity(env, model, num_steps=1):
 def compute_loss(action_prob, value, reward):
     """Computes the combined Actor-Critic loss."""
 
-    # returns = []
-    # discounted_sum = 0
-    # for r in rewards_history[::-1]:
-    #     discounted_sum = r + gamma * discounted_sum
-    #     returns.insert(0, discounted_sum)
-
-    # Normalize
-    # returns = np.array(returns)
-    # returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
-    # returns = returns.tolist()
-
-    # Calculating loss values to update our network
-    # history = zip(action_probs_history, critic_value_history, returns)
-    # actor_losses = []
-    # critic_losses = []
-    # for log_prob, value, ret in history:
-    # At this point in history, the critic estimated that we would get a
-    # total reward = `value` in the future. We took an action with log probability
-    # of `log_prob` and ended up recieving a total reward = `ret`.
-    # The actor must be updated so that it predicts an action that leads to
-    # high rewards (compared to critic's estimate) with high probability.
     diff = reward - value
-    actor_loss = -action_prob * diff
-    critic_loss = huber_loss(value, reward)
+    actor_loss = -tf.math.log(action_prob) * diff
+    critic_loss = huber_loss([value], [reward])
 
     return actor_loss + critic_loss
 
@@ -89,7 +68,7 @@ if __name__ == "__main__":
 
     model_sanity_check_frequency = 100
     solved_reward_threshold = 0.9 * SUCCESS_REWARD
-    exploration_rate = 0.6
+    exploration_rate = 0.0
 
     opt = tf.keras.optimizers.Adam(LEARNING_RATE)
     loss_function = tf.keras.losses.MeanAbsoluteError()
@@ -97,12 +76,12 @@ if __name__ == "__main__":
     running_rewards = collections.deque(maxlen=min_episodes)
     progress = tqdm.trange(max_episodes)
 
-    for i in progress:
+    for episode in progress:
         state, _ = env.reset()
-        with tf.GradientTape() as tape:
-            if i % model_sanity_check_frequency == 0:
-                test_model_sanity(env, model)
+        if episode % model_sanity_check_frequency == 0:
+            test_model_sanity(env, model)
 
+        with tf.GradientTape() as tape:
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
 
@@ -113,25 +92,25 @@ if __name__ == "__main__":
                 # Select random action
                 action = np.random.choice(NUM_ACTIONS)
             else:
-                # Select action according to policy
-                action = np.argmax(action_probs)
+                # Sample action from policy distribution
+                action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
 
             state, reward, done, legal, info = env.step(action)
 
-            loss = compute_loss(action_probs, value, reward)
+            loss = compute_loss(action_probs[0, action], value[0, 0], reward)
 
             gradients = tape.gradient(loss, model.trainable_variables)
             opt.apply_gradients(zip(gradients, model.trainable_variables))
 
-            running_rewards.append(reward)
-            running_mean_reward = statistics.mean(running_rewards)
-            progress.set_postfix(
-                running_reward="%.3f" % running_mean_reward,
-                exploration_rate="%.3f" % exploration_rate,
-            )
+        running_rewards.append(reward)
+        running_mean_reward = statistics.mean(running_rewards)
+        progress.set_postfix(
+            running_reward="%.3f" % running_mean_reward,
+            exploration_rate="%.3f" % exploration_rate,
+        )
 
-            if (i + 1) % int(0.1 * max_episodes) == 0:
-                exploration_rate /= 1.5
+        if (episode + 1) % int(0.1 * max_episodes) == 0:
+            exploration_rate /= 2
 
-            if running_mean_reward > solved_reward_threshold and i >= min_episodes:
-                break
+        if running_mean_reward > solved_reward_threshold and i >= min_episodes:
+            break
