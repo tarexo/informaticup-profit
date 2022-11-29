@@ -9,108 +9,133 @@ import tqdm
 import collections
 import statistics
 
-huber_loss = tf.keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
 
-
-def test_model_sanity(env, model, num_steps=1):
+def test_model_sanity(env, model, num_steps):
     state, _ = env.reset()
-    env.render()
 
     for _ in range(num_steps):
         state = tf.convert_to_tensor(state)
         state = tf.expand_dims(state, 0)
+
         action_probs, value = model(state)
         greedy_action = np.argmax(action_probs)
+        state, reward, done, legal, info = env.step(greedy_action)
 
-        best_building = env.get_building_from_action(greedy_action)
-
-        print("value:", value.numpy()[0])
+        print("\nvalue:", value.numpy()[0])
+        print("reward:", reward)
         print("action_probs:")
         print(action_probs.numpy().reshape((NUM_DIRECTIONS, NUM_SUBBUILDINGS)))
 
-        state, done, reward, legal, info = env.step(greedy_action)
-
-        if legal:
-            env.render()
-        else:
-            print("illegal building predicted: ")
+        if not legal:
+            best_building = env.get_building_from_action(greedy_action)
+            print("\nillegal building predicted: ")
             print(best_building)
+        if done or not legal:
             break
 
+    env.render()
 
-def compute_loss(action_prob, value, reward):
+
+def get_expected_return(rewards, normalize=False):
+    """Compute expected returns per timestep."""
+
+    returns = []
+    discounted_sum = 0
+    for reward in rewards[::-1]:
+        discounted_sum = reward + GAMMA * discounted_sum
+        returns.insert(0, discounted_sum)
+
+    if normalize:
+        returns = np.array(returns)
+        returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
+
+    returns = tf.convert_to_tensor(returns, dtype=tf.float32)
+    return returns
+
+
+def compute_loss(action_probs, values, rewards):
     """Computes the combined Actor-Critic loss."""
 
-    diff = reward - value
-    actor_loss = -tf.math.log(action_prob) * diff
-    critic_loss = huber_loss([value], [reward])
+    returns = get_expected_return(rewards)
+    diff = returns - values
+
+    actor_loss = tf.math.reduce_sum(-tf.math.log(action_probs) * diff)
+    critic_loss = critic_loss_function(values, returns)
 
     return actor_loss + critic_loss
 
 
+def run_episode(env, model, max_steps):
+    state, _ = env.reset()
+
+    episode_action_probs = []
+    episode_values = []
+    episode_rewards = []
+    for step in range(max_steps):
+        state = tf.convert_to_tensor(state)
+        state = tf.expand_dims(state, 0)
+
+        action_probs, value = model(state)
+
+        action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
+
+        state, reward, done, legal, info = env.step(action)
+
+        episode_action_probs.append(action_probs[0, action])
+        episode_values.append(value[0, 0])
+        episode_rewards.append(reward)
+
+        if done or not legal:
+            break
+
+    loss = compute_loss(episode_action_probs, episode_values, episode_rewards)
+
+    return loss, episode_rewards
+
+
 if __name__ == "__main__":
-
-    register_gym("Profit-v0")
-    env = make_gym("Profit-v0")
-    model = AlphaZero(blocks=2).model
-    model.summary()
-
-    np.set_printoptions(precision=2, suppress=True)
+    np.set_printoptions(precision=4, suppress=True)
+    np.random.seed(42)
     tf.random.set_seed(42)
     # for some reason eager execution is not enabled in my (Leo's) installation
     tf.config.run_functions_eagerly(True)
+    eps = np.finfo(np.float32).eps.item()
+
+    register_gym("Profit-v0")
+    env = make_gym("Profit-v0")
+
+    model = AlphaZero(blocks=2, block_filters=64).model
+    model.summary()
 
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
+    critic_loss_function = tf.keras.losses.Huber(
+        reduction=tf.keras.losses.Reduction.SUM
+    )
 
-    # Initialize parameters
     max_episodes = 2000
-    min_episodes = 500
+    min_episodes = 200
 
-    model_sanity_check_frequency = 100
-    solved_reward_threshold = 0.9 * SUCCESS_REWARD
-    exploration_rate = 0.0
+    max_steps_each_episode = 3
 
-    opt = tf.keras.optimizers.Adam(LEARNING_RATE)
-    loss_function = tf.keras.losses.MeanAbsoluteError()
+    model_sanity_check_frequency = 50
+    solved_reward_threshold = 0.95 * SUCCESS_REWARD
 
     running_rewards = collections.deque(maxlen=min_episodes)
     progress = tqdm.trange(max_episodes)
 
     for episode in progress:
-        state, _ = env.reset()
         if episode % model_sanity_check_frequency == 0:
-            test_model_sanity(env, model)
+            test_model_sanity(env, model, max_steps_each_episode)
 
         with tf.GradientTape() as tape:
-            state = tf.convert_to_tensor(state)
-            state = tf.expand_dims(state, 0)
-
-            action_probs, value = model(state)
-
-            epsilon = np.random.rand()
-            if epsilon <= exploration_rate:
-                # Select random action
-                action = np.random.choice(NUM_ACTIONS)
-            else:
-                # Sample action from policy distribution
-                action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
-
-            state, reward, done, legal, info = env.step(action)
-
-            loss = compute_loss(action_probs[0, action], value[0, 0], reward)
+            loss, episode_rewards = run_episode(env, model, max_steps_each_episode)
 
             gradients = tape.gradient(loss, model.trainable_variables)
-            opt.apply_gradients(zip(gradients, model.trainable_variables))
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-        running_rewards.append(reward)
+        running_rewards.append(episode_rewards[-1])
         running_mean_reward = statistics.mean(running_rewards)
-        progress.set_postfix(
-            running_reward="%.3f" % running_mean_reward,
-            exploration_rate="%.3f" % exploration_rate,
-        )
+        progress.set_postfix(running_reward="%.2f" % running_mean_reward)
 
-        if (episode + 1) % int(0.1 * max_episodes) == 0:
-            exploration_rate /= 2
-
-        if running_mean_reward > solved_reward_threshold and i >= min_episodes:
+        if running_mean_reward > solved_reward_threshold and episode >= min_episodes:
             break

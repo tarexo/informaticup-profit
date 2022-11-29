@@ -28,7 +28,9 @@ class TaskGenerator:
     def generate_easy_task(self, obstacle_probability=0.05):
         # two buildings missing
         # random.seed(42)
-        return self.generate_task(obstacle_probability, distance_range=[10, 11, 12, 13])
+        return self.generate_task(
+            obstacle_probability, distance_range=[6, 7, 8, 9, 10, 11, 12, 13]
+        )
 
     def generate_medium_task(self, obstacle_probability=0.10):
         # at least three buildings missing, more obstacles
