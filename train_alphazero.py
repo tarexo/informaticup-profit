@@ -21,7 +21,7 @@ def test_model_sanity(env, model, num_steps):
         greedy_action = np.argmax(action_probs)
         state, reward, done, legal, info = env.step(greedy_action)
 
-        print("\nvalue:", value.numpy()[0])
+        print("\nvalue:", value.numpy()[0, 0])
         print("reward:", reward)
         print("action_probs:")
         print(action_probs.numpy().reshape((NUM_DIRECTIONS, NUM_SUBBUILDINGS)))
@@ -41,7 +41,7 @@ def get_expected_return(rewards, normalize=False):
 
     returns = []
     discounted_sum = 0
-    for reward in rewards[::-1]:
+    for reward in tf.cast(rewards[::-1], dtype=tf.float32):
         discounted_sum = reward + GAMMA * discounted_sum
         returns.insert(0, discounted_sum)
 
@@ -49,7 +49,6 @@ def get_expected_return(rewards, normalize=False):
         returns = np.array(returns)
         returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
 
-    returns = tf.convert_to_tensor(returns, dtype=tf.float32)
     return returns
 
 
@@ -57,7 +56,7 @@ def compute_loss(action_probs, values, rewards):
     """Computes the combined Actor-Critic loss."""
 
     returns = get_expected_return(rewards)
-    diff = returns - values
+    diff = np.array(returns) - np.array(values)
 
     actor_loss = tf.math.reduce_sum(-tf.math.log(action_probs) * diff)
     critic_loss = critic_loss_function(values, returns)
@@ -90,7 +89,7 @@ def run_episode(env, model, max_steps):
 
     loss = compute_loss(episode_action_probs, episode_values, episode_rewards)
 
-    return loss, episode_rewards
+    return loss, episode_rewards[-1]
 
 
 if __name__ == "__main__":
@@ -104,7 +103,7 @@ if __name__ == "__main__":
     register_gym("Profit-v0")
     env = make_gym("Profit-v0")
 
-    model = AlphaZero(blocks=2, block_filters=64).model
+    model = AlphaZero(blocks=4, block_filters=128).model
     model.summary()
 
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
@@ -128,12 +127,12 @@ if __name__ == "__main__":
             test_model_sanity(env, model, max_steps_each_episode)
 
         with tf.GradientTape() as tape:
-            loss, episode_rewards = run_episode(env, model, max_steps_each_episode)
+            loss, episode_reward = run_episode(env, model, max_steps_each_episode)
 
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-        running_rewards.append(episode_rewards[-1])
+        running_rewards.append(episode_reward)
         running_mean_reward = statistics.mean(running_rewards)
         progress.set_postfix(running_reward="%.2f" % running_mean_reward)
 
