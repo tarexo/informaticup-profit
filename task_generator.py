@@ -44,7 +44,11 @@ class TaskGenerator:
 
     def generate_task(self, obstacle_probability, distance_range=None):
         self.env.empty()
-        deposit = self.env.add_building(Deposit((13, 0), 0, 3, 3))
+        random_position = (
+            random.randint(0, self.env.width - 3),
+            random.randint(0, self.env.height - 3),
+        )
+        deposit = self.env.add_building(Deposit(random_position, 0, 3, 3))
         constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 

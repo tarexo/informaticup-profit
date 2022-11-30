@@ -29,7 +29,9 @@ class ProfitGym(Environment, gym.Env):
         super().reset(seed=seed)
 
         # task generator modifies self (this environment!)
-        mine, factory = self.task_generator.generate_easy_task(obstacle_probability=0.0)
+        mine, factory = self.task_generator.generate_easy_task(
+            obstacle_probability=0.05
+        )
         self.current_building = mine
         self.target_building = factory
 

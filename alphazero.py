@@ -28,7 +28,6 @@ class AlphaZero:
         value_filters=1,
         value_hidden=256,
     ):
-        super(AlphaZero, self).__init__()
         board_size = (MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS)
         action_size = NUM_ACTIONS
 
@@ -65,3 +64,45 @@ class AlphaZero:
         v = Dense(1, activation="tanh", name="value")(v)
 
         self.model = Model(inputs=inp, outputs=[p, v])
+
+
+class DQN:
+    """The alphazero model."""
+
+    def __init__(
+        self,
+        block_filters=256,
+        block_kernel=3,
+        blocks=10,
+        value_filters=1,
+        value_hidden=256,
+    ):
+        board_size = (MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS)
+        action_size = NUM_ACTIONS
+
+        # initial conv block
+        inp = Input(shape=board_size)
+        x = Conv2D(block_filters, block_kernel, padding="same")(inp)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+
+        # residual blocks
+        for i in range(blocks):
+            # TODO: compress the residual block into a single layer
+            res = Conv2D(block_filters, block_kernel, padding="same")(x)
+            res = BatchNormalization()(res)
+            res = Activation("relu")(res)
+            res = Conv2D(block_filters, block_kernel, padding="same")(res)
+            res = BatchNormalization()(res)
+            res = Add()([res, x])
+            x = Activation("relu")(res)
+
+        # q values
+        q = Conv2D(value_filters, kernel_size=1)(x)
+        q = BatchNormalization()(q)
+        q = Activation("relu")(q)
+        q = Flatten()(q)
+        q = Dense(value_hidden, activation="relu")(q)
+        q = Dense(action_size, activation="linear", name="q-values")(q)
+
+        self.model = Model(inputs=inp, outputs=q)
