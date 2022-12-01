@@ -156,7 +156,7 @@ class TaskGenerator:
         out_positions = start_building.get_output_positions()
         for x, y in self.env.get_adjacent_positions(out_positions, empty_only=True):
             for BuildingClass in LEGAL_CONNECTIONS[type(start_building)]:
-                if BuildingClass == Factory:
+                if BuildingClass == Factory or BuildingClass == SimpleFactory:
                     continue
                 for subtype in range(BuildingClass.NUM_SUBTYPES):
                     building = BuildingClass.from_input_position(x, y, subtype)
@@ -167,6 +167,11 @@ class TaskGenerator:
                                 best_buildings = []
                             min_distance = distance
                             best_buildings.append(building)
+
+        # if not best_buildings:
+        #     print(self.env)
+        #     print(start_building.get_output_positions())
+        #     print(target_building.get_input_positions())
 
         return best_buildings
 

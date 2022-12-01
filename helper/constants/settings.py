@@ -1,12 +1,18 @@
 PRINT_ROUND_LOG = False
 
+SIMPLE_GAME = True
+
 MAX_WIDTH = 16
 MAX_HEIGHT = 16
 # NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
 NUM_CHANNELS = 4
 
 # NUM_SUBBUILDINGS may be reduced to 8 (instead of 16). mine/combiners not crucial (at least for now)
-NUM_SUBBUILDINGS = 16
+
+if SIMPLE_GAME:
+    NUM_SUBBUILDINGS = 4
+else:
+    NUM_SUBBUILDINGS = 16
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
 

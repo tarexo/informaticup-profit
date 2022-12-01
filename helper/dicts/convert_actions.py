@@ -25,3 +25,10 @@ BUILDING_ACTION_TO_CLASS_SUBTYPE = {
     14: (Mine, 2),
     15: (Mine, 3),
 }
+
+SIMPLE_BUILDING_ACTION_TO_CLASS_SUBTYPE = {
+    0: (SimpleConveyor, 0),
+    1: (SimpleConveyor, 1),
+    2: (SimpleConveyor, 2),
+    3: (SimpleConveyor, 3),
+}
