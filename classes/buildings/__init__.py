@@ -7,3 +7,6 @@ from .deposit import *
 from .factory import *
 from .mine import *
 from .obstacle import *
+from .simple_deposit import *
+from .simple_conveyor import *
+from .simple_factory import *

@@ -24,6 +24,12 @@ BUILDING_SHAPES = {
         6: Shape(1, 0, np.array([["-", "<", "<", "+"]])),
         7: Shape(0, 1, np.array([["-"], ["^"], ["^"], ["+"]])),
     },
+    SimpleConveyor: {
+        0: Shape(1, 0, np.array([["+", "-"]])),
+        1: Shape(0, 1, np.array([["+"], ["-"]])),
+        2: Shape(1, 0, np.array([["-", "+"]])),
+        3: Shape(0, 1, np.array([["-"], ["+"]])),
+    },
     Combiner: {
         0: Shape(1, 1, np.array([["+", "c", " "], ["+", "c", "-"], ["+", "c", " "]])),
         1: Shape(1, 1, np.array([["+", "+", "+"], ["c", "c", "c"], [" ", "-", " "]])),
@@ -45,6 +51,18 @@ BUILDING_SHAPES = {
                             ["+", "+", "+", "+", "+"],
                         ]
                     ),
+                )
+            ]
+            * 8
+        )
+    ),
+    SimpleFactory: dict(
+        enumerate(
+            [
+                Shape(
+                    0,
+                    0,
+                    np.array([["+"]]),
                 )
             ]
             * 8
