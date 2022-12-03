@@ -223,6 +223,15 @@ class Environment_Tests(unittest.TestCase):
             env3.add_building(conveyor2), conveyor2, "Conveyors are allowed to overlap"
         )
 
+    def test_mine_next_to_deposit(self):
+        env2 = fh.environment_from_json(filename2)
+        mine = buildings.Mine((0, 6), 0)
+        self.assertEqual(
+            env2.add_building(mine),
+            mine,
+            "mines are allowd to be next to deposits",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
