@@ -225,7 +225,7 @@ class Environment_Tests(unittest.TestCase):
 
     def test_mine_next_to_deposit(self):
         env2 = fh.environment_from_json(filename2)
-        mine = buildings.Mine((0, 6), 0)
+        mine = buildings.Mine((6, 0), 0)
         self.assertEqual(
             env2.add_building(mine),
             mine,

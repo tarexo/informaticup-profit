@@ -39,17 +39,19 @@ def add_mine(env: Environment):
     left = []
     right = []
 
-    for i in range(x, x + height):
-        if y - 2 >= 0:
-            left.appen([i, y - 2])
-        if y + width + 1 < env.grid.shape[1]:
-            right.append([i, y + width + 1])
-
-    for i in range(y, y + width):
+    for i in range(y, y + height):
         if x - 2 >= 0:
-            upper.appen([x - 2, i])
-        if x + height + 1 < env.grid.shape[0]:
-            lower.append([x + height + 1, i])
+            left.appen([x - 2, i])
+        if x + width + 1 < env.grid.shape[1]:
+            right.append([x + width + 1, i])
+
+    for i in range(x, x + width):
+        if y - 2 >= 0:
+            upper.appen([i, y - 2])
+        if y + height + 1 < env.grid.shape[0]:
+            lower.append([i, y + height + 1])
+
+    print(right)
 
     positions = [right, lower, left, upper]
     for i in range(len(positions)):
