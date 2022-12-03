@@ -30,6 +30,31 @@ def add_mine(env):
             deposit = building
     if deposit == None:
         return
+    x = deposit.x
+    y = deposit.y
+    width = deposit.width
+    height = deposit.height
+    lower = []
+    upper = []
+    left = []
+    right = []
+
+    for i in range(x, x + height):
+        if y - 2 >= 0:
+            left.appen([i, y - 2])
+        if y + width + 1 > env.grid.shape[1]:
+            right.append([i, y + width + 1])
+
+    for i in range(y, y + width):
+        if x - 2 >= 0:
+            upper.appen([x - 2, i])
+        if x + height + 1 > env.grid.shape[0]:
+            lower.append([x + height + 1, i])
+
+    print(upper)
+    print(lower)
+    print(left)
+    print(right)
 
 
 if __name__ == "__main__":
