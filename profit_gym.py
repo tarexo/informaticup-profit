@@ -29,8 +29,8 @@ class ProfitGym(Environment, gym.Env):
         super().reset(seed=seed)
 
         # task generator modifies self (this environment!)
-        mine, factory = self.task_generator.generate_easy_task(
-            obstacle_probability=0.05
+        mine, factory = self.task_generator.generate_task(
+            obstacle_probability=0.0, distance_range=[3, 5, 7, 9, 11, 13, 15]
         )
         self.current_building = mine
         self.target_building = factory
@@ -80,11 +80,11 @@ class ProfitGym(Environment, gym.Env):
         empty = np.where(np.isin(self.grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
         obstacles = np.where(self.grid != " ", 1.0, 0.0)
 
-        target_x, target_y = self.target_building.x + 2, self.target_building.y + 2
-        # target_input_positions = self.target_building.get_input_positions()
-        # input_idx = target_input_positions[:, 1], target_input_positions[:, 0]
+        # target_x, target_y = self.target_building.x, self.target_building.y
+        target_input_positions = self.target_building.get_input_positions()
+        input_idx = target_input_positions[:, 1], target_input_positions[:, 0]
         inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=np.float32)
-        inputs[(target_y, target_x)] = 1
+        inputs[input_idx] = 1
 
         agent_x, agent_y = self.current_building.get_output_positions()[0]
         output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=np.float32)

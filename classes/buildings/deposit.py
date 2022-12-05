@@ -24,7 +24,7 @@ class Deposit(UnplacableBuilding):
         The subtype of the deposit, determining its held resource (0-7)
     """
 
-    def __init__(self, position, subtype, width, height):
+    def __init__(self, position, subtype, width=3, height=3):
         super().__init__(position, subtype, width, height)
         self.resources[subtype] += 5 * width * height
 
@@ -94,8 +94,11 @@ class SimpleDeposit(Deposit):
         The subtype of the deposit, determining its held resource (0-7)
     """
 
-    def __init__(self, position, subtype, _width, _height):
+    def __init__(self, position, subtype, width=1, height=1):
         super().__init__(position, subtype, 1, 1)
+        from shapes import Shape
+
+        self.shape = Shape(0, 0, np.array([["d"]]))
         self.resources[subtype] += 5
 
     NUM_SUBTYPES = 8
@@ -110,6 +113,9 @@ class SimpleDeposit(Deposit):
             "height": self.height,
         }
         return building_dict
+
+    def get_output_positions(self):
+        return self.get_element_positions("d")
 
 
 from helper.constants.settings import SIMPLE_GAME

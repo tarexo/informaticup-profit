@@ -78,7 +78,7 @@ class SimpleConveyor(Conveyor):
         The subtype of the conveyor, determining its rotation (0-7)
     """
 
-    NUM_SUBTYPES = 8
+    NUM_SUBTYPES = 4
 
     def to_json(self):
         building_dict = {

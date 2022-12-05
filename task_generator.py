@@ -44,22 +44,22 @@ class TaskGenerator:
 
     def generate_task(self, obstacle_probability, distance_range=None):
         self.env.empty()
-        random_position = (
-            random.randint(0, self.env.width - 3),
-            random.randint(0, self.env.height - 3),
-        )
-        deposit = self.env.add_building(Deposit(random_position, 0, 3, 3))
+
+        deposit = self.place_at_random_position(Deposit, 0)
         constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
         self.add_obstacles(p=obstacle_probability)
 
-        assert len(connections) >= 1
-        mine = connections[0]
-        self.remove_connecting_buildings(mine, factory)
+        if SIMPLE_GAME:
+            start_building = deposit
+        else:
+            assert len(connections) >= 1
+            start_building = mine = connections[0]
+        self.remove_connecting_buildings(start_building, factory)
 
-        return mine, factory
+        return start_building, factory
 
     def connect_deposit_factory(self, deposit: Building, factory: Building):
         connections = []
@@ -85,14 +85,16 @@ class TaskGenerator:
                     obstacle = Obstacle((x, y), 0, 1, 1)
                     self.env.add_building(obstacle)
 
-    def place_at_random_position(self, BuildingClass, subtype, constraint):
+    def place_at_random_position(self, BuildingClass, subtype, constraint=None):
         building = self.get_random_legal_building(BuildingClass, subtype)
-        if not constraint(building):
+        if constraint and not constraint(building):
             return self.place_at_random_position(BuildingClass, subtype, constraint)
         self.env.add_building(building)
         return building
 
-    def get_random_legal_building(self, BuildingClass, subtype):
+    def get_random_legal_building(
+        self, BuildingClass, subtype, width=None, height=None
+    ):
         """suggests a random (but legal) building position.
         simple brute_force approach for now: pick a random position and test its legality
 
@@ -106,8 +108,6 @@ class TaskGenerator:
         Throws:
             MaxRecursionError
         """
-        assert not issubclass(BuildingClass, UnplacableBuilding)
-
         x, y = random.randint(0, self.env.width), random.randint(0, self.env.height)
         building = BuildingClass((x, y), subtype)
         if not self.env.is_legal_position(building):
@@ -200,5 +200,8 @@ if __name__ == "__main__":
     )
 
     task_gen = TaskGenerator(env)
-    task_gen.generate_task(obstacle_probability=0.0)
-    print(task_gen.env)
+    for i in range(100):
+        task_gen.generate_task(
+            obstacle_probability=0.0, distance_range=[3, 5, 7, 9, 11, 13, 15, 17, 19]
+        )
+        print(task_gen.env)
