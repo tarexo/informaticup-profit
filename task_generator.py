@@ -200,5 +200,5 @@ if __name__ == "__main__":
     )
 
     task_gen = TaskGenerator(env)
-    task_gen.generate_medium_task(obstacle_probability=0.0)
+    task_gen.generate_task(obstacle_probability=0.0)
     print(task_gen.env)

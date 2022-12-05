@@ -178,16 +178,16 @@ class Environment:
         return False
 
     def violates_single_input(self, building: Building):
-        for out_x, out_y in building.get_output_positions():
-            if len(self.get_adjacent_inputs(out_x, out_y)) > 1:
-                return True
-
-        for in_x, in_y in building.get_input_positions():
-            for out_x, out_y in self.get_adjacent_outputs(in_x, in_y):
-                # assume building has not been placed yet!
-                assert building not in self.buildings
-                if len(self.get_adjacent_inputs(out_x, out_y)) > 0:
+        outgoing_connections = 0
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                outgoing_connections += 1
+            elif self.would_connect_to(other_building, building):
+                if len(other_building.connections) > 0:
                     return True
+
+        if outgoing_connections > 1:
+            return True
         return False
 
     def get_adjacent_inputs(self, x, y):

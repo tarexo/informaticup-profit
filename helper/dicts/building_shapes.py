@@ -25,10 +25,14 @@ BUILDING_SHAPES = {
         7: Shape(0, 1, np.array([["-"], ["^"], ["^"], ["+"]])),
     },
     SimpleConveyor: {
-        0: Shape(1, 0, np.array([["+", "-"]])),
-        1: Shape(0, 1, np.array([["+"], ["-"]])),
-        2: Shape(1, 0, np.array([["-", "+"]])),
-        3: Shape(0, 1, np.array([["-"], ["+"]])),
+        0: Shape(0, 0, np.array([["+", "-"]])),
+        1: Shape(0, 0, np.array([["+"], ["-"]])),
+        2: Shape(0, 0, np.array([["-", "+"]])),
+        3: Shape(0, 0, np.array([["-"], ["+"]])),
+        4: Shape(1, 0, np.array([["+", ">", "-"]])),
+        5: Shape(0, 1, np.array([["+"], ["v"], ["-"]])),
+        6: Shape(1, 0, np.array([["-", "<", "+"]])),
+        7: Shape(0, 1, np.array([["-"], ["^"], ["+"]])),
     },
     Combiner: {
         0: Shape(1, 1, np.array([["+", "c", " "], ["+", "c", "-"], ["+", "c", " "]])),

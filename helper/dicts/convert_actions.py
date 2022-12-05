@@ -1,4 +1,5 @@
 from classes.buildings import *
+from helper.constants.settings import SIMPLE_GAME
 
 POSITIONAL_ACTION_TO_DIRECTION = {
     0: np.array([1, 0]),
@@ -32,3 +33,6 @@ SIMPLE_BUILDING_ACTION_TO_CLASS_SUBTYPE = {
     2: (SimpleConveyor, 2),
     3: (SimpleConveyor, 3),
 }
+
+if SIMPLE_GAME:
+    BUILDING_ACTION_TO_CLASS_SUBTYPE = SIMPLE_BUILDING_ACTION_TO_CLASS_SUBTYPE
