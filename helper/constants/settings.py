@@ -2,29 +2,25 @@ PRINT_ROUND_LOG = False
 
 SIMPLE_GAME = True
 
-MAX_WIDTH = 6
-MAX_HEIGHT = 6
+MAX_WIDTH = 5
+MAX_HEIGHT = 5
 # NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
-NUM_CHANNELS = 4
-
-# NUM_SUBBUILDINGS may be reduced to 8 (instead of 16). mine/combiners not crucial (at least for now)
+NUM_CHANNELS = 3
 
 if SIMPLE_GAME:
     NUM_SUBBUILDINGS = 4
 else:
+    # NUM_SUBBUILDINGS may be reduced to 8 (instead of 16). mine/combiners not crucial (at least for now)
     NUM_SUBBUILDINGS = 16
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
 
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 GAMMA = 0.7
 
-
-COMMON_CONV_SIZE = 128
-COMMON_CONV_DEPTH = 4
-COMMON_DENSE_SIZE = 128
-COMMON_DENSE_DEPTH = 1
-UNIQUE_DENSE_SIZE = 64
+MAX_EPISODES = 100000
+MAX_STEPS_EACH_EPISODE = 3
+FINAL_OBSTACLE_PROBABILITY = 0.5
 
 SUCCESS_REWARD = 1
 LEGAL_REWARD = 0

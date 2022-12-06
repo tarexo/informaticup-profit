@@ -12,12 +12,16 @@ from helper.constants.settings import *
 
 
 class BaseModel(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, env):
         super().__init__()
 
+        self.env = env
         self.model = None
         self.board_size = (MAX_HEIGHT + 2, MAX_WIDTH + 2, NUM_CHANNELS)
         self.action_size = NUM_ACTIONS
+
+        self.obstacle_probability = 0.0
+        self.exploration_rate = None
 
     def create(self):
         raise NotImplementedError
@@ -68,8 +72,8 @@ class BaseModel(tf.keras.Model):
 
 
 class ActorCritic(BaseModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, env):
+        super().__init__(env)
         self.critic_loss_function = tf.keras.losses.Huber(
             reduction=tf.keras.losses.Reduction.SUM
         )
@@ -77,18 +81,18 @@ class ActorCritic(BaseModel):
     def create(self):
         # shared network
         x = inputs = Input(shape=self.board_size)
-        x = Conv2D(filters=32, kernel_size=3, strides=(1, 1), activation="relu")(x)
-        x = Conv2D(filters=64, kernel_size=3, strides=(1, 1), activation="relu")(x)
+        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
+        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
         x = Flatten()(x)
 
         # policy head
-        p = Dense(units=256, activation="relu")(x)
+        p = Dense(units=64, activation="relu")(x)
         p = policy_head = Dense(self.action_size, activation="softmax", name="policy")(
             p
         )
 
         # value head
-        v = Dense(units=256, activation="relu")(x)
+        v = Dense(units=64, activation="relu")(x)
         v = value_head = Dense(1, activation="tanh", name="value")(v)
 
         self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
@@ -112,20 +116,22 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss
 
-    def run_episode(self, env, model, max_steps):
-        state, _ = env.reset()
+    def run_episode(self, episode):
+        self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+
+        state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
 
         episode_action_probs = []
         episode_values = []
         episode_rewards = []
-        for step in range(max_steps):
+        for step in range(MAX_STEPS_EACH_EPISODE):
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
 
-            action_probs, value = model(state)
+            action_probs, value = self.model(state)
             action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
 
-            state, reward, done, legal, info = env.step(action)
+            state, reward, done, legal, info = self.env.step(action)
 
             episode_action_probs.append(action_probs[0, action])
             episode_values.append(value[0, 0])
@@ -139,16 +145,16 @@ class ActorCritic(BaseModel):
 
 
 class DeepQNetwork(BaseModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, env):
+        super().__init__(env)
         self.loss_function = tf.keras.losses.Huber(
             reduction=tf.keras.losses.Reduction.SUM
         )
 
     def create(self):
-        inputs = Input(shape=self.board_size)
-        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(inputs)
-        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(inputs)
+        x = inputs = Input(shape=self.board_size)
+        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
+        x = Conv2D(filters=64, kernel_size=3, strides=(1, 1), activation="relu")(x)
         x = Flatten()(x)
         x = Dense(units=64, activation="relu")(x)
         x = q_values = Dense(self.action_size, activation="linear", name="q-values")(x)
@@ -170,23 +176,26 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, env, model, max_steps, exploration_rate):
-        state, _ = env.reset()
+    def run_episode(self, episode):
+        self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+        self.exploration_rate = 0.5 ** (episode / (0.1 * MAX_EPISODES))
+
+        state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
 
         episode_q_values = []
         episode_rewards = []
-        for step in range(max_steps):
+        for step in range(MAX_STEPS_EACH_EPISODE):
             state = tf.convert_to_tensor(state)
             state = tf.expand_dims(state, 0)
 
-            q_values = model(state)
+            q_values = self.model(state)
 
-            if np.random.rand() <= exploration_rate:
+            if np.random.rand() <= self.exploration_rate:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.argmax(q_values)
 
-            state, reward, done, legal, info = env.step(action)
+            state, reward, done, legal, info = self.env.step(action)
 
             episode_q_values.append(q_values[0, action])
             episode_rewards.append(reward)

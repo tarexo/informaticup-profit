@@ -10,10 +10,10 @@ import collections
 import statistics
 
 
-def test_model_sanity(env, model, num_steps):
-    state, _ = env.reset()
+def test_model_sanity(env, model):
+    state, _ = env.reset(obstacle_probability=model.obstacle_probability)
 
-    for _ in range(num_steps):
+    for _ in range(MAX_STEPS_EACH_EPISODE):
         state = tf.convert_to_tensor(state)
         state = tf.expand_dims(state, 0)
 
@@ -42,41 +42,37 @@ if __name__ == "__main__":
     register_gym("Profit-v0")
     env = make_gym("Profit-v0")
 
-    model = DeepQNetwork()
+    model = DeepQNetwork(env)
+    # model = ActorCritic(env)
     model.summary()
 
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
-    max_episodes = 10000
-    min_episodes = int(0.1 * max_episodes)
-
-    max_steps_each_episode = 5
-
+    min_episodes = min(500, int(0.1 * MAX_EPISODES))
     model_sanity_check_frequency = 200
     solved_reward_threshold = 0.95 * SUCCESS_REWARD
 
     running_rewards = collections.deque(maxlen=min_episodes)
-    progress = tqdm.trange(max_episodes)
+    progress = tqdm.trange(MAX_EPISODES)
 
     for episode in progress:
         if episode % model_sanity_check_frequency == 0:
-            test_model_sanity(env, model, max_steps_each_episode)
+            test_model_sanity(env, model)
 
         with tf.GradientTape() as tape:
-            exploration_rate = 0.5 ** (episode / (0.1 * max_episodes))
-            loss, episode_reward = model.run_episode(
-                env, model, max_steps_each_episode, exploration_rate
-            )
+            loss, episode_reward = model.run_episode(episode)
 
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
         running_rewards.append(episode_reward)
         running_mean_reward = statistics.mean(running_rewards)
-        progress.set_postfix(
-            running_reward="%.2f" % running_mean_reward,
-            exploration_rate="%.2f" % exploration_rate,
-        )
+
+        progress_info = collections.OrderedDict()
+        progress_info["p"] = "%.2f" % model.obstacle_probability
+        progress_info["ε"] = "%.2f" % model.exploration_rate
+        progress_info["mean_final_reward"] = "%.2f" % running_mean_reward
+        progress.set_postfix(progress_info)
 
         if running_mean_reward > solved_reward_threshold and episode >= min_episodes:
             break

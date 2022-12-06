@@ -25,14 +25,18 @@ class ProfitGym(Environment, gym.Env):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-    def reset(self, seed=None, options=None):
+    def reset(self, obstacle_probability=0.1, seed=None, options=None):
         super().reset(seed=seed)
 
-        # task generator modifies self (this environment!)
-        mine, factory = self.task_generator.generate_task(
-            obstacle_probability=0.0, distance_range=[3, 5, 7, 9, 11, 13, 15]
+        if SIMPLE_GAME:
+            distance_range = range(3, MAX_WIDTH + MAX_HEIGHT, 2)
+        else:
+            distance_range = range(6, MAX_WIDTH + MAX_HEIGHT)
+
+        start_building, factory = self.task_generator.generate_task(
+            obstacle_probability, distance_range
         )
-        self.current_building = mine
+        self.current_building = start_building
         self.target_building = factory
 
         state = self.grid_to_observation()
@@ -79,7 +83,7 @@ class ProfitGym(Environment, gym.Env):
     def grid_to_observation(self):
         padded_grid = np.pad(self.grid, pad_width=1, constant_values="x")
 
-        empty = np.where(np.isin(padded_grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
+        # empty = np.where(np.isin(padded_grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
         obstacles = np.where(padded_grid != " ", 1.0, 0.0)
 
         # target_x, target_y = self.target_building.x, self.target_building.y
@@ -92,7 +96,7 @@ class ProfitGym(Environment, gym.Env):
         output = np.zeros((MAX_HEIGHT + 2, MAX_WIDTH + 2), dtype=np.float32)
         output[(agent_y, agent_x)] = 1
 
-        channels_first = np.stack([empty, obstacles, inputs, output])
+        channels_first = np.stack([obstacles, inputs, output])
         channels_last = np.moveaxis(channels_first, 0, 2)
         return channels_last
 
