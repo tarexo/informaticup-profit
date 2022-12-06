@@ -2,8 +2,8 @@ PRINT_ROUND_LOG = False
 
 SIMPLE_GAME = True
 
-MAX_WIDTH = 16
-MAX_HEIGHT = 16
+MAX_WIDTH = 8
+MAX_HEIGHT = 8
 # NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
 NUM_CHANNELS = 4
 
@@ -16,7 +16,7 @@ else:
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
 
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 GAMMA = 0.7
 
 
