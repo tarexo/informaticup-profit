@@ -16,6 +16,8 @@ class BaseModel(tf.keras.Model):
         super().__init__()
 
         self.model = None
+        self.board_size = (MAX_HEIGHT + 2, MAX_WIDTH + 2, NUM_CHANNELS)
+        self.action_size = NUM_ACTIONS
 
     def create(self):
         raise NotImplementedError
@@ -73,21 +75,20 @@ class ActorCritic(BaseModel):
         )
 
     def create(self):
-        board_size = (MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS)
-        action_size = NUM_ACTIONS
-
         # shared network
-        inputs = Input(shape=board_size)
-        x = Conv2D(filters=64, kernel_size=5, strides=(1, 1), activation="relu")(inputs)
+        x = inputs = Input(shape=self.board_size)
+        x = Conv2D(filters=32, kernel_size=3, strides=(1, 1), activation="relu")(x)
+        x = Conv2D(filters=64, kernel_size=3, strides=(1, 1), activation="relu")(x)
+        x = Flatten()(x)
 
         # policy head
-        p = Conv2D(filters=2, kernel_size=1, activation="relu")(x)
-        p = Flatten()(p)
-        p = policy_head = Dense(action_size, activation="softmax", name="policy")(p)
+        p = Dense(units=256, activation="relu")(x)
+        p = policy_head = Dense(self.action_size, activation="softmax", name="policy")(
+            p
+        )
 
         # value head
-        v = Conv2D(filters=1, kernel_size=1, activation="relu")(x)
-        v = Flatten()(v)
+        v = Dense(units=256, activation="relu")(x)
         v = value_head = Dense(1, activation="tanh", name="value")(v)
 
         self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
@@ -143,20 +144,14 @@ class DeepQNetwork(BaseModel):
         self.loss_function = tf.keras.losses.Huber(
             reduction=tf.keras.losses.Reduction.SUM
         )
-        self.exploration_rate = 0.2
-        tf.keras.optimizers.schedules.ExponentialDecay(
-            self.exploration_rate, decay_steps=100000, decay_rate=0.96, staircase=True
-        )
 
     def create(self):
-        board_size = (MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS)
-        action_size = NUM_ACTIONS
-
-        inputs = Input(shape=board_size)
-        x = Conv2D(filters=64, kernel_size=5, strides=(1, 1), activation="relu")(inputs)
-        x = Dense(filters=64, kernel_size=1, activation="relu")(x)
+        inputs = Input(shape=self.board_size)
+        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(inputs)
+        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(inputs)
         x = Flatten()(x)
-        x = q_values = Dense(action_size, activation="linear", name="q-values")(x)
+        x = Dense(units=64, activation="relu")(x)
+        x = q_values = Dense(self.action_size, activation="linear", name="q-values")(x)
 
         self.model = Model(inputs=inputs, outputs=q_values)
 
@@ -169,13 +164,13 @@ class DeepQNetwork(BaseModel):
 
         return greedy_action
 
-    def compute_q_loss(self, q_values, rewards):
+    def compute_loss(self, q_values, rewards):
         returns = self.get_expected_return(rewards)
         loss = self.loss_function(q_values, returns)
 
         return loss
 
-    def run_q_episode(self, env, model, max_steps):
+    def run_episode(self, env, model, max_steps, exploration_rate):
         state, _ = env.reset()
 
         episode_q_values = []
@@ -186,7 +181,7 @@ class DeepQNetwork(BaseModel):
 
             q_values = model(state)
 
-            if np.random.rand() <= self.exploration_rate:
+            if np.random.rand() <= exploration_rate:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.argmax(q_values)

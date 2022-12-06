@@ -16,7 +16,7 @@ class ProfitGym(Environment, gym.Env):
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
         self.observation_space = spaces.MultiBinary(
-            (MAX_HEIGHT, MAX_WIDTH, NUM_CHANNELS)
+            (MAX_HEIGHT + 2, MAX_WIDTH + 2, NUM_CHANNELS)
         )
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
@@ -77,17 +77,19 @@ class ProfitGym(Environment, gym.Env):
         print(self)
 
     def grid_to_observation(self):
-        empty = np.where(np.isin(self.grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
-        obstacles = np.where(self.grid != " ", 1.0, 0.0)
+        padded_grid = np.pad(self.grid, pad_width=1, constant_values="x")
+
+        empty = np.where(np.isin(padded_grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
+        obstacles = np.where(padded_grid != " ", 1.0, 0.0)
 
         # target_x, target_y = self.target_building.x, self.target_building.y
         target_input_positions = self.target_building.get_input_positions()
         input_idx = target_input_positions[:, 1], target_input_positions[:, 0]
-        inputs = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=np.float32)
+        inputs = np.zeros((MAX_HEIGHT + 2, MAX_WIDTH + 2), dtype=np.float32)
         inputs[input_idx] = 1
 
         agent_x, agent_y = self.current_building.get_output_positions()[0]
-        output = np.zeros((MAX_HEIGHT, MAX_WIDTH), dtype=np.float32)
+        output = np.zeros((MAX_HEIGHT + 2, MAX_WIDTH + 2), dtype=np.float32)
         output[(agent_y, agent_x)] = 1
 
         channels_first = np.stack([empty, obstacles, inputs, output])

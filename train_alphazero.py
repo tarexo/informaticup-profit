@@ -42,15 +42,15 @@ if __name__ == "__main__":
     register_gym("Profit-v0")
     env = make_gym("Profit-v0")
 
-    model = ActorCritic()
+    model = DeepQNetwork()
     model.summary()
 
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
     max_episodes = 10000
-    min_episodes = int(0.2 * max_episodes)
+    min_episodes = int(0.1 * max_episodes)
 
-    max_steps_each_episode = 10
+    max_steps_each_episode = 5
 
     model_sanity_check_frequency = 200
     solved_reward_threshold = 0.95 * SUCCESS_REWARD
@@ -63,7 +63,10 @@ if __name__ == "__main__":
             test_model_sanity(env, model, max_steps_each_episode)
 
         with tf.GradientTape() as tape:
-            loss, episode_reward = model.run_episode(env, model, max_steps_each_episode)
+            exploration_rate = 0.5 ** (episode / (0.1 * max_episodes))
+            loss, episode_reward = model.run_episode(
+                env, model, max_steps_each_episode, exploration_rate
+            )
 
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -72,7 +75,7 @@ if __name__ == "__main__":
         running_mean_reward = statistics.mean(running_rewards)
         progress.set_postfix(
             running_reward="%.2f" % running_mean_reward,
-            # exploration_rate="%.2f" % exploration_rate,
+            exploration_rate="%.2f" % exploration_rate,
         )
 
         if running_mean_reward > solved_reward_threshold and episode >= min_episodes:
