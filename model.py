@@ -1,40 +1,90 @@
 import tensorflow as tf
-from keras.models import Model
+from keras.models import Model, load_model, save_model
 from keras.layers import (
     Dense,
     Conv2D,
     Flatten,
     Input,
 )
+import os
 import numpy as np
 
 from helper.constants.settings import *
+from helper.dicts.convert_actions import named_array
 
 
 class BaseModel(tf.keras.Model):
     def __init__(self, env):
         super().__init__()
 
-        self.env = env
         self.model = None
-        self.board_size = (MAX_HEIGHT + 2, MAX_WIDTH + 2, NUM_CHANNELS)
+        self.env = env
+        self.board_size = self.env.observation_shape
         self.action_size = NUM_ACTIONS
 
         self.obstacle_probability = 0.0
         self.exploration_rate = None
 
-    def create(self):
-        raise NotImplementedError
+    def create(self, num_conv_layers):
+        x = inputs = Input(shape=self.board_size, name="Observation")
+
+        num_filters = INITIAL_CONV_FILTERS
+        for i in range(num_conv_layers):
+            x = Conv2D(num_filters, 3, name=f"Conv_{i+1}", activation="relu")(x)
+            if FILTER_DECREASING:
+                num_filters //= 2
+
+        x = Flatten(name="Flatten")(x)
+        x = Dense(units=NUM_FEATURES, activation="relu", name="Features")(x)
+
+        outputs = self.create_heads(x)
+
+        self.model = Model(inputs=inputs, outputs=outputs, name=self.architecture_name)
+
+    def transfer(self, path, trainable):
+        if not os.path.isdir(path):
+            print(f"WARNING: model could not be tranfered. {path} does not exist!")
+            return
+        trained_model = load_model(path, compile=False)
+        conv_layers = [layer for layer in trained_model.layers if type(layer) == Conv2D]
+
+        for i, trained_layer in enumerate(conv_layers, 1):
+            if self.model.layers[i].filters != trained_layer.filters:
+                print(f"WARNING: #filters of Convolutional Layer {i} does not match")
+                print(f"{self.model.layers[i].filters} vs {trained_layer.filters}")
+                continue
+            self.model.layers[i].set_weights(trained_layer.get_weights())
+            self.model.layers[i].trainable = trainable
+            print(f"Convolutional Layer {i} has been transfered from {path}")
+
+        if RETRAIN_LAST_CONV_LAYER:
+            self.model.layers[i].trainable = True
 
     def load(self, path):
-        self.model.load_weights(path)
+        if not os.path.isdir(path):
+            print(f"WARNING: model could not be loaded. {path} does not exist!")
+            return
+        self.get_model_path = load_model(path, compile=False)
+        print(f"Model has been loaded from {path}")
 
     def save(self, path):
-        self.model.save(path)
+        save_model(self.model, path, include_optimizer=False)
+        print(f"model has been saved to {path}")
+
+    def get_model_description(self):
+        conv_layers = [layer for layer in self.model.layers if type(layer) == Conv2D]
+        conv_str = ""
+        for conv_layer in conv_layers:
+            num_filters = conv_layer.filters
+            conv_str += f"_{num_filters}"
+
+        return f"{self.env.width}x{self.env.height}__{self.architecture_name}{conv_str}"
+
+    def get_model_path(self):
+        return os.path.join(".", "saved_models", self.get_model_description())
 
     def summary(self):
-        if self.model is None:
-            self.create()
+        print()
         self.model.summary()
 
     @staticmethod
@@ -65,45 +115,36 @@ class BaseModel(tf.keras.Model):
         pass
 
     def call(self, inputs):
-        if self.model is None:
-            self.create()
-
         return self.model(inputs)
 
 
 class ActorCritic(BaseModel):
     def __init__(self, env):
         super().__init__(env)
+        self.architecture_name = "A-C"
         self.critic_loss_function = tf.keras.losses.Huber(
             reduction=tf.keras.losses.Reduction.SUM
         )
 
-    def create(self):
-        # shared network
-        x = inputs = Input(shape=self.board_size)
-        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
-        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
-        x = Flatten()(x)
+    def create_heads(self, x):
+        # unique policy network
+        p = Dense(units=NUM_FEATURES * 2, activation="relu", name="Policy-Features")(x)
+        p = Dense(self.action_size, activation="softmax", name="Policy-Head")(p)
 
-        # policy head
-        p = Dense(units=64, activation="relu")(x)
-        p = policy_head = Dense(self.action_size, activation="softmax", name="policy")(
-            p
-        )
+        # unique value network
+        v = Dense(units=NUM_FEATURES, activation="relu", name="Value-Features")(x)
+        v = Dense(1, activation="tanh", name="Value-Head")(v)
 
-        # value head
-        v = Dense(units=64, activation="relu")(x)
-        v = value_head = Dense(1, activation="tanh", name="value")(v)
-
-        self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
+        return [p, v]
 
     def verbose_greedy_prediction(self, state):
         action_probs, value = self.model(state)
         greedy_action = np.argmax(action_probs)
 
-        print("\naction_probs:")
-        print(action_probs.numpy().reshape((NUM_DIRECTIONS, NUM_SUBBUILDINGS)))
-        print("value:", value.numpy()[0, 0])
+        named_action_probs = named_array(action_probs)
+        print("\n\nAction Policy:")
+        print(named_action_probs)
+        print("\nValue Prediction:", round(value.numpy()[0, 0], 3))
 
         return greedy_action
 
@@ -116,8 +157,9 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss
 
-    def run_episode(self, episode):
-        self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+    def run_episode(self, episode, obstacle_probability):
+        # self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+        self.obstacle_probability = min(MAX_OBSTACLE_PROBABILITY, obstacle_probability)
 
         state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
 
@@ -147,26 +189,23 @@ class ActorCritic(BaseModel):
 class DeepQNetwork(BaseModel):
     def __init__(self, env):
         super().__init__(env)
+        self.architecture_name = "DQN"
         self.loss_function = tf.keras.losses.Huber(
             reduction=tf.keras.losses.Reduction.SUM
         )
 
-    def create(self):
-        x = inputs = Input(shape=self.board_size)
-        x = Conv2D(filters=64, kernel_size=2, strides=(1, 1), activation="relu")(x)
-        x = Conv2D(filters=64, kernel_size=3, strides=(1, 1), activation="relu")(x)
-        x = Flatten()(x)
-        x = Dense(units=64, activation="relu")(x)
-        x = q_values = Dense(self.action_size, activation="linear", name="q-values")(x)
-
-        self.model = Model(inputs=inputs, outputs=q_values)
+    def create_heads(self, x):
+        # single q-values head
+        q_values = Dense(self.action_size, activation="linear", name="Q-Values")(x)
+        return q_values
 
     def verbose_greedy_prediction(self, state):
         q_values = self.model(state)
         greedy_action = np.argmax(q_values)
 
-        print("\nq_values:")
-        print(q_values.numpy().reshape((NUM_DIRECTIONS, NUM_SUBBUILDINGS)))
+        named_q_values = named_array(q_values)
+        print("\n\nQ-Values:")
+        print(named_q_values)
 
         return greedy_action
 
@@ -176,8 +215,9 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, episode):
-        self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+    def run_episode(self, episode, obstacle_probability):
+        # self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
+        self.obstacle_probability = min(MAX_OBSTACLE_PROBABILITY, obstacle_probability)
         self.exploration_rate = 0.5 ** (episode / (0.1 * MAX_EPISODES))
 
         state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
