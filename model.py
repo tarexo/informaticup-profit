@@ -150,9 +150,9 @@ class ActorCritic(BaseModel):
 
     def compute_loss(self, action_probs, values, rewards):
         returns = self.get_expected_return(rewards)
-        diff = np.array(returns) - np.array(values)
+        advantage = np.array(returns) - np.array(values)
 
-        actor_loss = tf.math.reduce_sum(-tf.math.log(action_probs) * diff)
+        actor_loss = tf.math.reduce_sum(-tf.math.log(action_probs) * advantage)
         critic_loss = self.critic_loss_function(values, returns)
 
         return actor_loss + critic_loss
