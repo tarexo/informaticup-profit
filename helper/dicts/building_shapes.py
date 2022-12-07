@@ -62,19 +62,7 @@ BUILDING_SHAPES = {
                 Shape(
                     0,
                     0,
-                    np.array([["f"]]),
-                )
-            ]
-            * 8
-        )
-    ),
-    SimpleDeposit: dict(
-        enumerate(
-            [
-                Shape(
-                    0,
-                    0,
-                    np.array([["d"]]),
+                    np.array([["F"]]),
                 )
             ]
             * 8

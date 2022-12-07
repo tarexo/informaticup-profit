@@ -38,8 +38,8 @@ class TaskGenerator:
 
     def generate_hard_task(self, obstacle_probability=0.15):
         # multiple buildings missing, many obstacles
-        assert MAX_WIDTH > 40
-        distance_range = range(18, MAX_WIDTH)
+        assert self.env.width > 40
+        distance_range = range(18, self.env.width)
         return self.generate_task(obstacle_probability, distance_range)
 
     def generate_task(self, obstacle_probability, distance_range=None):
@@ -186,8 +186,8 @@ class TaskGenerator:
 
 if __name__ == "__main__":
     env = environment.Environment(
-        MAX_WIDTH,
-        MAX_HEIGHT,
+        32,
+        32,
         50,
         [
             {

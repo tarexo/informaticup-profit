@@ -100,7 +100,7 @@ class SimpleFactory(Factory):
         return building_dict
 
     def get_input_positions(self):
-        return self.get_element_positions("f")
+        return self.get_element_positions("F")
 
 
 from helper.constants.settings import SIMPLE_GAME

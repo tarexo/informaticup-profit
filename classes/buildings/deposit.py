@@ -98,7 +98,7 @@ class SimpleDeposit(Deposit):
         super().__init__(position, subtype, 1, 1)
         from shapes import Shape
 
-        self.shape = Shape(0, 0, np.array([["d"]]))
+        self.shape = Shape(0, 0, np.array([["D"]]))
         self.resources[subtype] += 5
 
     NUM_SUBTYPES = 8
@@ -115,7 +115,7 @@ class SimpleDeposit(Deposit):
         return building_dict
 
     def get_output_positions(self):
-        return self.get_element_positions("d")
+        return self.get_element_positions("D")
 
 
 from helper.constants.settings import SIMPLE_GAME

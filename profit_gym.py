@@ -15,9 +15,8 @@ class ProfitGym(Environment, gym.Env):
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
-        self.observation_space = spaces.MultiBinary(
-            (MAX_HEIGHT + 2, MAX_WIDTH + 2, NUM_CHANNELS)
-        )
+        self.observation_shape = (self.height + 2, self.width + 2, NUM_CHANNELS)
+        self.observation_space = spaces.MultiBinary(self.observation_shape)
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((NUM_SUBBUILDINGS, NUM_DIRECTIONS))
@@ -29,9 +28,9 @@ class ProfitGym(Environment, gym.Env):
         super().reset(seed=seed)
 
         if SIMPLE_GAME:
-            distance_range = range(3, MAX_WIDTH + MAX_HEIGHT, 2)
+            distance_range = range(3, self.width + self.height, 2)
         else:
-            distance_range = range(6, MAX_WIDTH + MAX_HEIGHT)
+            distance_range = range(6, self.width + self.height)
 
         start_building, factory = self.task_generator.generate_task(
             obstacle_probability, distance_range
@@ -60,9 +59,15 @@ class ProfitGym(Environment, gym.Env):
 
         return state, reward, done, legal, info
 
-    def get_building_from_action(self, action_id):
+    @staticmethod
+    def split_action(action_id):
         positional_action = action_id // NUM_SUBBUILDINGS
         building_action = action_id % NUM_SUBBUILDINGS
+
+        return positional_action, building_action
+
+    def get_building_from_action(self, action_id):
+        positional_action, building_action = self.split_action(action_id)
 
         x, y = self.current_building.get_output_positions()[0]
         x_offset, y_offset = POSITIONAL_ACTION_TO_DIRECTION[positional_action]
@@ -89,11 +94,11 @@ class ProfitGym(Environment, gym.Env):
         # target_x, target_y = self.target_building.x, self.target_building.y
         target_input_positions = self.target_building.get_input_positions()
         input_idx = target_input_positions[:, 1], target_input_positions[:, 0]
-        inputs = np.zeros((MAX_HEIGHT + 2, MAX_WIDTH + 2), dtype=np.float32)
+        inputs = np.zeros((self.height + 2, self.width + 2), dtype=np.float32)
         inputs[input_idx] = 1
 
         agent_x, agent_y = self.current_building.get_output_positions()[0]
-        output = np.zeros((MAX_HEIGHT + 2, MAX_WIDTH + 2), dtype=np.float32)
+        output = np.zeros((self.height + 2, self.width + 2), dtype=np.float32)
         output[(agent_y, agent_x)] = 1
 
         channels_first = np.stack([obstacles, inputs, output])
@@ -101,15 +106,15 @@ class ProfitGym(Environment, gym.Env):
         return channels_last
 
 
-def register_gym(name):
-    register(id=name, entry_point="profit_gym:ProfitGym")
+def register_gym():
+    register(id=GYM_ID, entry_point="profit_gym:ProfitGym")
 
 
-def make_gym(name):
+def make_gym(width, height):
     return gym.make(
-        name,
-        width=MAX_WIDTH,
-        height=MAX_HEIGHT,
+        GYM_ID,
+        width=width,
+        height=height,
         turns=50,
         products={},
         render_mode=None,
