@@ -69,7 +69,7 @@ def train(env, model):
 def train_model(width, height, num_conv_layers, transfer_model_path=None):
     env = make_gym(width, height)
 
-    if MODEL_ID == "QDN":
+    if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
     elif MODEL_ID == "A-C":
         model = ActorCritic(env)
