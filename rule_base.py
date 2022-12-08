@@ -7,11 +7,9 @@ import helper.functions.file_handler as fh
 
 def generate_solution(filename):
     env = fh.environment_from_json(filename)
-
     add_factory(env)
-    print(env.grid)
     add_mine(env)
-    print(env.grid)
+    find_path(env)
 
 
 def add_factory(env: Environment):
@@ -51,16 +49,17 @@ def add_mine(env: Environment):
         if y + height + 1 < env.grid.shape[0]:
             lower.append([i, y + height + 1])
 
-    print(right)
-
     positions = [right, lower, left, upper]
     for i in range(len(positions)):
         for pos in positions[i]:
-            print(pos)
             mine = buildings.Mine((pos[0], pos[1]), i)
             success = env.add_building(mine)
             if success == mine:
                 return
+
+
+def find_path(env: Environment):
+    print(env)
 
 
 if __name__ == "__main__":
