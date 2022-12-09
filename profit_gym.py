@@ -24,16 +24,11 @@ class ProfitGym(Environment, gym.Env):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-    def reset(self, obstacle_probability=0.1, seed=None, options=None):
+    def reset(self, difficulty=0.0, no_obstacles=False, seed=None, options=None):
         super().reset(seed=seed)
 
-        if SIMPLE_GAME:
-            distance_range = range(3, self.width + self.height, 2)
-        else:
-            distance_range = range(6, self.width + self.height)
-
         start_building, factory = self.task_generator.generate_task(
-            obstacle_probability, distance_range
+            difficulty, no_obstacles
         )
         self.current_building = start_building
         self.target_building = factory

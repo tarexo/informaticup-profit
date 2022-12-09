@@ -22,17 +22,13 @@ class BaseModel(tf.keras.Model):
         self.board_size = self.env.observation_shape
         self.action_size = NUM_ACTIONS
 
-        self.obstacle_probability = 0.0
-        self.exploration_rate = None
-
     def create(self, num_conv_layers):
         x = inputs = Input(shape=self.board_size, name="Observation")
 
-        num_filters = INITIAL_CONV_FILTERS
         for i in range(num_conv_layers):
-            x = Conv2D(num_filters, 3, name=f"Conv_{i+1}", activation="relu")(x)
-            if FILTER_DECREASING:
-                num_filters //= 2
+            x = Conv2D(
+                NUM_CONV_FILTERS, KERNEL_SIZE, name=f"Conv_{i+1}", activation="relu"
+            )(x)
 
         x = Flatten(name="Flatten")(x)
         x = Dense(units=NUM_FEATURES, activation="relu", name="Features")(x)
@@ -50,15 +46,15 @@ class BaseModel(tf.keras.Model):
 
         for i, trained_layer in enumerate(conv_layers, 1):
             if self.model.layers[i].filters != trained_layer.filters:
-                print(f"WARNING: #filters of Convolutional Layer {i} does not match")
+                print(f"WARNING: #filters of Convolutional Layer {i} do not match")
                 print(f"{self.model.layers[i].filters} vs {trained_layer.filters}")
                 continue
             self.model.layers[i].set_weights(trained_layer.get_weights())
             self.model.layers[i].trainable = trainable
-            print(f"Convolutional Layer {i} has been transfered from {path}")
+            print(f"Convolutional Layer {i} has been frozen and transfered from {path}")
 
-        if RETRAIN_LAST_CONV_LAYER:
-            self.model.layers[i].trainable = True
+    def transfer_heads(self, trained_model):
+        raise NotImplementedError
 
     def load(self, path):
         if not os.path.isdir(path):
@@ -72,13 +68,13 @@ class BaseModel(tf.keras.Model):
         print(f"model has been saved to {path}")
 
     def get_model_description(self):
-        conv_layers = [layer for layer in self.model.layers if type(layer) == Conv2D]
-        conv_str = ""
-        for conv_layer in conv_layers:
-            num_filters = conv_layer.filters
-            conv_str += f"_{num_filters}"
+        env_str = "SIMPLE" if SIMPLE_GAME else "NORMAL"
+        grid_str = f"{self.env.width}x{self.env.height}"
+        architecture_str = self.architecture_name
+        architecture_str += f"{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
+        architecture_str += f"_{NUM_FEATURES}"
 
-        return f"{self.env.width}x{self.env.height}__{self.architecture_name}{conv_str}"
+        return env_str + "__" + grid_str + "__" + architecture_str
 
     def get_model_path(self):
         return os.path.join(".", "saved_models", self.get_model_description())
@@ -86,6 +82,16 @@ class BaseModel(tf.keras.Model):
     def summary(self):
         print()
         self.model.summary()
+
+    def has_frozen_layers(self):
+        for layer in self.model.layers[1:]:
+            if not layer.trainable:
+                return True
+        return False
+
+    def unfreeze(self):
+        for layer in self.model.layers[1:]:
+            layer.trainable = True
 
     @staticmethod
     def get_expected_return(rewards, normalize=False):
@@ -101,6 +107,10 @@ class BaseModel(tf.keras.Model):
             returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
 
         return returns
+
+    @staticmethod
+    def min_max_scaling(reward):
+        return (reward - ILLEGAL_REWARD) / (SUCCESS_REWARD - ILLEGAL_REWARD)
 
     def compute_loss(self, *args, **kwargs):
         raise NotImplementedError
@@ -157,12 +167,7 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss
 
-    def run_episode(self, episode, obstacle_probability):
-        # self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
-        self.obstacle_probability = min(MAX_OBSTACLE_PROBABILITY, obstacle_probability)
-
-        state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
-
+    def run_episode(self, state, exploration_rate):
         episode_action_probs = []
         episode_values = []
         episode_rewards = []
@@ -183,7 +188,9 @@ class ActorCritic(BaseModel):
                 break
 
         loss = self.compute_loss(episode_action_probs, episode_values, episode_rewards)
-        return loss, episode_rewards[-1]
+        normalized_episode_reward = self.min_max_scaling(episode_rewards[-1])
+
+        return loss, normalized_episode_reward
 
 
 class DeepQNetwork(BaseModel):
@@ -215,13 +222,7 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, episode, obstacle_probability):
-        # self.obstacle_probability = FINAL_OBSTACLE_PROBABILITY * episode / MAX_EPISODES
-        self.obstacle_probability = min(MAX_OBSTACLE_PROBABILITY, obstacle_probability)
-        self.exploration_rate = 0.5 ** (episode / (0.1 * MAX_EPISODES))
-
-        state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
-
+    def run_episode(self, state, exploration_rate):
         episode_q_values = []
         episode_rewards = []
         for step in range(MAX_STEPS_EACH_EPISODE):
@@ -230,7 +231,7 @@ class DeepQNetwork(BaseModel):
 
             q_values = self.model(state)
 
-            if np.random.rand() <= self.exploration_rate:
+            if np.random.rand() <= exploration_rate:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.argmax(q_values)
@@ -244,4 +245,6 @@ class DeepQNetwork(BaseModel):
                 break
 
         loss = self.compute_loss(episode_q_values, episode_rewards)
-        return loss, episode_rewards[-1]
+        normalized_episode_reward = self.min_max_scaling(episode_rewards[-1])
+
+        return loss, normalized_episode_reward

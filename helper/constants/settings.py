@@ -4,32 +4,38 @@ PRINT_ROUND_LOG = False
 # Replace Deposit/Factory with single celled variant + only 4 placable buildings: conveyors are 2x1
 SIMPLE_GAME = True
 
-MODEL_ID = "A-C"  # "DQN" or "A-C"
+MODEL_ID = "DQN"  # "DQN" or "A-C"
 # Gradually increase Environment size in order to train convolutional layers one after the other
 TRANSFER_LEARNING = True
 # continue training of partially trained model (currently not implemented)
 CONTINUE_TRAINING = False
 
 # Model
-INITIAL_CONV_FILTERS = 128
-FILTER_DECREASING = False
-NUM_FEATURES = 64
+NUM_CONV_FILTERS = 64
+KERNEL_SIZE = 3
+NUM_FEATURES = 32
 
 # Freeze all transfered convolutional layers except last (allow for some adjustments of the larger grid size)
-RETRAIN_LAST_CONV_LAYER = True
+RETRAIN_LAST_CONV_LAYER = False
 
 # Hyperparameters
-LEARNING_RATE = 0.001
-GAMMA = 0.9
-
 MAX_EPISODES = 100000
+PRE_TRAIN_EPISODES = MAX_EPISODES // 10
+FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 100
 MAX_OBSTACLE_PROBABILITY = 0.5
+# what is the minimum reward before increasing difficulty?
+INCREASE_DIFFICULTY_AT = 0.15
+# at what reward level should the difficulty be at its maximum?
+MAX_DIFFICULTY_AT = 0.75
+
+LEARNING_RATE = 0.0001
+GAMMA = 0.85
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
-LEGAL_REWARD = 0
-ILLEGAL_REWARD = 0
+LEGAL_REWARD = -0.01
+ILLEGAL_REWARD = -1
 
 
 # Action/Observation Space (only change when the game structure has changed)

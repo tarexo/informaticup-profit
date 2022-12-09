@@ -12,8 +12,8 @@ import statistics
 import os
 
 
-def test_model_sanity(env, model):
-    state, _ = env.reset(obstacle_probability=model.obstacle_probability)
+def test_model_sanity(env, model, difficulty, no_obstacles):
+    state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
         state = tf.convert_to_tensor(state)
@@ -35,18 +35,33 @@ def test_model_sanity(env, model):
     env.render()
 
 
-def train(env, model):
+def determine_difficulty(mean_reward):
+    if mean_reward <= INCREASE_DIFFICULTY_AT:
+        return 0.0
+    elif mean_reward >= MAX_DIFFICULTY_AT:
+        return 1.0
+    return (mean_reward - INCREASE_DIFFICULTY_AT) / (
+        MAX_DIFFICULTY_AT - INCREASE_DIFFICULTY_AT
+    )
+
+
+def train(env, model, max_episodes, no_obstacles=False):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
     running_rewards = collections.deque(maxlen=min_episodes)
     running_mean_reward = 0.0
-    progress = tqdm.trange(MAX_EPISODES)
+    progress = tqdm.trange(max_episodes)
     for episode in progress:
+        difficulty = determine_difficulty(running_mean_reward)
+        exploration_rate = 0.5 ** (episode / (0.1 * max_episodes))
+
         if episode % model_sanity_check_frequency == 0:
-            test_model_sanity(env, model)
+            test_model_sanity(env, model, difficulty, no_obstacles)
 
         with tf.GradientTape() as tape:
-            loss, episode_reward = model.run_episode(episode, 0.5 * running_mean_reward)
+            state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
+
+            loss, episode_reward = model.run_episode(state, exploration_rate)
 
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -55,11 +70,9 @@ def train(env, model):
         running_mean_reward = statistics.mean(running_rewards)
 
         progress_info = collections.OrderedDict()
-        # currently uses mean_final_reward  as obstacle_probability
-        # progress_info["p"] = "%.2f" % model.obstacle_probability
-        if model.exploration_rate is not None:
-            progress_info["ε"] = "%.2f" % model.exploration_rate
-        progress_info["mean_final_reward"] = "%.2f" % running_mean_reward
+        progress_info["difficulty"] = "%.2f" % difficulty
+        progress_info["ε"] = "%.2f" % exploration_rate
+        progress_info["mean_reward"] = "%.2f" % running_mean_reward
         progress.set_postfix(progress_info)
 
         if running_mean_reward > solved_reward_threshold and episode >= min_episodes:
@@ -85,17 +98,31 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
         model.transfer(transfer_model_path, trainable=False)
     model.summary()
 
-    train(env, model)
+    # Pre-Train (no obstacles)
+    train(env, model, PRE_TRAIN_EPISODES, no_obstacles=True)
+    # model.save(model_path)
+
+    # Main Training
+    train(env, model, MAX_EPISODES)
     model.save(model_path)
+
+    # Fine Tune
+    if model.has_frozen_layers():
+        model.unfreeze()
+        train(env, model, FINE_TUNE_EPISODES)
+        model.save(model_path)
 
     return model_path
 
 
-def train_transfer_models(board_sizes):
+def train_transfer_models(initial_size, final_size):
     transfer_model_path = None
 
+    step_size = KERNEL_SIZE - 1
+
     print(f"\nTraining multiple transfer models...\n")
-    for num_conv_layers, size in enumerate(board_sizes, 2):
+    for size in range(initial_size, final_size + 1, step_size):
+        num_conv_layers = (size + 1) // step_size
         model_path = train_model(size, size, num_conv_layers, transfer_model_path)
         transfer_model_path = model_path
 
@@ -108,7 +135,7 @@ if __name__ == "__main__":
     eps = np.finfo(np.float32).eps.item()
     # for some reason eager execution is not enabled in my (Leo's) installation
     tf.config.run_functions_eagerly(True)
-    # supress AVX_WARNING!
+    # suppress AVX_WARNING!
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
     min_episodes = min(500, int(0.1 * MAX_EPISODES))
@@ -119,14 +146,13 @@ if __name__ == "__main__":
     register_gym()
 
     if TRANSFER_LEARNING:
-        board_sizes = range(4, 12, 2)
-        train_transfer_models(board_sizes)
+        initial_size = 2 + KERNEL_SIZE
+        final_size = 13
+        train_transfer_models(initial_size, final_size)
     else:
-        width = height = 16
-        num_conv_layers = 5
-        # transfer_model_path = None
-        # transfer_model_path = ".\\saved_models\\4x4__DQN_512_256"
-        # transfer_model_path = ".\\saved_models\\6x6__DQN_512_256_128"
-        transfer_model_path = ".\\saved_models\\8x8__DQN_512_256_128_64"
+        width = height = 13
+        num_conv_layers = (width + 1) // KERNEL_SIZE - 1
+        transfer_model_path = None
+        # transfer_model_path = ".\\saved_models\\SIMPLE__5x5__DQN_128-3x3_64"
 
         train_model(width, height, num_conv_layers, transfer_model_path)
