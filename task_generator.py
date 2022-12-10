@@ -16,15 +16,18 @@ class TaskGenerator:
         self.env = env
 
     def generate_task(self, difficulty, no_obstacles=False):
-        self.env.empty()
-
         obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
+
+        self.env.empty()
+        # middle_obstacle = self.place_obstacle_in_middle()
 
         deposit = self.place_at_random_position(Deposit, 0)
         constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
+
+        # self.env.remove_building(middle_obstacle)
         if not no_obstacles:
             self.add_obstacles(p=obstacle_probability)
 
@@ -38,7 +41,7 @@ class TaskGenerator:
         return start_building, factory
 
     def get_difficulty_params(self, difficulty):
-        obstacle_probability = difficulty * MAX_OBSTACLE_PROBABILITY
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * (difficulty ** 2)
         max_distance = max(4, int((self.env.width + self.env.height) * difficulty))
         if SIMPLE_GAME:
             distance_range = range(3, max_distance, 2)
@@ -52,6 +55,8 @@ class TaskGenerator:
         new_building = deposit
         while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
+            if not best_buildings:
+                print(self.env)
             assert best_buildings
             new_building = random.choice(best_buildings)
             self.env.add_building(new_building)
@@ -77,6 +82,10 @@ class TaskGenerator:
             return self.place_at_random_position(BuildingClass, subtype, constraint)
         self.env.add_building(building)
         return building
+
+    def place_obstacle_in_middle(self):
+        obstacle = Obstacle((self.env.width // 2, self.env.height // 2), 0, 1, 1)
+        return self.env.add_building(obstacle)
 
     def get_random_legal_building(
         self, BuildingClass, subtype, width=None, height=None

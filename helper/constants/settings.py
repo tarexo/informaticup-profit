@@ -13,28 +13,30 @@ CONTINUE_TRAINING = False
 # Model
 NUM_CONV_FILTERS = 64
 KERNEL_SIZE = 3
-NUM_FEATURES = 32
+NUM_FEATURES = 64
 
 # Freeze all transfered convolutional layers except last (allow for some adjustments of the larger grid size)
 RETRAIN_LAST_CONV_LAYER = False
 
 # Hyperparameters
-MAX_EPISODES = 100000
+MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 100
-MAX_OBSTACLE_PROBABILITY = 0.5
+MAX_OBSTACLE_PROBABILITY = 0.3
 # what is the minimum reward before increasing difficulty?
-INCREASE_DIFFICULTY_AT = 0.15
+INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?
-MAX_DIFFICULTY_AT = 0.75
+MAX_DIFFICULTY_AT = 0.8
 
 LEARNING_RATE = 0.0001
+FINAL_EXPLORATION_RATE = 0.001
 GAMMA = 0.85
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
 LEGAL_REWARD = -0.01
+DISTANCE_REDUCTION_REWARD = 0.01
 ILLEGAL_REWARD = -1
 
 

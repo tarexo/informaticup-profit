@@ -53,7 +53,7 @@ def train(env, model, max_episodes, no_obstacles=False):
     progress = tqdm.trange(max_episodes)
     for episode in progress:
         difficulty = determine_difficulty(running_mean_reward)
-        exploration_rate = 0.5 ** (episode / (0.1 * max_episodes))
+        exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
 
         if episode % model_sanity_check_frequency == 0:
             test_model_sanity(env, model, difficulty, no_obstacles)
@@ -99,7 +99,7 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
     model.summary()
 
     # Pre-Train (no obstacles)
-    train(env, model, PRE_TRAIN_EPISODES, no_obstacles=True)
+    # train(env, model, PRE_TRAIN_EPISODES, no_obstacles=True)
     # model.save(model_path)
 
     # Main Training

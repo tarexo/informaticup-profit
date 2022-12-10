@@ -114,6 +114,9 @@ class Environment:
             return False
         if self.violates_single_input(building):
             return False
+        # technically not illegal, but very dumb move!
+        if self.creates_connection_loop(building):
+            return False
         return True
 
     def coords_out_off_bounds(self, x, y):
@@ -188,6 +191,13 @@ class Environment:
 
         if outgoing_connections > 1:
             return True
+        return False
+
+    def creates_connection_loop(self, building):
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                if self.would_connect_to(other_building, building):
+                    return True
         return False
 
     def get_adjacent_inputs(self, x, y):

@@ -33,6 +33,10 @@ class ProfitGym(Environment, gym.Env):
         self.current_building = start_building
         self.target_building = factory
 
+        self.target_distance = self.get_min_distance(
+            self.current_building, self.target_building
+        )
+
         state = self.grid_to_observation()
         info = {}
 
@@ -48,11 +52,27 @@ class ProfitGym(Environment, gym.Env):
             self.current_building = new_building
 
         done = self.is_connected(self.current_building, self.target_building)
-        reward = SUCCESS_REWARD if done else (LEGAL_REWARD if legal else ILLEGAL_REWARD)
+
+        old_target_distance = self.target_distance
+        self.target_distance = self.get_min_distance(
+            self.current_building, self.target_building
+        )
+        distance_reduction = old_target_distance - self.target_distance
+
+        reward = self.calculate_reward(done, legal, distance_reduction)
+
         state = self.grid_to_observation()
         info = {}
 
         return state, reward, done, legal, info
+
+    @staticmethod
+    def calculate_reward(done, legal, distance_reduction):
+        if done:
+            return SUCCESS_REWARD
+        elif not legal:
+            return ILLEGAL_REWARD
+        return LEGAL_REWARD + (DISTANCE_REDUCTION_REWARD * distance_reduction)
 
     @staticmethod
     def split_action(action_id):

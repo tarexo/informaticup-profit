@@ -71,7 +71,7 @@ class BaseModel(tf.keras.Model):
         env_str = "SIMPLE" if SIMPLE_GAME else "NORMAL"
         grid_str = f"{self.env.width}x{self.env.height}"
         architecture_str = self.architecture_name
-        architecture_str += f"{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
+        architecture_str += f"_{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
         architecture_str += f"_{NUM_FEATURES}"
 
         return env_str + "__" + grid_str + "__" + architecture_str
