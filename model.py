@@ -22,6 +22,8 @@ class BaseModel(tf.keras.Model):
         self.board_size = self.env.observation_shape
         self.action_size = NUM_ACTIONS
 
+        self.eps = np.finfo(np.float32).eps.item()
+
     def create(self, num_conv_layers):
         x = inputs = Input(shape=self.board_size, name="Observation")
 
@@ -118,11 +120,8 @@ class BaseModel(tf.keras.Model):
     def run_episode(self, *args, **kwargs):
         raise NotImplementedError
 
-    def train(self):
-        pass
-
-    def verbose_greedy_prediction(self):
-        pass
+    def verbose_greedy_prediction(self, state):
+        raise NotImplementedError
 
     def call(self, inputs):
         return self.model(inputs)
@@ -138,7 +137,7 @@ class ActorCritic(BaseModel):
 
     def create_heads(self, x):
         # unique policy network
-        p = Dense(units=NUM_FEATURES * 2, activation="relu", name="Policy-Features")(x)
+        p = Dense(units=NUM_FEATURES, activation="relu", name="Policy-Features")(x)
         p = Dense(self.action_size, activation="softmax", name="Policy-Head")(p)
 
         # unique value network
@@ -176,11 +175,15 @@ class ActorCritic(BaseModel):
             state = tf.expand_dims(state, 0)
 
             action_probs, value = self.model(state)
-            action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
+
+            if np.random.rand() <= exploration_rate:
+                action = np.random.choice(NUM_ACTIONS)
+            else:
+                action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
 
             state, reward, done, legal, info = self.env.step(action)
 
-            episode_action_probs.append(action_probs[0, action])
+            episode_action_probs.append(action_probs[0, action] + self.eps)
             episode_values.append(value[0, 0])
             episode_rewards.append(reward)
 
@@ -188,9 +191,9 @@ class ActorCritic(BaseModel):
                 break
 
         loss = self.compute_loss(episode_action_probs, episode_values, episode_rewards)
-        normalized_episode_reward = self.min_max_scaling(episode_rewards[-1])
+        episode_score = self.min_max_scaling(episode_rewards[-1])
 
-        return loss, normalized_episode_reward
+        return loss, episode_score
 
 
 class DeepQNetwork(BaseModel):
@@ -245,6 +248,6 @@ class DeepQNetwork(BaseModel):
                 break
 
         loss = self.compute_loss(episode_q_values, episode_rewards)
-        normalized_episode_reward = self.min_max_scaling(episode_rewards[-1])
+        episode_score = self.min_max_scaling(episode_rewards[-1])
 
-        return loss, normalized_episode_reward
+        return loss, episode_score

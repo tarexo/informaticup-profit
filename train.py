@@ -132,7 +132,6 @@ if __name__ == "__main__":
 
     np.random.seed(42)
     tf.random.set_seed(42)
-    eps = np.finfo(np.float32).eps.item()
     # for some reason eager execution is not enabled in my (Leo's) installation
     tf.config.run_functions_eagerly(True)
     # suppress AVX_WARNING!
@@ -150,8 +149,8 @@ if __name__ == "__main__":
         final_size = 13
         train_transfer_models(initial_size, final_size)
     else:
-        width = height = 13
-        num_conv_layers = (width + 1) // KERNEL_SIZE - 1
+        width = height = 3
+        num_conv_layers = (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__5x5__DQN_128-3x3_64"
 

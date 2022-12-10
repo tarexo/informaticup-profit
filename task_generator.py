@@ -19,7 +19,8 @@ class TaskGenerator:
         obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
 
         self.env.empty()
-        # middle_obstacle = self.place_obstacle_in_middle()
+        if self.env.width == 3:
+            middle_obstacle = self.place_obstacle_in_middle()
 
         deposit = self.place_at_random_position(Deposit, 0)
         constraint = self.distance_constraint(distance_range, deposit)
@@ -27,7 +28,8 @@ class TaskGenerator:
 
         connections = self.connect_deposit_factory(deposit, factory)
 
-        # self.env.remove_building(middle_obstacle)
+        if self.env.width == 3:
+            self.env.remove_building(middle_obstacle)
         if not no_obstacles:
             self.add_obstacles(p=obstacle_probability)
 
