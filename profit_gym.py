@@ -27,7 +27,7 @@ class ProfitGym(Environment, gym.Env):
         self.observation_space = spaces.Tuple(
             [
                 spaces.MultiBinary(self.observation_shape),
-                spaces.Box(-100, 100, shape=(2,), dtype=np.int16),
+                spaces.MultiBinary((34)),
             ]
         )
 
@@ -134,7 +134,20 @@ class ProfitGym(Environment, gym.Env):
         agent_x, agent_y = self.current_building.get_output_positions()[0]
         target_x, target_y = self.target_building.x, self.target_building.y
 
-        return (agent_x - target_x, agent_y - target_y)
+        x_distance = agent_x - target_x
+        y_distance = agent_y - target_y
+
+        x_distance = max(-8, min(8, x_distance))
+        y_distance = max(-8, min(8, y_distance))
+
+        x_id = x_distance + 8
+        y_id = 17 + y_distance + 8
+
+        target_position = np.zeros((34,))
+
+        target_position[x_id] = 1
+        target_position[y_id] = 1
+        return target_position
 
     def grid_to_observation(self):
         return (self.get_field_of_vison(), self.get_target_distance())

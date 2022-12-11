@@ -13,13 +13,13 @@ CONTINUE_TRAINING = False
 # Model
 NUM_CONV_FILTERS = 256
 KERNEL_SIZE = 3
-NUM_FEATURES = 256
+NUM_FEATURES = 512
 
 # Freeze all transfered convolutional layers except last (allow for some adjustments of the larger grid size)
 RETRAIN_LAST_CONV_LAYER = False
 
 # Hyperparameters
-MAX_EPISODES = 100000
+MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
@@ -37,7 +37,7 @@ ENTROPY_WEIGHT = 0.05
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
 LEGAL_REWARD = -0.1
-DISTANCE_REDUCTION_REWARD = 0.1
+DISTANCE_REDUCTION_REWARD = 0.05
 ILLEGAL_REWARD = -1
 
 

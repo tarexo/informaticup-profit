@@ -26,7 +26,7 @@ class BaseModel(tf.keras.Model):
 
     def create(self, num_conv_layers):
         x = field_of_vision = Input(shape=self.board_size, name="field_of_vision")
-        target_position = Input(shape=(2,), name="target_position")
+        target_position = Input(shape=(34,), name="target_position")
 
         for i in range(num_conv_layers):
             x = Conv2D(
