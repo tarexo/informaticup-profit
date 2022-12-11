@@ -25,19 +25,29 @@ class BaseModel(tf.keras.Model):
         self.eps = np.finfo(np.float32).eps.item()
 
     def create(self, num_conv_layers):
-        x = inputs = Input(shape=self.board_size, name="Observation")
+        x = field_of_vision = Input(shape=self.board_size, name="Field of Vision")
+        target_position = Input(shape=(2,), name="Target Position")
 
         for i in range(num_conv_layers):
             x = Conv2D(
-                NUM_CONV_FILTERS, KERNEL_SIZE, name=f"Conv_{i+1}", activation="relu"
+                NUM_CONV_FILTERS,
+                KERNEL_SIZE,
+                name=f"Conv_{i+1}",
+                activation="relu",
             )(x)
 
-        x = Flatten(name="Flatten")(x)
+        obstacle_features = Flatten(name="Flatten")(x)
+
+        x = tf.concat([obstacle_features, target_position], axis=1)
         x = Dense(units=NUM_FEATURES, activation="relu", name="Features")(x)
 
         outputs = self.create_heads(x)
 
-        self.model = Model(inputs=inputs, outputs=outputs, name=self.architecture_name)
+        self.model = Model(
+            inputs=[field_of_vision, target_position],
+            outputs=outputs,
+            name=self.architecture_name,
+        )
 
     def transfer(self, path, trainable):
         if not os.path.isdir(path):
@@ -54,6 +64,9 @@ class BaseModel(tf.keras.Model):
             self.model.layers[i].set_weights(trained_layer.get_weights())
             self.model.layers[i].trainable = trainable
             print(f"Convolutional Layer {i} has been frozen and transfered from {path}")
+
+        self.model.layers[-2].set_weights(trained_model.layers[-2].get_weights())
+        self.model.layers[-1].set_weights(trained_model.layers[-1].get_weights())
 
     def transfer_heads(self, trained_model):
         raise NotImplementedError
@@ -126,6 +139,19 @@ class BaseModel(tf.keras.Model):
     def call(self, inputs):
         return self.model(inputs)
 
+    @staticmethod
+    def state_to_tensors(state):
+        if type(state) != tuple:
+            return Model.state_to_tensors((state,))
+
+        tensor_state = []
+        for input in state:
+            input = tf.convert_to_tensor(input)
+            input = tf.expand_dims(input, 0)
+            tensor_state.append(input)
+
+        return tensor_state
+
 
 class ActorCritic(BaseModel):
     def __init__(self, env):
@@ -147,6 +173,8 @@ class ActorCritic(BaseModel):
         return [p, v]
 
     def verbose_greedy_prediction(self, state):
+        state = self.state_to_tensors(state)
+
         action_probs, value = self.model(state)
         greedy_action = np.argmax(action_probs)
 
@@ -157,22 +185,24 @@ class ActorCritic(BaseModel):
 
         return greedy_action
 
-    def compute_loss(self, action_probs, values, rewards):
+    def compute_loss(self, action_probs, values, rewards, entropies):
         returns = self.get_expected_return(rewards)
         advantage = np.array(returns) - np.array(values)
 
-        actor_loss = tf.math.reduce_sum(-tf.math.log(action_probs) * advantage)
+        action_log_probs = tf.math.log(action_probs)
+
+        actor_loss = -tf.math.reduce_sum(action_log_probs * advantage)
         critic_loss = self.critic_loss_function(values, returns)
 
-        return actor_loss + critic_loss
+        return actor_loss + critic_loss - entropies
 
     def run_episode(self, state, exploration_rate):
         episode_action_probs = []
         episode_values = []
         episode_rewards = []
+        episode_entropies = []
         for step in range(MAX_STEPS_EACH_EPISODE):
-            state = tf.convert_to_tensor(state)
-            state = tf.expand_dims(state, 0)
+            state = self.state_to_tensors(state)
 
             action_probs, value = self.model(state)
 
@@ -183,14 +213,20 @@ class ActorCritic(BaseModel):
 
             state, reward, done, legal, info = self.env.step(action)
 
+            action_log_probs = tf.math.log(action_probs)
+            entropy = -tf.math.reduce_sum(action_probs * action_log_probs)
+
             episode_action_probs.append(action_probs[0, action] + self.eps)
             episode_values.append(value[0, 0])
             episode_rewards.append(reward)
+            episode_entropies.append(entropy)
 
             if done or not legal:
                 break
 
-        loss = self.compute_loss(episode_action_probs, episode_values, episode_rewards)
+        loss = self.compute_loss(
+            episode_action_probs, episode_values, episode_rewards, episode_entropies
+        )
         episode_score = self.min_max_scaling(episode_rewards[-1])
 
         return loss, episode_score
@@ -210,6 +246,8 @@ class DeepQNetwork(BaseModel):
         return q_values
 
     def verbose_greedy_prediction(self, state):
+        state = self.state_to_tensors(state)
+
         q_values = self.model(state)
         greedy_action = np.argmax(q_values)
 
@@ -229,9 +267,7 @@ class DeepQNetwork(BaseModel):
         episode_q_values = []
         episode_rewards = []
         for step in range(MAX_STEPS_EACH_EPISODE):
-            state = tf.convert_to_tensor(state)
-            state = tf.expand_dims(state, 0)
-
+            state = self.state_to_tensors(state)
             q_values = self.model(state)
 
             if np.random.rand() <= exploration_rate:

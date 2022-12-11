@@ -16,9 +16,6 @@ def test_model_sanity(env, model, difficulty, no_obstacles):
     state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
-        state = tf.convert_to_tensor(state)
-        state = tf.expand_dims(state, 0)
-
         greedy_action = model.verbose_greedy_prediction(state)
         state, reward, done, legal, info = env.step(greedy_action)
 
@@ -118,11 +115,9 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
 def train_transfer_models(initial_size, final_size):
     transfer_model_path = None
 
-    step_size = KERNEL_SIZE - 1
-
     print(f"\nTraining multiple transfer models...\n")
-    for size in range(initial_size, final_size + 1, step_size):
-        num_conv_layers = (size + 1) // step_size
+    for num_conv_layers in range(2, 6):
+        size = (KERNEL_SIZE ** (num_conv_layers + 1)) - 2
         model_path = train_model(size, size, num_conv_layers, transfer_model_path)
         transfer_model_path = model_path
 
@@ -145,13 +140,13 @@ if __name__ == "__main__":
     register_gym()
 
     if TRANSFER_LEARNING:
-        initial_size = 2 + KERNEL_SIZE
-        final_size = 13
+        initial_size = KERNEL_SIZE
+        final_size = 25
         train_transfer_models(initial_size, final_size)
     else:
-        width = height = 3
-        num_conv_layers = (width + 1) // (KERNEL_SIZE - 1)
+        width = height = 30
+        num_conv_layers = 3  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
-        # transfer_model_path = ".\\saved_models\\SIMPLE__5x5__DQN_128-3x3_64"
+        # transfer_model_path = ".\\saved_models\\SIMPLE__16x16__DQN_64-3x3_64"
 
         train_model(width, height, num_conv_layers, transfer_model_path)

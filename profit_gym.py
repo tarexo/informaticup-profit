@@ -15,8 +15,17 @@ class ProfitGym(Environment, gym.Env):
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
-        self.observation_shape = (self.height + 2, self.width + 2, NUM_CHANNELS)
-        self.observation_space = spaces.MultiBinary(self.observation_shape)
+        self.observation_shape = (
+            FIELD_OF_VISION_SIZE,
+            FIELD_OF_VISION_SIZE,
+            NUM_CHANNELS,
+        )
+        self.observation_space = spaces.Tuple(
+            [
+                spaces.MultiBinary(self.observation_shape),
+                spaces.Box(-100, 100, shape=(2,), dtype=np.int),
+            ]
+        )
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((NUM_SUBBUILDINGS, NUM_DIRECTIONS))
@@ -100,7 +109,29 @@ class ProfitGym(Environment, gym.Env):
     def render(self):
         print(self)
 
+    def get_field_of_vison(self):
+        size = FIELD_OF_VISION_SIZE
+        padding = size // 2
+        padded_grid = np.pad(self.grid, pad_width=padding, constant_values="x")
+
+        agent_x, agent_y = self.current_building.get_output_positions()[0]
+
+        field_of_vision = np.where(
+            padded_grid[agent_y : agent_y + size, agent_x : agent_x + size] != " ",
+            1.0,
+            0.0,
+        )
+        return field_of_vision
+
+    def get_target_distance(self):
+        agent_x, agent_y = self.current_building.get_output_positions()[0]
+        target_x, target_y = self.target_building.x, self.target_building.y
+
+        return (agent_x - target_x, agent_y - target_y)
+
     def grid_to_observation(self):
+        return (self.get_field_of_vison(), self.get_target_distance())
+
         padded_grid = np.pad(self.grid, pad_width=1, constant_values="x")
 
         # empty = np.where(np.isin(padded_grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
