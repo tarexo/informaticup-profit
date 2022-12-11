@@ -2,6 +2,7 @@ from model import ActorCritic, DeepQNetwork
 from profit_gym import register_gym, make_gym
 from helper.constants.settings import *
 from helper.dicts.convert_actions import action_to_description
+from helper.functions.profiling import profile
 
 import numpy as np
 import tensorflow as tf
@@ -100,7 +101,8 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
     # model.save(model_path)
 
     # Main Training
-    train(env, model, MAX_EPISODES)
+    profile(train, env, model, MAX_EPISODES)
+    # train(env, model, MAX_EPISODES)
     model.save(model_path)
 
     # Fine Tune

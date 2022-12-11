@@ -43,7 +43,7 @@ class TaskGenerator:
         return start_building, factory
 
     def get_difficulty_params(self, difficulty):
-        obstacle_probability = MAX_OBSTACLE_PROBABILITY * difficulty  # ** 2
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * (difficulty ** 2)
         max_distance = max(4, int((self.env.width + self.env.height) * difficulty))
         if SIMPLE_GAME:
             distance_range = range(3, max_distance, 2)
@@ -76,7 +76,7 @@ class TaskGenerator:
             for x in range(self.env.width):
                 if self.env.is_tile_empty(x, y) and random.random() < p:
                     obstacle = Obstacle((x, y), 0, 1, 1)
-                    self.env.add_building(obstacle)
+                    self.env.add_building(obstacle, force=True)
 
     def place_at_random_position(self, BuildingClass, subtype, constraint=None):
         building = self.get_random_legal_building(BuildingClass, subtype)

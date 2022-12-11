@@ -45,18 +45,19 @@ class Environment:
         self.buildings: List(Building) = []
         self.grid = np.full((self.height, self.width), " ")
 
-    def add_building(self, building: Building):
+    def add_building(self, building: Building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
 
         Args:
             building (Building): Factory, Deposit, Obstacle, ...
+            force: only use this option if you are certain that it is a legal position (reduce computation)
 
         Returns:
             Building: returns building object or None if building could not be added
         """
         assert building not in self.buildings
 
-        if not self.is_legal_position(building):
+        if force or not self.is_legal_position(building):
             return None
 
         for (tile_x, tile_y, element) in iter(building):
