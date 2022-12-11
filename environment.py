@@ -42,10 +42,11 @@ class Environment:
         self.empty()
 
     def empty(self):
-        self.buildings: List(Building) = []
+        self.buildings = []
+        self.obstacles = []
         self.grid = np.full((self.height, self.width), " ")
 
-    def add_building(self, building: Building, force=False):
+    def add_building(self, building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
 
         Args:
@@ -57,11 +58,15 @@ class Environment:
         """
         assert building not in self.buildings
 
-        if force or not self.is_legal_position(building):
+        if not force and not self.is_legal_position(building):
             return None
 
         for (tile_x, tile_y, element) in iter(building):
             self.grid[tile_y, tile_x] = element
+
+        if type(building) == Obstacle:
+            self.obstacles.append(building)
+            return building
 
         for other_building in self.buildings:
             if self.would_connect_to(other_building, building):
@@ -82,10 +87,14 @@ class Environment:
         Returns:
             Building: returns removed building object
         """
-        assert building in self.buildings
+        assert building in self.buildings or building in self.obstacles
 
         for (tile_x, tile_y, element) in iter(building):
             self.grid[tile_y, tile_x] = " "
+
+        if type(building) == Obstacle:
+            self.obstacles.remove(building)
+            return building
 
         for other_building in self.buildings:
             if building in other_building.connections:
@@ -96,7 +105,7 @@ class Environment:
 
         return building
 
-    def is_legal_position(self, building: Building):
+    def is_legal_position(self, building):
         """Check whether a building that is not yet part of the enviornment has a valid position
 
         Args:
@@ -181,7 +190,7 @@ class Environment:
                     return True
         return False
 
-    def violates_single_input(self, building: Building):
+    def violates_single_input(self, building):
         outgoing_connections = 0
         for other_building in self.buildings:
             if self.would_connect_to(building, other_building):
@@ -217,7 +226,7 @@ class Environment:
 
         return adjacent_positions
 
-    def get_min_distance(self, output_building: Building, input_building: Building):
+    def get_min_distance(self, output_building, input_building):
         min_distance = None
         for out_x, out_y in output_building.get_output_positions():
             for in_x, in_y in input_building.get_input_positions():

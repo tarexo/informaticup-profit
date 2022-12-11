@@ -25,8 +25,8 @@ class BaseModel(tf.keras.Model):
         self.eps = np.finfo(np.float32).eps.item()
 
     def create(self, num_conv_layers):
-        x = field_of_vision = Input(shape=self.board_size, name="Field of Vision")
-        target_position = Input(shape=(2,), name="Target Position")
+        x = field_of_vision = Input(shape=self.board_size, name="Vision")
+        target_position = Input(shape=(2,), name="Target")
 
         for i in range(num_conv_layers):
             x = Conv2D(

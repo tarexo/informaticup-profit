@@ -13,6 +13,7 @@ SIMPLE_LEGAL_CONNECTIONS = {
     SimpleDeposit: [SimpleConveyor],
     SimpleConveyor: [SimpleConveyor, SimpleFactory],
     SimpleFactory: [],
+    Obstacle: [],
 }
 
 from helper.constants.settings import SIMPLE_GAME
