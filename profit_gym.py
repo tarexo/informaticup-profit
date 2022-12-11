@@ -10,20 +10,24 @@ from gym.envs.registration import register
 class ProfitGym(Environment, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    def __init__(self, width, height, turns, products: dict, render_mode=None):
+    def __init__(
+        self, width, height, field_of_vision, turns, products: dict, render_mode=None
+    ):
         super().__init__(width, height, turns, products)
+
+        self.field_of_vision = field_of_vision
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
         self.observation_shape = (
-            FIELD_OF_VISION_SIZE,
-            FIELD_OF_VISION_SIZE,
+            self.field_of_vision,
+            self.field_of_vision,
             NUM_CHANNELS,
         )
         self.observation_space = spaces.Tuple(
             [
                 spaces.MultiBinary(self.observation_shape),
-                spaces.Box(-100, 100, shape=(2,), dtype=np.int),
+                spaces.Box(-100, 100, shape=(2,), dtype=np.int16),
             ]
         )
 
@@ -110,14 +114,17 @@ class ProfitGym(Environment, gym.Env):
         print(self)
 
     def get_field_of_vison(self):
-        size = FIELD_OF_VISION_SIZE
-        padding = size // 2
+        padding = self.field_of_vision // 2
         padded_grid = np.pad(self.grid, pad_width=padding, constant_values="x")
 
         agent_x, agent_y = self.current_building.get_output_positions()[0]
 
         field_of_vision = np.where(
-            padded_grid[agent_y : agent_y + size, agent_x : agent_x + size] != " ",
+            padded_grid[
+                agent_y : agent_y + self.field_of_vision,
+                agent_x : agent_x + self.field_of_vision,
+            ]
+            != " ",
             1.0,
             0.0,
         )
@@ -156,11 +163,12 @@ def register_gym():
     register(id=GYM_ID, entry_point="profit_gym:ProfitGym")
 
 
-def make_gym(width, height):
+def make_gym(width, height, field_of_vision):
     return gym.make(
         GYM_ID,
         width=width,
         height=height,
+        field_of_vision=field_of_vision,
         turns=50,
         products={},
         render_mode=None,

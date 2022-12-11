@@ -6,24 +6,24 @@ SIMPLE_GAME = True
 
 MODEL_ID = "DQN"  # "DQN" or "A-C"
 # Gradually increase Environment size in order to train convolutional layers one after the other
-TRANSFER_LEARNING = False
+TRANSFER_LEARNING = True
 # continue training of partially trained model (currently not implemented)
 CONTINUE_TRAINING = False
 
 # Model
 NUM_CONV_FILTERS = 256
 KERNEL_SIZE = 3
-NUM_FEATURES = 128
+NUM_FEATURES = 256
 
 # Freeze all transfered convolutional layers except last (allow for some adjustments of the larger grid size)
 RETRAIN_LAST_CONV_LAYER = False
 
 # Hyperparameters
-MAX_EPISODES = 10000
+MAX_EPISODES = 100000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
-MAX_OBSTACLE_PROBABILITY = 0.4
+MAX_OBSTACLE_PROBABILITY = 0.5
 # what is the minimum reward before increasing difficulty?
 INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?
@@ -42,7 +42,6 @@ ILLEGAL_REWARD = -1
 
 
 # Action/Observation Space (only change when the game structure has changed)
-FIELD_OF_VISION_SIZE = 7
 if SIMPLE_GAME:
     NUM_SUBBUILDINGS = 4
 else:

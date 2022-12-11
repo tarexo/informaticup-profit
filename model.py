@@ -25,8 +25,8 @@ class BaseModel(tf.keras.Model):
         self.eps = np.finfo(np.float32).eps.item()
 
     def create(self, num_conv_layers):
-        x = field_of_vision = Input(shape=self.board_size, name="Vision")
-        target_position = Input(shape=(2,), name="Target")
+        x = field_of_vision = Input(shape=self.board_size, name="field_of_vision")
+        target_position = Input(shape=(2,), name="target_position")
 
         for i in range(num_conv_layers):
             x = Conv2D(
@@ -84,7 +84,7 @@ class BaseModel(tf.keras.Model):
 
     def get_model_description(self):
         env_str = "SIMPLE" if SIMPLE_GAME else "NORMAL"
-        grid_str = f"{self.env.width}x{self.env.height}"
+        grid_str = f"{self.env.field_of_vision}x{self.env.field_of_vision}"
         architecture_str = self.architecture_name
         architecture_str += f"_{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
         architecture_str += f"_{NUM_FEATURES}"
@@ -142,7 +142,7 @@ class BaseModel(tf.keras.Model):
     @staticmethod
     def state_to_tensors(state):
         if type(state) != tuple:
-            return Model.state_to_tensors((state,))
+            return BaseModel.state_to_tensors((state,))
 
         tensor_state = []
         for input in state:

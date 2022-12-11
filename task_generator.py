@@ -21,7 +21,7 @@ class TaskGenerator:
         self.env.empty()
 
         deposit = self.place_at_random_position(Deposit, 0)
-        constraint = self.distance_constraint(distance_range, deposit)
+        constraint = self.distance_constraint(distance_range, deposit)  # None
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
@@ -39,8 +39,8 @@ class TaskGenerator:
         return start_building, factory
 
     def get_difficulty_params(self, difficulty):
-        obstacle_probability = MAX_OBSTACLE_PROBABILITY * difficulty
-        max_distance = max(4, int((self.env.width + self.env.height) * difficulty))
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * (difficulty ** 2)
+        max_distance = max(4, int((self.env.width + self.env.height)))  # *difficulty
         if SIMPLE_GAME:
             distance_range = range(3, max_distance, 2)
         else:

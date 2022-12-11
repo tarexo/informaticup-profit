@@ -77,8 +77,9 @@ def train(env, model, max_episodes, no_obstacles=False):
             break
 
 
-def train_model(width, height, num_conv_layers, transfer_model_path=None):
-    env = make_gym(width, height)
+def train_model(width, height, field_of_vision, transfer_model_path=None):
+    env = make_gym(width, height, field_of_vision)
+    num_conv_layers = (field_of_vision - 1) // (KERNEL_SIZE - 1)
 
     if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
@@ -114,13 +115,14 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
     return model_path
 
 
-def train_transfer_models(initial_size, final_size):
+def train_transfer_models(width, height):
     transfer_model_path = None
 
+    field_of_vision_sizes = [5, 7, 9]
+
     print(f"\nTraining multiple transfer models...\n")
-    for num_conv_layers in range(2, 6):
-        size = (KERNEL_SIZE ** (num_conv_layers + 1)) - 2
-        model_path = train_model(size, size, num_conv_layers, transfer_model_path)
+    for field_of_vision in field_of_vision_sizes:
+        model_path = train_model(width, height, field_of_vision, transfer_model_path)
         transfer_model_path = model_path
 
 
@@ -142,13 +144,12 @@ if __name__ == "__main__":
     register_gym()
 
     if TRANSFER_LEARNING:
-        initial_size = KERNEL_SIZE
-        final_size = 25
-        train_transfer_models(initial_size, final_size)
+        width = height = 14
+        train_transfer_models(width, height)
     else:
-        width = height = 30
-        num_conv_layers = 3  # (width + 1) // (KERNEL_SIZE - 1)
+        width = height = 10
+        num_conv_layers = 4  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
-        # transfer_model_path = ".\\saved_models\\SIMPLE__16x16__DQN_64-3x3_64"
+        transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 
         train_model(width, height, num_conv_layers, transfer_model_path)
