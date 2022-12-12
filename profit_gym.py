@@ -10,39 +10,30 @@ from gym.envs.registration import register
 class ProfitGym(Environment, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    def __init__(
-        self, width, height, field_of_vision, turns, products: dict, render_mode=None
-    ):
+    def __init__(self, width, height, field_of_vision, turns, products):
         super().__init__(width, height, turns, products)
 
         self.field_of_vision = field_of_vision
+        self.target_detection_distance = 8
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
-        self.observation_shape = (
-            self.field_of_vision,
-            self.field_of_vision,
-            NUM_CHANNELS,
-        )
+        self.vision_shape = (self.field_of_vision, self.field_of_vision, NUM_CHANNELS)
+        self.target_pos_shape = ((2 * self.target_detection_distance + 1) * 2,)
         self.observation_space = spaces.Tuple(
             [
-                spaces.MultiBinary(self.observation_shape),
-                spaces.MultiBinary((34)),
+                spaces.MultiBinary(self.vision_shape),
+                spaces.MultiBinary(self.target_pos_shape),
             ],
         )
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((NUM_SUBBUILDINGS, NUM_DIRECTIONS))
 
-        assert render_mode is None or render_mode in self.metadata["render_modes"]
-        self.render_mode = render_mode
-
-    def reset(self, difficulty=0.0, no_obstacles=False, seed=None, options=None):
+    def reset(self, difficulty=0.0, seed=None, options=None):
         super().reset(seed=seed)
 
-        start_building, factory = self.task_generator.generate_task(
-            difficulty, no_obstacles
-        )
+        start_building, factory = self.task_generator.generate_task(difficulty)
         self.current_building = start_building
         self.target_building = factory
 
@@ -118,58 +109,37 @@ class ProfitGym(Environment, gym.Env):
         padded_grid = np.pad(self.grid, pad_width=padding, constant_values="x")
 
         agent_x, agent_y = self.current_building.get_output_positions()[0]
+        end_x = agent_x + self.field_of_vision
+        end_y = agent_y + self.field_of_vision
 
-        field_of_vision = np.where(
-            padded_grid[
-                agent_y : agent_y + self.field_of_vision,
-                agent_x : agent_x + self.field_of_vision,
-            ]
-            != " ",
-            1.0,
-            0.0,
-        )
+        field_of_vision = padded_grid[agent_y:end_y, agent_x:end_x]
+        field_of_vision = np.where(field_of_vision != " ", 1.0, 0.0)
+
         return field_of_vision[:, :, np.newaxis].astype(np.int8)
 
     def get_target_distance(self):
+        max_dist = self.target_detection_distance
+
         agent_x, agent_y = self.current_building.get_output_positions()[0]
         target_x, target_y = self.target_building.x, self.target_building.y
 
         x_distance = agent_x - target_x
         y_distance = agent_y - target_y
 
-        x_distance = max(-8, min(8, x_distance))
-        y_distance = max(-8, min(8, y_distance))
+        x_distance = max(-max_dist, min(max_dist, x_distance))
+        y_distance = max(-max_dist, min(max_dist, y_distance))
 
-        x_id = x_distance + 8
-        y_id = 17 + y_distance + 8
+        x_id = x_distance + max_dist
+        y_id = (max_dist * 2 + 1) + y_distance + max_dist
 
-        target_position = np.zeros((34,), dtype=np.int8)
-
+        target_position = np.zeros(self.target_pos_shape, dtype=np.int8)
         target_position[x_id] = 1
         target_position[y_id] = 1
+
         return target_position
 
     def grid_to_observation(self):
         return (self.get_field_of_vison(), self.get_target_distance())
-
-        padded_grid = np.pad(self.grid, pad_width=1, constant_values="x")
-
-        # empty = np.where(np.isin(padded_grid, [" ", "<", ">", "^", "v"]), 1.0, 0.0)
-        obstacles = np.where(padded_grid != " ", 1.0, 0.0)
-
-        # target_x, target_y = self.target_building.x, self.target_building.y
-        target_input_positions = self.target_building.get_input_positions()
-        input_idx = target_input_positions[:, 1], target_input_positions[:, 0]
-        inputs = np.zeros((self.height + 2, self.width + 2), dtype=np.float32)
-        inputs[input_idx] = 1
-
-        agent_x, agent_y = self.current_building.get_output_positions()[0]
-        output = np.zeros((self.height + 2, self.width + 2), dtype=np.float32)
-        output[(agent_y, agent_x)] = 1
-
-        channels_first = np.stack([obstacles, inputs, output])
-        channels_last = np.moveaxis(channels_first, 0, 2)
-        return channels_last
 
 
 def register_gym():
@@ -184,5 +154,4 @@ def make_gym(width, height, field_of_vision):
         field_of_vision=field_of_vision,
         turns=50,
         products={},
-        render_mode=None,
     )

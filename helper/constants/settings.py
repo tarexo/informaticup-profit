@@ -5,18 +5,15 @@ PRINT_ROUND_LOG = False
 SIMPLE_GAME = True
 
 MODEL_ID = "DQN"  # "DQN" or "A-C"
-# Gradually increase Environment size in order to train convolutional layers one after the other
+# Gradually increase Field of Vision in order to train convolutional layers one after the other
 TRANSFER_LEARNING = True
-# continue training of partially trained model (currently not implemented)
-CONTINUE_TRAINING = False
+# see how envionment performs without any obstacles
+NO_OBSTACLES = False
 
 # Model
 NUM_CONV_FILTERS = 512
 KERNEL_SIZE = 3
 NUM_FEATURES = 512
-
-# Freeze all transfered convolutional layers except last (allow for some adjustments of the larger grid size)
-RETRAIN_LAST_CONV_LAYER = False
 
 # Hyperparameters
 MAX_EPISODES = 10000

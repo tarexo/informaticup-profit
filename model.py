@@ -19,14 +19,13 @@ class BaseModel(tf.keras.Model):
 
         self.model = None
         self.env = env
-        self.board_size = self.env.observation_shape
         self.action_size = NUM_ACTIONS
 
         self.eps = np.finfo(np.float32).eps.item()
 
     def create(self, num_conv_layers):
-        x = field_of_vision = Input(shape=self.board_size, name="field_of_vision")
-        target_position = Input(shape=(34,), name="target_position")
+        x = field_of_vision = Input(shape=self.env.vision_shape, name="field_of_vision")
+        target_position = Input(shape=self.env.target_pos_shape, name="target_position")
 
         for i in range(num_conv_layers):
             x = Conv2D(

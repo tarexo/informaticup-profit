@@ -1,7 +1,7 @@
-from model import ActorCritic, DeepQNetwork, BaseModel
+from model import ActorCritic, DeepQNetwork
+from test import *
 from profit_gym import register_gym, make_gym
 from helper.constants.settings import *
-from helper.dicts.convert_actions import action_to_description
 from helper.functions.profiling import profile
 
 import numpy as np
@@ -23,67 +23,8 @@ def determine_difficulty(mean_reward):
     )
 
 
-def test_model_sanity(env, model, difficulty, no_obstacles):
-    state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
-
-    for _ in range(MAX_STEPS_EACH_EPISODE):
-        greedy_action = model.verbose_greedy_prediction(state)
-        state, reward, done, legal, info = env.step(greedy_action)
-
-        direction_id, subbuilding_id = env.split_action(greedy_action)
-        action_description = action_to_description(direction_id, subbuilding_id)
-        print(
-            f"\nGreedy Action: {action_description}"
-            + (" (illegal)" if not legal else "")
-        )
-        print("--> Reward:", reward)
-        if done or not legal:
-            break
-
-    env.render()
-
-
-def test(env, model, difficulty, num_episodes=100):
-    rewards = []
-    for episode in range(num_episodes):
-        state, _ = env.reset(difficulty=difficulty)
-        _, episode_reward = model.run_episode(state, exploration_rate=0)
-
-        rewards.append(episode_reward)
-    return statistics.mean(rewards)
-
-
-def test_model(env, model):
-    test_score = test(env, model, difficulty=1.0, num_episodes=100)
-    print(f"Model achieved a Test score of {test_score}\n")
-
-
-def test_models(width, height, model_paths):
-    for model_path in model_paths:
-        model_name = model_path.split("\\")[-1]
-        game_type, field_of_vision, network = model_name.split("__")
-        field_of_vision = int(field_of_vision.split("x")[0])
-
-        env = make_gym(width, height, field_of_vision)
-
-        if "DQN" in network:
-            model = DeepQNetwork(env)
-        elif "A-C" in network:
-            model = ActorCritic(env)
-        model.load(model_path)
-
-        test_model(env, model)
-
-
-def compare_all_saved_model(width, height):
-    models_path = os.path.join(".", "saved_models")
-    model_names = os.listdir(models_path)
-    model_paths = [os.path.join(models_path, model_name) for model_name in model_names]
-    test_models(width, height, model_paths)
-
-
 @profile
-def train(env, model, max_episodes, no_obstacles=False):
+def train(env, model, max_episodes):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
     mean_test_reward = 0.0
@@ -102,10 +43,10 @@ def train(env, model, max_episodes, no_obstacles=False):
             mean_test_reward = statistics.mean(test_rewards)
 
         if episode % model_sanity_check_frequency == 0:
-            test_model_sanity(env, model, difficulty, no_obstacles)
+            test_model_sanity(env, model, difficulty)
 
         with tf.GradientTape() as tape:
-            state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
+            state, _ = env.reset(difficulty=difficulty)
 
             loss, episode_reward = model.run_episode(state, exploration_rate)
 
@@ -150,10 +91,6 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
         model.transfer(transfer_model_path, trainable=False)
     model.summary()
 
-    # Pre-Train (no obstacles)
-    # train(env, model, PRE_TRAIN_EPISODES, no_obstacles=True)
-    # model.save(model_path)
-
     # Main Training
     train(env, model, MAX_EPISODES)
     model.save(model_path)
@@ -190,7 +127,7 @@ if __name__ == "__main__":
     # suppress AVX_WARNING!
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-    min_episodes = min(500, int(0.1 * MAX_EPISODES))
+    min_episodes = min(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
     model_sanity_check_frequency = 150
@@ -198,9 +135,7 @@ if __name__ == "__main__":
 
     register_gym()
 
-    width = height = 30
-
-    # compare_all_saved_model(width, height)
+    width = height = 20
 
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)

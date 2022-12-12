@@ -15,7 +15,7 @@ class TaskGenerator:
         random.seed(seed)
         self.env = env
 
-    def generate_task(self, difficulty, no_obstacles=False):
+    def generate_task(self, difficulty):
         obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
 
         self.env.empty()
@@ -26,7 +26,7 @@ class TaskGenerator:
 
         connections = self.connect_deposit_factory(deposit, factory)
 
-        if not no_obstacles:
+        if not NO_OBSTACLES:
             self.add_obstacles(p=obstacle_probability)
 
         if SIMPLE_GAME:
