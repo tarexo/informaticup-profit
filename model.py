@@ -32,6 +32,7 @@ class BaseModel(tf.keras.Model):
             x = Conv2D(
                 NUM_CONV_FILTERS,
                 KERNEL_SIZE,
+                strides=(KERNEL_SIZE, KERNEL_SIZE),
                 name=f"Conv_{i+1}",
                 activation="relu",
             )(x)
@@ -197,6 +198,8 @@ class ActorCritic(BaseModel):
         return actor_loss + critic_loss - entropies
 
     def run_episode(self, state, exploration_rate):
+        exploration_rate = 0.0
+
         episode_action_probs = []
         episode_values = []
         episode_rewards = []

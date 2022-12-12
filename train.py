@@ -13,6 +13,16 @@ import statistics
 import os
 
 
+def determine_difficulty(mean_reward):
+    if mean_reward <= INCREASE_DIFFICULTY_AT:
+        return 0.0
+    elif mean_reward >= MAX_DIFFICULTY_AT:
+        return 1.0
+    return (mean_reward - INCREASE_DIFFICULTY_AT) / (
+        MAX_DIFFICULTY_AT - INCREASE_DIFFICULTY_AT
+    )
+
+
 def test_model_sanity(env, model, difficulty, no_obstacles):
     state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
 
@@ -33,25 +43,33 @@ def test_model_sanity(env, model, difficulty, no_obstacles):
     env.render()
 
 
-def determine_difficulty(mean_reward):
-    if mean_reward <= INCREASE_DIFFICULTY_AT:
-        return 0.0
-    elif mean_reward >= MAX_DIFFICULTY_AT:
-        return 1.0
-    return (mean_reward - INCREASE_DIFFICULTY_AT) / (
-        MAX_DIFFICULTY_AT - INCREASE_DIFFICULTY_AT
-    )
+def test(env, model, difficulty, num_episodes=100):
+    rewards = []
+    for episode in range(num_episodes):
+        state, _ = env.reset(difficulty=difficulty)
+        _, episode_reward = model.run_episode(state, exploration_rate=0)
+
+        rewards.append(episode_reward)
+    return statistics.mean(rewards)
 
 
 def train(env, model, max_episodes, no_obstacles=False):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
-    running_rewards = collections.deque(maxlen=min_episodes)
-    running_mean_reward = 0.0
+    mean_test_reward = 0.0
+    mean_train_reward = 0.0
+    test_rewards = collections.deque(maxlen=min_episodes // model_test_frequency)
+    train_rewards = collections.deque(maxlen=min_episodes)
+
     progress = tqdm.trange(max_episodes)
     for episode in progress:
-        difficulty = determine_difficulty(running_mean_reward)
+        difficulty = determine_difficulty(mean_test_reward)
         exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
+
+        if episode % model_test_frequency == 0:
+            test_reward = test(env, model, difficulty, num_episodes=1)
+            test_rewards.append(test_reward)
+            mean_test_reward = statistics.mean(test_rewards)
 
         if episode % model_sanity_check_frequency == 0:
             test_model_sanity(env, model, difficulty, no_obstacles)
@@ -64,22 +82,27 @@ def train(env, model, max_episodes, no_obstacles=False):
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-        running_rewards.append(episode_reward)
-        running_mean_reward = statistics.mean(running_rewards)
+        train_rewards.append(episode_reward)
+        mean_train_reward = statistics.mean(train_rewards)
 
         progress_info = collections.OrderedDict()
         progress_info["difficulty"] = "%.2f" % difficulty
         progress_info["ε"] = "%.2f" % exploration_rate
-        progress_info["mean_reward"] = "%.2f" % running_mean_reward
+        progress_info["train_reward"] = "%.2f" % mean_train_reward
+        progress_info["test_reward"] = "%.2f" % mean_test_reward
         progress.set_postfix(progress_info)
 
-        if running_mean_reward > solved_reward_threshold and episode >= min_episodes:
+        if (
+            mean_test_reward > solved_reward_threshold
+            and difficulty == 1.0
+            and episode > min_episodes
+        ):
             break
 
 
 def train_model(width, height, field_of_vision, transfer_model_path=None):
     env = make_gym(width, height, field_of_vision)
-    num_conv_layers = (field_of_vision - 1) // (KERNEL_SIZE - 1)
+    num_conv_layers = 2  # (field_of_vision - 1) // (KERNEL_SIZE - 1)
 
     if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
@@ -105,6 +128,8 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
     profile(train, env, model, MAX_EPISODES)
     # train(env, model, MAX_EPISODES)
     model.save(model_path)
+    test_score = test(env, model, difficulty=1.0, num_episodes=100)
+    print(f"Model achieved a Test score of {test_score}")
 
     # Fine Tune
     if model.has_frozen_layers():
@@ -138,7 +163,8 @@ if __name__ == "__main__":
 
     min_episodes = min(500, int(0.1 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
-    model_sanity_check_frequency = 200
+    model_test_frequency = 10
+    model_sanity_check_frequency = 150
     model_save_frequency = 2500
 
     register_gym()
@@ -148,8 +174,8 @@ if __name__ == "__main__":
         train_transfer_models(width, height)
     else:
         width = height = 10
-        num_conv_layers = 4  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 9  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
-        transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
+        # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 
-        train_model(width, height, num_conv_layers, transfer_model_path)
+        train_model(width, height, field_of_vision, transfer_model_path)

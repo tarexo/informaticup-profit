@@ -6,12 +6,12 @@ SIMPLE_GAME = True
 
 MODEL_ID = "DQN"  # "DQN" or "A-C"
 # Gradually increase Environment size in order to train convolutional layers one after the other
-TRANSFER_LEARNING = True
+TRANSFER_LEARNING = False
 # continue training of partially trained model (currently not implemented)
 CONTINUE_TRAINING = False
 
 # Model
-NUM_CONV_FILTERS = 256
+NUM_CONV_FILTERS = 512
 KERNEL_SIZE = 3
 NUM_FEATURES = 512
 
@@ -32,7 +32,7 @@ MAX_DIFFICULTY_AT = 0.7
 LEARNING_RATE = 0.001
 FINAL_EXPLORATION_RATE = 0.001
 GAMMA = 0.9
-ENTROPY_WEIGHT = 0.05
+ENTROPY_WEIGHT = 0.0
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
