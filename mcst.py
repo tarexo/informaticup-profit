@@ -1,4 +1,4 @@
-
+import math
 
 class Node:
     def __init__(self, game_state, parent, children):
@@ -47,3 +47,36 @@ class MCST:
         raise NotImplementedError
 
     
+
+def choose_child(node):
+    # Repeated until leave node is reached
+    # NOTE Pseudocode
+    c_puct = 1.0 # Controls balance between exploration and exploitation
+    best_U = -float("inf")
+    chosen_action = None
+    for action in node.actions:
+        U = c_puct * action.probability * (math.sqrt(sum_visits_over_children(node)) / 1 + node.get_child(action))
+        if U > best_U:
+            best_U = U
+            chosen_action = action
+    return chosen_action
+
+def choose_action(node):
+    # If serious play, choose best, else sample from distribution
+    # NOTE Pseudocode
+    # TODO Create probability distribution from values
+    tau = 1.0
+    best_pi = -float("inf")
+    chosen_action = None
+    for action in node.actions:
+        pi = action.visits ** (1 / tau) / sum_visits_over_children(node)
+        if pi > best_pi:
+            best_pi = pi
+            chosen_action = action
+    return action
+
+def sum_visits_over_children(node):
+    sum = 0
+    for child in node.children:
+        sum += child.visits
+    return sum
