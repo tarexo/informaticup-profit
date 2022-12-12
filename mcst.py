@@ -1,13 +1,13 @@
 import math
 
 class Node:
-    def __init__(self, game_state, parent, children):
+    def __init__(self, game_state):
         self.game_state = game_state
-        self.parent = parent
-        self.children = children
-        self.visit_count = 0
-        self.value = 0
-        self.prior = 0
+        self.parent = None
+        N = 0
+        W = 0
+        Q = 0
+        self.expanded = False
 
     def expand():
         # TODO
@@ -19,31 +19,34 @@ class Node:
         # ? Might need the model to expand?
         raise NotImplementedError
 
-    def simulate():
-        # TODO
-        # Perform random actions on the board until
-        #   Game ends (connection from deposit to factory created)
-        #   Or no more actions are possible
-        # ? What should be returned?
-        raise NotImplementedError
-
     def select_child():
         # TODO
         # Select one of the available childs and return it
         # ? Selection may be based on the formula?
         raise NotImplementedError
 
+    # def simulate():
+    #     # TODO
+    #     # Perform random actions on the board until
+    #     #   Game ends (connection from deposit to factory created)
+    #     #   Or no more actions are possible
+    #     # ? What should be returned?
+    #     # ? Is this even needed?
+    #     raise NotImplementedError
+
+
 class MCST:
-    def __init(self, root):
-        self.root = root
-        self.search_path = None
+    def __init(self, game_state):
+        self.root = Node(game_state)
+        self.search_path = [self.root]
         return
 
-    def run():
+    def run(self):
         # TODO
         # Run the monte carlo search tree
         # ? What should be returned?
         # ? Does num_simluations refer to the depth of the tree or on node.simulate()?
+        self.root.expand()
         raise NotImplementedError
 
     
