@@ -6,7 +6,7 @@ SIMPLE_GAME = True
 
 MODEL_ID = "DQN"  # "DQN" or "A-C"
 # Gradually increase Environment size in order to train convolutional layers one after the other
-TRANSFER_LEARNING = False
+TRANSFER_LEARNING = True
 # continue training of partially trained model (currently not implemented)
 CONTINUE_TRAINING = False
 
@@ -23,7 +23,7 @@ MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
-MAX_OBSTACLE_PROBABILITY = 0.5
+MAX_OBSTACLE_PROBABILITY = 0.35
 # what is the minimum reward before increasing difficulty?
 INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?

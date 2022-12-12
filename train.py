@@ -1,4 +1,4 @@
-from model import ActorCritic, DeepQNetwork
+from model import ActorCritic, DeepQNetwork, BaseModel
 from profit_gym import register_gym, make_gym
 from helper.constants.settings import *
 from helper.dicts.convert_actions import action_to_description
@@ -53,6 +53,36 @@ def test(env, model, difficulty, num_episodes=100):
     return statistics.mean(rewards)
 
 
+def test_model(env, model):
+    test_score = test(env, model, difficulty=1.0, num_episodes=100)
+    print(f"Model achieved a Test score of {test_score}\n")
+
+
+def test_models(width, height, model_paths):
+    for model_path in model_paths:
+        model_name = model_path.split("\\")[-1]
+        game_type, field_of_vision, network = model_name.split("__")
+        field_of_vision = int(field_of_vision.split("x")[0])
+
+        env = make_gym(width, height, field_of_vision)
+
+        if "DQN" in network:
+            model = DeepQNetwork(env)
+        elif "A-C" in network:
+            model = ActorCritic(env)
+        model.load(model_path)
+
+        test_model(env, model)
+
+
+def compare_all_saved_model(width, height):
+    models_path = os.path.join(".", "saved_models")
+    model_names = os.listdir(models_path)
+    model_paths = [os.path.join(models_path, model_name) for model_name in model_names]
+    test_models(width, height, model_paths)
+
+
+@profile
 def train(env, model, max_episodes, no_obstacles=False):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
@@ -102,7 +132,7 @@ def train(env, model, max_episodes, no_obstacles=False):
 
 def train_model(width, height, field_of_vision, transfer_model_path=None):
     env = make_gym(width, height, field_of_vision)
-    num_conv_layers = 2  # (field_of_vision - 1) // (KERNEL_SIZE - 1)
+    num_conv_layers = (field_of_vision - 1) // (KERNEL_SIZE - 1)
 
     if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
@@ -125,17 +155,16 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
     # model.save(model_path)
 
     # Main Training
-    profile(train, env, model, MAX_EPISODES)
-    # train(env, model, MAX_EPISODES)
+    train(env, model, MAX_EPISODES)
     model.save(model_path)
-    test_score = test(env, model, difficulty=1.0, num_episodes=100)
-    print(f"Model achieved a Test score of {test_score}")
+    test_model(env, model)
 
     # Fine Tune
     if model.has_frozen_layers():
         model.unfreeze()
         train(env, model, FINE_TUNE_EPISODES)
         model.save(model_path)
+        test_model(env, model)
 
     return model_path
 
@@ -169,12 +198,14 @@ if __name__ == "__main__":
 
     register_gym()
 
+    width = height = 30
+
+    # compare_all_saved_model(width, height)
+
     if TRANSFER_LEARNING:
-        width = height = 14
         train_transfer_models(width, height)
     else:
-        width = height = 10
-        field_of_vision = 9  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 7  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 

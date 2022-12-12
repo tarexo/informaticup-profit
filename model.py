@@ -32,7 +32,7 @@ class BaseModel(tf.keras.Model):
             x = Conv2D(
                 NUM_CONV_FILTERS,
                 KERNEL_SIZE,
-                strides=(KERNEL_SIZE, KERNEL_SIZE),
+                strides=(1, 1),
                 name=f"Conv_{i+1}",
                 activation="relu",
             )(x)
@@ -52,7 +52,7 @@ class BaseModel(tf.keras.Model):
 
     def transfer(self, path, trainable):
         if not os.path.isdir(path):
-            print(f"WARNING: model could not be tranfered. {path} does not exist!")
+            print(f"\nWARNING: model could not be tranfered. {path} does not exist!\n")
             return
         trained_model = load_model(path, compile=False)
         conv_layers = [layer for layer in trained_model.layers if type(layer) == Conv2D]
@@ -74,9 +74,9 @@ class BaseModel(tf.keras.Model):
 
     def load(self, path):
         if not os.path.isdir(path):
-            print(f"WARNING: model could not be loaded. {path} does not exist!")
+            print(f"\nWARNING: model could not be loaded. {path} does not exist!\n")
             return
-        self.get_model_path = load_model(path, compile=False)
+        self.model = load_model(path, compile=False)
         print(f"Model has been loaded from {path}")
 
     def save(self, path):

@@ -28,7 +28,7 @@ class ProfitGym(Environment, gym.Env):
             [
                 spaces.MultiBinary(self.observation_shape),
                 spaces.MultiBinary((34)),
-            ]
+            ],
         )
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
@@ -128,7 +128,7 @@ class ProfitGym(Environment, gym.Env):
             1.0,
             0.0,
         )
-        return field_of_vision
+        return field_of_vision[:, :, np.newaxis].astype(np.int8)
 
     def get_target_distance(self):
         agent_x, agent_y = self.current_building.get_output_positions()[0]
@@ -143,7 +143,7 @@ class ProfitGym(Environment, gym.Env):
         x_id = x_distance + 8
         y_id = 17 + y_distance + 8
 
-        target_position = np.zeros((34,))
+        target_position = np.zeros((34,), dtype=np.int8)
 
         target_position[x_id] = 1
         target_position[y_id] = 1
