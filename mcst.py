@@ -125,25 +125,27 @@ class MonteCarloTreeSearch:
         self.model = model
         return
 
-    def run(self):
+    def run(self, num_runs=100):
         # TODO
         # Run the monte carlo search tree
         # ? What should be returned?
         # ? Does num_simluations refer to the depth of the tree or on node.simulate()?
 
         root = Node(self.env, self.game_state, self.model)
-        node = root
-        # search_path = [node]
 
-        # PHASE I: SELECT (a sequence of moves from the root to a leave)
-        while node.expanded:
-            node = node.select_child()
+        for _ in range(num_runs):
+            node = root
+            # search_path = [node]
 
-        # PHASE II: EXPAND (explore one more move)
-        node.expand()
+            # PHASE I: SELECT (a sequence of moves from the root to a leave)
+            while node.expanded:
+                node = node.select_child()
 
-        # PHASE III: BACKUP (update all nodes on the path)
-        self.backup()
+            # PHASE II: EXPAND (explore one more move)
+            node.expand()
+
+            # PHASE III: BACKUP (update all nodes on the path)
+            self.backup()
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
 
