@@ -82,40 +82,11 @@ class Node:
                 selected_child = child
         return selected_child
 
-        # Repeated until leave node is reached
-        # NOTE Pseudocode
-        c_puct = 1.0  # Controls balance between exploration and exploitation
-        best_U = -float("inf")
-        chosen_action = None
-        for action in node.actions:
-            U = (
-                c_puct
-                * action.probability
-                * (
-                    math.sqrt(sum_visits_over_children(node)) / 1
-                    + node.get_child(action)
-                )
-            )
-            if U > best_U:
-                best_U = U
-                chosen_action = action
-        return chosen_action
-        raise NotImplementedError
-
     def make_prediction(self):
         game_state = tf.convert_to_tensor(self.game_state)
         game_state = tf.expand_dims(game_state, 0)
         action_probs, value = self.model(game_state)
         return action_probs, value
-
-    # def simulate():
-    #     # TODO
-    #     # Perform random actions on the board until
-    #     #   Game ends (connection from deposit to factory created)
-    #     #   Or no more actions are possible
-    #     # ? What should be returned?
-    #     # ? Is this even needed?
-    #     raise NotImplementedError
 
 
 class MonteCarloTreeSearch:
