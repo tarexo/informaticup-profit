@@ -3,6 +3,10 @@ from profit_gym import register_gym, make_gym
 from helper.constants.settings import *
 from helper.dicts.convert_actions import action_to_description
 
+# FIXME Must be removed before merging!
+from copy import deepcopy
+from mcts import MonteCarloTreeSearch
+
 import numpy as np
 import tensorflow as tf
 
@@ -85,6 +89,11 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
         model.transfer(transfer_model_path, trainable=False)
     model.summary()
 
+    # FIXME Must be removed before merging!
+    state, _ = env.reset(obstacle_probability=model.obstacle_probability)
+    mcts = MonteCarloTreeSearch(deepcopy(env), state, model)
+    mcts.run()
+    return
     train(env, model)
     model.save(model_path)
 
