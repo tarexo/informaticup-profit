@@ -39,7 +39,11 @@ class Node:
         # Add them as children to self
         # Return the Nodes as an array
         # ? Might need the model to expand?
-        action_probs, _ = self.make_prediction()
+        action_probs, val = self.make_prediction()
+
+        # ? Alternatively take the reward given from the env as state value?
+        self.W = val
+
         action_probs = action_probs.numpy().flatten().tolist()
 
         for action in range(NUM_ACTIONS):
@@ -54,9 +58,10 @@ class Node:
                     action_taken=action,
                     prior_probability=action_probs[action],
                     final_state=done,
-                    state_value=reward,
+                    # state_value=reward,
                 )
                 self.children.append(new_child)
+        self.expanded = True
 
     def select_child(self):
         # TODO
@@ -128,22 +133,29 @@ class MonteCarloTreeSearch:
 
         root = Node(self.env, self.game_state, self.model)
         node = root
-        search_path = [node]
+        # search_path = [node]
 
         # PHASE I: SELECT (a sequence of moves from the root to a leave)
         while node.expanded:
             node = node.select_child()
-            search_path.append(node)
 
         # PHASE II: EXPAND (explore one more move)
         node.expand()
 
         # PHASE III: BACKUP (update all nodes on the path)
-        node.backup()
+        self.backup()
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
 
         raise NotImplementedError
+
+    def backup(self, node):
+        v = node.W
+        while node.parent is not None:
+            parent = node.parent
+            parent.N += 1
+            parent.W += v
+            parent.Q = parent.W / parent.N
 
 
 def choose_child(node):
