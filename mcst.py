@@ -2,6 +2,7 @@ import math
 import tensorflow as tf
 from copy import deepcopy
 from helper.constants.settings import NUM_ACTIONS
+import random as rand
 
 
 class Node:
@@ -96,7 +97,7 @@ class MonteCarloTreeSearch:
         self.model = model
         return
 
-    def run(self, num_runs=100):
+    def run(self, num_runs=100, is_train=True, tau=1.0):
         # TODO
         # Run the monte carlo search tree
         # ? What should be returned?
@@ -119,8 +120,30 @@ class MonteCarloTreeSearch:
             self.backup()
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
+        if not is_train:
+            max_n = 0
+            max_action = None
+            for child in root.children:
+                if child.N > max_n:
+                    max_n = child.N
+                    max_action = child.action_taken
+            return max_action
+        else:
+            children_visit_sum = 0
+            for child in root.children:
+                children_visit_sum += child.N
 
-        raise NotImplementedError
+            distribution = []
+            actions = []
+            for child in root.children:
+                actions.append(child.action_taken)
+
+                pi = child.N ** (1 / tau) / children_visit_sum
+                distribution.append(pi)
+            selected_action = rand.choices(
+                population=actions, weights=distribution, k=1
+            )
+            return selected_action[0]
 
     def backup(self, node):
         v = node.W
