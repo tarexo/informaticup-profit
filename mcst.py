@@ -58,9 +58,43 @@ class Node:
                 )
                 self.children.append(new_child)
 
+    def select_child(self):
         # TODO
         # Select one of the available childs and return it
         # ? Selection may be based on the formula?
+        children_visit_sum = 0
+        for child in self.children:
+            children_visit_sum += child.N
+
+        c_puct = 1.0
+        max_q_u = -float("inf")
+        selected_child = None
+        for child in self.children:
+            Q = child.W / child.N if child.N > 0 else child.W
+            U = c_puct * child.P * (math.sqrt(children_visit_sum) / 1 + child.N)
+            if Q + U > max_q_u:
+                max_q_u = Q + U
+                selected_child = child
+        return selected_child
+
+        # Repeated until leave node is reached
+        # NOTE Pseudocode
+        c_puct = 1.0  # Controls balance between exploration and exploitation
+        best_U = -float("inf")
+        chosen_action = None
+        for action in node.actions:
+            U = (
+                c_puct
+                * action.probability
+                * (
+                    math.sqrt(sum_visits_over_children(node)) / 1
+                    + node.get_child(action)
+                )
+            )
+            if U > best_U:
+                best_U = U
+                chosen_action = action
+        return chosen_action
         raise NotImplementedError
 
     def make_prediction(self):
