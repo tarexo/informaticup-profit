@@ -73,7 +73,7 @@ def train(env, model, max_episodes):
 
 def train_model(width, height, field_of_vision, transfer_model_path=None):
     env = make_gym(width, height, field_of_vision)
-    num_conv_layers = 3  # (field_of_vision - 1) // (KERNEL_SIZE - 1)
+    num_conv_layers = 2  # (field_of_vision - 1) // (KERNEL_SIZE - 1)
 
     if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
@@ -135,12 +135,12 @@ if __name__ == "__main__":
 
     register_gym()
 
-    width = height = 25
+    width = height = 30
 
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)
     else:
-        field_of_vision = 15  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 9  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 

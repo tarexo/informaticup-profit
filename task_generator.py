@@ -39,8 +39,8 @@ class TaskGenerator:
         return start_building, factory
 
     def get_difficulty_params(self, difficulty):
-        obstacle_probability = MAX_OBSTACLE_PROBABILITY * (difficulty ** 2)
-        max_distance = max(6, 10 + int((self.env.width + self.env.height) * difficulty))
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * difficulty
+        max_distance = 7 + int((self.env.width + self.env.height) * difficulty)
         if SIMPLE_GAME:
             distance_range = range(3, max_distance, 2)
         else:

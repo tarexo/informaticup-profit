@@ -128,7 +128,7 @@ class ProfitGym(Environment, gym.Env):
         max_dist = self.target_detection_distance
 
         agent_x, agent_y = self.current_building.get_output_positions()[self.outlet]
-        target_x, target_y = self.target_building.x, self.target_building.y
+        target_x, target_y = self.target_building.get_center_position()
 
         x_distance = agent_x - target_x
         y_distance = agent_y - target_y

@@ -9,7 +9,6 @@ import os
 
 def test_model_sanity(env, model, difficulty):
     state, _ = env.reset(difficulty=difficulty)
-    print(state[0][:, :, 0])
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
         greedy_action = model.verbose_greedy_prediction(state)
@@ -17,6 +16,9 @@ def test_model_sanity(env, model, difficulty):
 
         direction_id, subbuilding_id = env.split_action(greedy_action)
         action_description = action_to_description(direction_id, subbuilding_id)
+
+        print(f"\nField of Vision:")
+        print(state[0][:, :, 0])
         print(
             f"\nGreedy Action: {action_description}"
             + (" (illegal)" if not legal else "")

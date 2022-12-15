@@ -44,14 +44,14 @@ BUILDING_ACTION_TO_ID = {
     5: "Conv vv",
     6: "Conv <<",
     7: "Conv ^^",
-    8: "Comb >",
-    9: "Comb v",
-    10: "Comb <",
-    11: "Comb ^",
-    12: "Mine >",
-    13: "Mine v",
-    14: "Mine <",
-    15: "Mine ^",
+    # 8: "Comb >",
+    # 9: "Comb v",
+    # 10: "Comb <",
+    # 11: "Comb ^",
+    # 12: "Mine >",
+    # 13: "Mine v",
+    # 14: "Mine <",
+    # 15: "Mine ^",
 }
 
 SIMPLE_BUILDING_ACTION_TO_CLASS_SUBTYPE = {

@@ -20,7 +20,7 @@ MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
-MAX_OBSTACLE_PROBABILITY = 0.5
+MAX_OBSTACLE_PROBABILITY = 0.35
 # what is the minimum reward before increasing difficulty?
 INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?
@@ -33,8 +33,8 @@ ENTROPY_WEIGHT = 0.0
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
-LEGAL_REWARD = -0.1
-DISTANCE_REDUCTION_REWARD = 0.025
+LEGAL_REWARD = -0.01
+DISTANCE_REDUCTION_REWARD = 0.005
 ILLEGAL_REWARD = -1
 
 
