@@ -37,7 +37,7 @@ class Environment:
         self.turns = turns
         self.products = products
 
-        self.task_generator = task_generator.TaskGenerator(self, seed=42)
+        self.task_generator = task_generator.TaskGenerator(self, seed=423)
 
         self.empty()
 
