@@ -1,5 +1,6 @@
 # Informaticup 2023
 Teamname: Die Schmetterlinge
+Link zur Doku: https://docs.google.com/document/d/11EoqrBL7JvpLbgzfFhgAI_0WVvd42rh0ffrRY5xGEhs/edit?usp=sharing
 
 # Bewertungskriterien
 Folgendes ist die Checkliste der Bewertungskriterien des Informaticups. 
