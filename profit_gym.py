@@ -6,6 +6,8 @@ import gym
 from gym import spaces
 from gym.envs.registration import register
 
+import random
+
 
 class ProfitGym(Environment, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 1}
@@ -37,6 +39,9 @@ class ProfitGym(Environment, gym.Env):
         self.current_building = start_building
         self.target_building = factory
 
+        num_outlets = len(self.current_building.get_output_positions())
+        self.outlet = random.randrange(num_outlets)
+
         self.target_distance = self.get_min_distance(
             self.current_building, self.target_building
         )
@@ -54,6 +59,8 @@ class ProfitGym(Environment, gym.Env):
             legal = True
             self.add_building(new_building)
             self.current_building = new_building
+            num_outlets = len(self.current_building.get_output_positions())
+            self.outlet = random.randrange(num_outlets)
 
         done = self.is_connected(self.current_building, self.target_building)
 
@@ -88,7 +95,7 @@ class ProfitGym(Environment, gym.Env):
     def get_building_from_action(self, action_id):
         positional_action, building_action = self.split_action(action_id)
 
-        x, y = self.current_building.get_output_positions()[0]
+        x, y = self.current_building.get_output_positions()[self.outlet]
         x_offset, y_offset = POSITIONAL_ACTION_TO_DIRECTION[positional_action]
         input_x, input_y = x + x_offset, y + y_offset
 
@@ -108,7 +115,7 @@ class ProfitGym(Environment, gym.Env):
         padding = self.field_of_vision // 2
         padded_grid = np.pad(self.grid, pad_width=padding, constant_values="x")
 
-        agent_x, agent_y = self.current_building.get_output_positions()[0]
+        agent_x, agent_y = self.current_building.get_output_positions()[self.outlet]
         end_x = agent_x + self.field_of_vision
         end_y = agent_y + self.field_of_vision
 
@@ -120,7 +127,7 @@ class ProfitGym(Environment, gym.Env):
     def get_target_distance(self):
         max_dist = self.target_detection_distance
 
-        agent_x, agent_y = self.current_building.get_output_positions()[0]
+        agent_x, agent_y = self.current_building.get_output_positions()[self.outlet]
         target_x, target_y = self.target_building.x, self.target_building.y
 
         x_distance = agent_x - target_x

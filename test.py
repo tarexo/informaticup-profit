@@ -7,8 +7,9 @@ import statistics
 import os
 
 
-def test_model_sanity(env, model, difficulty, no_obstacles):
-    state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
+def test_model_sanity(env, model, difficulty):
+    state, _ = env.reset(difficulty=difficulty)
+    print(state[0][:, :, 0])
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
         greedy_action = model.verbose_greedy_prediction(state)

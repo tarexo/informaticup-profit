@@ -31,7 +31,7 @@ class BaseModel(tf.keras.Model):
             x = Conv2D(
                 NUM_CONV_FILTERS,
                 KERNEL_SIZE,
-                strides=(1, 1),
+                strides=2,
                 name=f"Conv_{i+1}",
                 activation="relu",
             )(x)
