@@ -43,7 +43,7 @@ class Node:
         action_probs, val = self.make_prediction()
 
         # ? Alternatively take the reward given from the env as state value?
-        self.W = val
+        # self.W = val
 
         action_probs = action_probs.numpy().flatten().tolist()
 
@@ -59,7 +59,7 @@ class Node:
                     action_taken=action,
                     prior_probability=action_probs[action],
                     final_state=done,
-                    # state_value=reward,
+                    state_value=reward,
                 )
                 self.children.append(new_child)
         self.expanded = True
@@ -117,7 +117,7 @@ class MonteCarloTreeSearch:
             node.expand()
 
             # PHASE III: BACKUP (update all nodes on the path)
-            self.backup()
+            self.backup(node)
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
         if not is_train:
@@ -147,10 +147,16 @@ class MonteCarloTreeSearch:
 
     def backup(self, node):
         v = node.W
-        while True:
-            node = node.parent
+        if node.parent is None:  # We are at the root
+            return
             node.N += 1
             node.W += v
             node.Q = node.W / node.N
-            if node.parent is None:
-                break
+            return
+
+        node = node.parent
+        while node is not None:
+            node.N += 1
+            node.W += v  # FIXME v is a tensor
+            node.Q = node.W / node.N
+            node = node.parent
