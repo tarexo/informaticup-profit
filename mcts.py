@@ -52,7 +52,7 @@ class Node:
             state, reward, done, legal, info = env.step(action)
             if legal:
                 new_child = Node(
-                    env=self.env,
+                    env=env,
                     game_state=state,
                     model=self.model,
                     parent=self,
@@ -62,6 +62,8 @@ class Node:
                     state_value=reward,
                 )
                 self.children.append(new_child)
+            if done:
+                return new_child
         self.expanded = True
 
     def select_child(self):
@@ -104,17 +106,26 @@ class MonteCarloTreeSearch:
         # ? Does num_simluations refer to the depth of the tree or on node.simulate()?
 
         root = Node(self.env, self.game_state, self.model)
+        self.env.render()
 
         for _ in range(num_runs):
             node = root
             # search_path = [node]
 
             # PHASE I: SELECT (a sequence of moves from the root to a leave)
+            # FIXME Node might be none type object! What do do if you reach the leaves of the tree?
             while node.expanded:
                 node = node.select_child()
 
             # PHASE II: EXPAND (explore one more move)
-            node.expand()
+            solution_node = node.expand()
+            if solution_node is not None:
+                print("Found solution")
+                node = solution_node
+                while node is not None:
+                    node.env.render()
+                    node = node.parent
+                return
 
             # PHASE III: BACKUP (update all nodes on the path)
             self.backup(node)
