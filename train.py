@@ -35,7 +35,10 @@ def train(env, model, max_episodes):
     progress = tqdm.trange(max_episodes)
     for episode in progress:
         difficulty = determine_difficulty(mean_test_reward)
-        exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
+        if model.architecture_name == "A-C":
+            exploration_rate = 0.05
+        else:
+            exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
 
         if episode % model_test_frequency == 0:
             test_reward = test(env, model, difficulty, num_episodes=1)
@@ -140,7 +143,7 @@ if __name__ == "__main__":
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)
     else:
-        field_of_vision = 9  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 12  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 

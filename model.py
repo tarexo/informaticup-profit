@@ -196,7 +196,7 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss - entropies
 
-    def run_episode(self, state, exploration_rate):
+    def run_episode(self, state, exploration_rate, greedy=False):
         exploration_rate = 0.0
 
         episode_action_probs = []
@@ -208,7 +208,9 @@ class ActorCritic(BaseModel):
 
             action_probs, value = self.model(state)
 
-            if np.random.rand() <= exploration_rate:
+            if greedy:
+                action = np.argmax(action_probs)
+            elif np.random.rand() <= exploration_rate:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
@@ -216,7 +218,9 @@ class ActorCritic(BaseModel):
             state, reward, done, legal, info = self.env.step(action)
 
             action_log_probs = tf.math.log(action_probs)
-            entropy = -tf.math.reduce_sum(action_probs * action_log_probs)
+            entropy = (
+                -tf.math.reduce_sum(action_probs * action_log_probs) * ENTROPY_WEIGHT
+            )
 
             episode_action_probs.append(action_probs[0, action] + self.eps)
             episode_values.append(value[0, 0])
@@ -265,14 +269,14 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, state, exploration_rate):
+    def run_episode(self, state, exploration_rate, greedy=False):
         episode_q_values = []
         episode_rewards = []
         for step in range(MAX_STEPS_EACH_EPISODE):
             state = self.state_to_tensors(state)
             q_values = self.model(state)
 
-            if np.random.rand() <= exploration_rate:
+            if np.random.rand() <= exploration_rate and not greedy:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.argmax(q_values)
