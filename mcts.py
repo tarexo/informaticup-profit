@@ -147,8 +147,10 @@ class MonteCarloTreeSearch:
 
     def backup(self, node):
         v = node.W
-        while node.parent is not None:
-            parent = node.parent
-            parent.N += 1
-            parent.W += v
-            parent.Q = parent.W / parent.N
+        while True:
+            node = node.parent
+            node.N += 1
+            node.W += v
+            node.Q = node.W / node.N
+            if node.parent is None:
+                break
