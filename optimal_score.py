@@ -19,26 +19,24 @@ class Product:
 
 
 def optimal_score(env):
-    products = []
-    product_resoucres = np.empty((len(env.products), 8))
-    env_resources = np.zeros(8)
+    products = get_products(env)
+    env_resources = get_env_resources(env)
     turns = env.turns
-    for i in range(len(env.products)):  # get products and fill product_resouces matrix
-        new_product = Product.from_json(env.products[i])
-        products.append(new_product)
-        product_resoucres[i] = new_product.resources
-    for building in env.buildings:
-        if building.__class__ == buildings.Deposit:
-            env_resources[building.subtype] += building.width * building.height * 5
     product_combinations = []
     for i in range(len(products) + 1):  # fill combinations
         for subset in itertools.combinations(products, i):
             product_combinations.append(subset)
     best_score = 0
     for combination in product_combinations:
-        temp_score = 0
-        temp_env_resources = env_resources
-        for i in range(turns):
+        temp_score = calc_best_score(combination, turns, env_resources)
+        if temp_score > best_score:
+            best_score = temp_score
+    return best_score
+
+def calc_best_score(combination, turns, all_resources):
+    temp_score= 0
+    temp_env_resources = all_resources
+    for _ in range(turns):
             for p in combination:
                 n = np.subtract(temp_env_resources, p.resources)
                 if is_resource_value_negative(n):
@@ -46,10 +44,21 @@ def optimal_score(env):
                 else:
                     temp_env_resources = n
                     temp_score += p.points
-        if temp_score > best_score:
-            best_score = temp_score
-    return best_score
+    return temp_score
 
+def get_products(env):
+    products = []
+    for i in range(len(env.products)):  # get products and fill product_resouces matrix
+        new_product = Product.from_json(env.products[i])
+        products.append(new_product)
+    return products
+
+def get_env_resources(env):
+    env_resources = np.zeros(8)
+    for building in env.buildings:
+        if building.__class__ == buildings.Deposit:
+            env_resources[building.subtype] += building.width * building.height * 5
+    return env_resources
 
 @staticmethod
 def is_resource_value_negative(resources):
