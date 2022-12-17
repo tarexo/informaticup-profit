@@ -58,6 +58,7 @@ class Node:
 
         child_added = False
         solution_child = None
+        no_solution_possible = False
 
         for action in range(NUM_ACTIONS):
             env = copy_env(self.env)  # deepcopy(self.env)
@@ -144,7 +145,7 @@ class MonteCarloTreeSearch:
 
         root = Node(self.env, self.game_state, self.model)
         # new_env = copy_env(self.env)
-        self.env.render()
+        # self.env.render()
         # self.env.step(1)
         # self.env.render()
         # new_env.render()
@@ -153,34 +154,43 @@ class MonteCarloTreeSearch:
         # new_env.render()
         # self.env.render()
 
-        for _ in tqdm(range(num_runs)):
+        for _ in range(num_runs):
             node = root
             # search_path = [node]
 
             # PHASE I: SELECT (a sequence of moves from the root to a leave)
+            expanded_without_childs = False
             while node.expanded:
-                node = node.select_child()
+                next = node.select_child()
+                if next is None:
+                    self.backup(node)
+                    expanded_without_childs = True
+                    break
+                node = next
+
+            if expanded_without_childs:
+                continue
 
             # PHASE II: EXPAND (explore one more move)
             solution_node, added_child, no_solution_possible = node.expand()
             if no_solution_possible:
                 raise Exception("No solution for MCTS possible!")
 
-            if solution_node is not None:
-                print("Found solution")
-                node = solution_node
-                while node is not None:
-                    node.env.render()
-                    node = node.parent
-                solution_node.env.render()
-                return
+            # if solution_node is not None:
+            #     print("Found solution")
+            #     node = solution_node
+            #     while node is not None:
+            #         node.env.render()
+            #         node = node.parent
+            #     solution_node.env.render()
+            #     return
 
             # PHASE III: BACKUP (update all nodes on the path)
             if added_child:
                 # Only backup if a step was taken
                 self.backup(node)
 
-        node.env.render()
+        # node.env.render()
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
         if not is_train:
@@ -190,7 +200,7 @@ class MonteCarloTreeSearch:
                 if child.N > max_n:
                     max_n = child.N
                     max_action = child.action_taken
-            return max_action
+            return root, max_action
         else:
             children_visit_sum = 0
             for child in root.children:
@@ -206,7 +216,7 @@ class MonteCarloTreeSearch:
             selected_action = rand.choices(
                 population=actions, weights=distribution, k=1
             )
-            return selected_action[0]
+            return root, selected_action[0]
 
     def backup(self, node):
         v = node.W
