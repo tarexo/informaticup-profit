@@ -108,7 +108,7 @@ class Node:
         max_q_u = -float("inf")
         selected_child = None
         for child in self.children:
-            Q = child.W / child.N if child.N > 0 else child.W
+            Q = child.Q  # child.W / child.N if child.N > 0 else child.W
             U = c_puct * child.P * (1 / 1 + child.N)
             # U = c_puct * child.P * (math.sqrt(children_visit_sum) / 1 + child.N)
             if Q + U > max_q_u:
