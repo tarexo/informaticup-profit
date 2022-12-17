@@ -32,6 +32,8 @@ class Node:
         self.action_taken = action_taken
         self.final_state = final_state
 
+        self.dead_end = False  # Node has no legal actions
+
     def expand(self):
         # TODO
         # Create all possible successor board states
