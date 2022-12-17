@@ -1,4 +1,5 @@
-from model import ActorCritic, DeepQNetwork
+# from model import ActorCritic, DeepQNetwork
+from model_custom_mcts import ActorCritic, DeepQNetwork
 from profit_gym import register_gym, make_gym
 from helper.constants.settings import *
 from helper.dicts.convert_actions import action_to_description
@@ -70,8 +71,82 @@ def train(env, model):
             break
 
 
+def train_custom(env, model):
+    optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
+
+    running_rewards = collections.deque(maxlen=min_episodes)
+    running_mean_reward = 0.0
+    losses = []
+    progress = tqdm.trange(MAX_ITERATIONS)
+    for iteration in progress:
+        # if iteration % model_sanity_check_frequency == 0:
+        #     test_model_sanity(env, model)
+
+        train_examples = model.gather_examples(
+            MAX_EPISODES
+        )  # play game MAX_EPISODES times
+
+        for epoch in range(NUM_EPOCHS):
+            batch_index = 0
+
+            while batch_index < int(len(train_examples) / BATCH_SIZE):
+                sample_ids = np.random.randint(len(train_examples), size=BATCH_SIZE)
+                board_states, target_action_probs, target_rewards = list(
+                    zip(*[train_examples[i] for i in sample_ids])
+                )
+                target_action_probs = tf.convert_to_tensor(
+                    np.array(target_action_probs)
+                )
+                target_rewards = tf.convert_to_tensor(np.array(target_rewards))
+
+                with tf.GradientTape() as tape:
+                    # loss, episode_reward = model.run_episode(iteration, 0.5 * running_mean_reward)
+
+                    pred_action_probs, pred_values = model.predict(board_states)
+                    l_action_probs = loss_action_probs(
+                        target_action_probs, pred_action_probs
+                    )
+                    l_pred_values = loss_pred_values(target_rewards, pred_values)
+
+                    loss = l_action_probs + l_pred_values
+                    losses.append(loss)
+
+                    gradients = tape.gradient(loss, model.trainable_variables)
+                    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+                # running_rewards.append(episode_reward)
+                # running_mean_reward = statistics.mean(running_rewards)
+
+                progress_info = collections.OrderedDict()
+                # currently uses mean_final_reward  as obstacle_probability
+                # progress_info["p"] = "%.2f" % model.obstacle_probability
+                if model.exploration_rate is not None:
+                    progress_info["ε"] = "%.2f" % model.exploration_rate
+                progress_info["mean_final_reward"] = "%.2f" % tf.reduce_mean(
+                    tf.convert_to_tensor(losses)
+                )
+                progress.set_postfix(progress_info)
+
+                if (
+                    running_mean_reward > solved_reward_threshold
+                    and iteration >= min_episodes
+                ):
+                    break
+
+
+def loss_action_probs(targets, predictions):
+    loss = tf.reduce_sum(-(targets * tf.math.log(predictions)), 1)
+    return tf.reduce_mean(loss)
+
+
+def loss_pred_values(targets, predictions):
+    mse = tf.keras.losses.MeanSquaredError()
+    loss = mse(targets, predictions)
+    return loss
+
+
 def train_model(width, height, num_conv_layers, transfer_model_path=None):
-    env = make_gym(32, 32)
+    env = make_gym(9, 9)
 
     if MODEL_ID == "QDN":
         model = DeepQNetwork(env)
@@ -90,11 +165,12 @@ def train_model(width, height, num_conv_layers, transfer_model_path=None):
     model.summary()
 
     # FIXME Must be removed before merging!
-    state, _ = env.reset(obstacle_probability=model.obstacle_probability)
-    mcts = MonteCarloTreeSearch(deepcopy(env), state, model)
-    mcts.run()
-    return
-    train(env, model)
+    # state, _ = env.reset(obstacle_probability=model.obstacle_probability)
+    # mcts = MonteCarloTreeSearch(deepcopy(env), state, model)
+    # mcts.run()
+    # return
+    train_custom(env, model)
+    # train(env, model)
     model.save(model_path)
 
     return model_path
