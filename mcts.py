@@ -65,6 +65,25 @@ class Node:
             if done:
                 return new_child
         self.expanded = True
+        if not child_added and not done:
+            # ? How to handle dead ends? -> Remove for now
+            no_solution_possible = self.remove_dead_end()
+
+        return solution_child, child_added, no_solution_possible
+
+    def remove_dead_end(self):
+        no_solution_possible = False
+        self.dead_end = True
+        parent = self.parent
+        parent.children = [child for child in parent.children if not child.dead_end]
+        while len(parent.children) == 0:
+            parent.dead_end = True
+            parent = parent.parent
+            if parent == None:
+                print("There is no solution!")
+                no_solution_possible = True
+            parent.children = [child for child in parent.children if not child.dead_end]
+        return no_solution_possible
 
     def select_child(self):
         # TODO
@@ -118,7 +137,10 @@ class MonteCarloTreeSearch:
                 node = node.select_child()
 
             # PHASE II: EXPAND (explore one more move)
-            solution_node = node.expand()
+            solution_node, added_child, no_solution_possible = node.expand()
+            if no_solution_possible:
+                raise Exception("No solution for MCTS possible!")
+
             if solution_node is not None:
                 print("Found solution")
                 node = solution_node
