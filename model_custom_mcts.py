@@ -11,6 +11,11 @@ import numpy as np
 
 from helper.constants.settings import *
 from helper.dicts.convert_actions import named_array
+from mcts import MonteCarloTreeSearch, copy_env
+from copy import deepcopy
+from helper.constants.settings import NUM_ACTIONS
+from random import shuffle
+from tqdm import tqdm
 
 
 class BaseModel(tf.keras.Model):
@@ -184,6 +189,63 @@ class ActorCritic(BaseModel):
 
         loss = self.compute_loss(episode_action_probs, episode_values, episode_rewards)
         return loss, episode_rewards[-1]
+
+    def gather_examples(self, num_episodes):
+        train_examples = []
+
+        for _ in tqdm(range(num_episodes)):
+            episode_example = self.collect_experience()
+            train_examples.extend(episode_example)
+
+        shuffle(train_examples)
+        return train_examples
+
+    def collect_experience(self):
+        # Credit to Josh Varty: https://github.com/JoshVarty/AlphaZeroSimple/blob/master/trainer.py
+        train_examples = []
+
+        state, _ = self.env.reset(obstacle_probability=self.obstacle_probability)
+
+        # loop:
+        while True:
+            # - save game state
+            board_state = state
+            # - run mcts for set num of episodes
+            mcts = MonteCarloTreeSearch(deepcopy(self.env), state, self.model)
+            root, action = mcts.run(num_runs=50)
+            # - transform N of root to action probabilities
+            action_probs = [0 for _ in range(NUM_ACTIONS)]
+            for child in root.children:
+                i = child.action_taken
+                v = child.N
+                action_probs[i] = v
+            action_probs = action_probs / np.sum(action_probs)
+            # - Store: (game state, action probs)
+            train_examples.append((board_state, action_probs))
+            # - Take an action based on the root node
+            state, reward, done, legal, info = self.env.step(action)
+            self.env.render()
+
+            # - If reward == SUCCESS_REWARD [CUSTOM]: or no more moves possible
+            if reward == SUCCESS_REWARD:
+                ret = []
+                for board_state, action_probs in train_examples:
+                    ret.append((board_state, action_probs, reward))
+                return ret
+
+            if not self.legal_action_possible(copy_env(self.env)):
+                ret = []
+                for board_state, action_probs in train_examples:
+                    ret.append((board_state, action_probs, -1))
+                return ret
+
+    def legal_action_possible(self, env):
+        for action in range(NUM_ACTIONS):
+            _env = copy_env(env)
+            state, reward, done, legal, info = _env.step(action)
+            if legal:
+                return True
+        return False
 
 
 class DeepQNetwork(BaseModel):
