@@ -5,18 +5,58 @@ from helper.constants.settings import *
 import gym
 from gym import spaces
 from gym.envs.registration import register
+from copy import deepcopy
 
 
 class ProfitGym(Environment, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    def __init__(self, width, height, turns, products: dict, render_mode=None):
-        super().__init__(width, height, turns, products)
+    def __init__(
+        self,
+        width,
+        height,
+        turns,
+        products: dict,
+        render_mode=None,
+        copy=False,
+        old_env=None,
+    ):
+        if copy:
+            super().__init__(
+                old_env.unwrapped.width,
+                old_env.unwrapped.height,
+                old_env.unwrapped.turns,
+                old_env.unwrapped.products,
+                copy=copy,
+                grid=old_env.unwrapped.grid,
+                buildings=old_env.unwrapped.buildings,
+            )
+            # print(
+            #     f"currentb {type(old_env.unwrapped.current_building)}\ntarget {type(old_env.unwrapped.target_building)}\nbuildings: {type(old_env.buildings)}"
+            # )
+            self.current_building = deepcopy(old_env.unwrapped.current_building)
+            self.target_building = deepcopy(old_env.unwrapped.target_building)
+            self.buildings = [
+                deepcopy(b)
+                for b in old_env.unwrapped.buildings
+                if b is not old_env.unwrapped.target_building
+            ]
+            self.buildings.append(self.target_building)
 
-        # [obstacles, inputs, agent's single output] each in a 100x100 grid
-        # channels last for tensorflow
-        self.observation_shape = (self.height + 2, self.width + 2, NUM_CHANNELS)
-        self.observation_space = spaces.MultiBinary(self.observation_shape)
+            self.observation_shape = (
+                old_env.unwrapped.height + 2,
+                old_env.unwrapped.width + 2,
+                NUM_CHANNELS,
+            )
+            self.observation_space = old_env.unwrapped.observation_space
+
+        else:
+            super().__init__(width, height, turns, products)
+
+            # [obstacles, inputs, agent's single output] each in a 100x100 grid
+            # channels last for tensorflow
+            self.observation_shape = (self.height + 2, self.width + 2, NUM_CHANNELS)
+            self.observation_space = spaces.MultiBinary(self.observation_shape)
 
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((NUM_SUBBUILDINGS, NUM_DIRECTIONS))
@@ -24,7 +64,9 @@ class ProfitGym(Environment, gym.Env):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-    def reset(self, obstacle_probability=0.1, seed=None, options=None):
+    def reset(self, obstacle_probability=0.1, seed=None, options=None, copy=False):
+        if copy:
+            return
         super().reset(seed=seed)
 
         if SIMPLE_GAME:
@@ -110,7 +152,7 @@ def register_gym():
     register(id=GYM_ID, entry_point="profit_gym:ProfitGym")
 
 
-def make_gym(width, height):
+def make_gym(width, height, copy=False, old_env=None):
     return gym.make(
         GYM_ID,
         width=width,
@@ -118,4 +160,6 @@ def make_gym(width, height):
         turns=50,
         products={},
         render_mode=None,
+        copy=copy,
+        old_env=old_env,
     )

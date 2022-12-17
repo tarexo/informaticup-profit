@@ -6,7 +6,7 @@ SIMPLE_GAME = True
 
 MODEL_ID = "A-C"  # "DQN" or "A-C"
 # Gradually increase Environment size in order to train convolutional layers one after the other
-TRANSFER_LEARNING = True
+TRANSFER_LEARNING = False
 # continue training of partially trained model (currently not implemented)
 CONTINUE_TRAINING = False
 

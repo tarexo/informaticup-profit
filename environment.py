@@ -23,7 +23,16 @@ class Environment:
     Profit Game Environment
     """
 
-    def __init__(self, width, height, turns, products: dict):
+    def __init__(
+        self,
+        width,
+        height,
+        turns,
+        products: dict,
+        copy=False,
+        grid=None,
+        buildings=None,
+    ):
         """initialize environment
 
         Args:
@@ -35,11 +44,17 @@ class Environment:
         self.width = width
         self.height = height
         self.turns = turns
-        self.products = products
 
-        self.task_generator = task_generator.TaskGenerator(self, seed=423)
+        self.task_generator = task_generator.TaskGenerator(self, seed=12)
 
-        self.empty()
+        if not copy:
+            self.empty()
+            self.products = products
+        else:
+            # print(type(buildings))
+            self.products = products.copy()
+            self.grid = np.copy(grid)
+            self.buildings = buildings.copy()
 
     def empty(self):
         self.buildings: List(Building) = []
