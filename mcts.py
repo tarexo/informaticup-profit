@@ -48,7 +48,7 @@ class Node:
         action_probs = action_probs.numpy().flatten().tolist()
 
         for action in range(NUM_ACTIONS):
-            env = deepcopy(self.env)
+            env = copy_env(self.env)  # deepcopy(self.env)
             state, reward, done, legal, info = env.step(action)
             if legal:
                 child_added = True
