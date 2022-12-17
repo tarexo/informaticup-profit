@@ -114,7 +114,7 @@ class Node:
         selected_child = None
         for child in self.children:
             Q = child.Q  # child.W / child.N if child.N > 0 else child.W
-            U = c_puct * child.P * (1 / 1 + child.N)
+            U = c_puct * child.P * (math.sqrt(child.parent.N) / 1 + child.N)
             # U = c_puct * child.P * (math.sqrt(children_visit_sum) / 1 + child.N)
             if Q + U > max_q_u:
                 max_q_u = Q + U
@@ -212,15 +212,11 @@ class MonteCarloTreeSearch:
         v = node.W
         if node.parent is None:  # We are at the root
             return
-            node.N += 1
-            node.W += v
-            node.Q = node.W / node.N
-            return
 
         node = node.parent
         while node is not None:
             node.N += 1
-            node.W += v  # FIXME v is a tensor
+            node.W += v
             node.Q = node.W / node.N
             node = node.parent
 
