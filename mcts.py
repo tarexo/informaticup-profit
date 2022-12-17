@@ -61,7 +61,6 @@ class Node:
         for action in range(NUM_ACTIONS):
             env = copy_env(self.env)  # deepcopy(self.env)
             state, reward, done, legal, info = env.step(action)
-            # env.render()
             if legal:
                 child_added = True
                 new_child = Node(
@@ -110,7 +109,8 @@ class Node:
         selected_child = None
         for child in self.children:
             Q = child.W / child.N if child.N > 0 else child.W
-            U = c_puct * child.P * (math.sqrt(children_visit_sum) / 1 + child.N)
+            U = c_puct * child.P * (1 / 1 + child.N)
+            # U = c_puct * child.P * (math.sqrt(children_visit_sum) / 1 + child.N)
             if Q + U > max_q_u:
                 max_q_u = Q + U
                 selected_child = child
