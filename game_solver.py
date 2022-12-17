@@ -5,10 +5,16 @@ import numpy as np
 import helper.functions.file_handler as fh
 from  optimal_score import *
 import collections
+import random
 
-class ProductPlaner:
+class GameSolver:
     def __init__(self,env:environment.Environment):
         self.env = env
+        self.orderd_products = self.get_product_order()
+        self.optimal_score = optimal_score(env)
+        print(self.optimal_score)
+        #self.solve()
+
 
 
     def update(self, pairs):
@@ -20,26 +26,44 @@ class ProductPlaner:
         products = get_products(self.env)
         all_resources = get_env_resources(self.env)
         turns = self.env.turns
-        print(turns)
         for p in products:
             score = calc_best_score([p], turns, all_resources)
             order.append([p,score])
         order = self.sort_product_list(order)
+        return order
 
 
     def sort_product_list(self,order):
-        sorted = []
+        sorted = order.copy()
         nums = np.zeros(len(order))
         for i in range(len(order)):
             nums[i] = order[i][1]
+            
         args = np.argsort(nums)
-        print(args)
+        for i in range(len(args)):
+            n = len(args)-1-i
+            sorted[i] = order[args[n]]
+        return sorted
+
+    def solve(self):
+        print('solve Game')
+        #build pairs
+        for pair in self.pairs:
+            success = self.build_pairs(pair)
+            if success == False:
+                self.update(pair)
+            else: self.pairs.remove(pair)
         
 
 
 
+    def build_pair(self):
+        n = random.randint(0,1)
+        if n == 1: return True
+        return False
+
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "004.task.json")
+    filename = os.path.join(".", "tasks","hard", "profit.task.1671272940276.json")#tasks\hard\profit.task.1671032210813.json
     env = fh.environment_from_json(filename)
-    product_planer = ProductPlaner(env)
-    product_planer.get_product_order()
+    solver = GameSolver(env)
+    

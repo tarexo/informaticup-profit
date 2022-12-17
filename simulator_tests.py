@@ -50,6 +50,17 @@ class Simulator_Tests(unittest.TestCase):
         total_points, total_rounds = sim.run()
         self.assertEqual(total_points, 120)
         self.assertEqual(total_rounds, 47)
+    
+    def test_simulator_task_5(self):
+        filename = os.path.join(
+            ".", "tasks","hard", "solved","profit.1671275983129.json"
+        )  # tasks\manual solutions\task_4.json
+        env = fh.environment_from_json(filename)
+        sim = simulator.Simulator(env)
+        total_points, total_rounds = sim.run()
+        self.assertEqual(total_points, 900)
+        self.assertEqual(total_rounds, 72)
+
 
 
 if __name__ == "__main__":
