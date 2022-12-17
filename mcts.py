@@ -3,6 +3,9 @@ import tensorflow as tf
 from copy import deepcopy
 from helper.constants.settings import NUM_ACTIONS
 import random as rand
+from profit_gym import make_gym
+from tqdm import tqdm
+import random as rand
 
 
 class Node:
@@ -45,13 +48,20 @@ class Node:
         action_probs, val = self.make_prediction()
 
         # ? Alternatively take the reward given from the env as state value?
+        # FIXME Is 'W' reward of action or given by the value network?
         # self.W = val
 
-        action_probs = action_probs.numpy().flatten().tolist()
+        action_probs = action_probs.numpy().flatten().tolist()  # tensor -> np array
+
+        # FIXME Maybe mask out illegal game moves from action_probs and renormalize probabilities
+
+        child_added = False
+        solution_child = None
 
         for action in range(NUM_ACTIONS):
             env = copy_env(self.env)  # deepcopy(self.env)
             state, reward, done, legal, info = env.step(action)
+            # env.render()
             if legal:
                 child_added = True
                 new_child = Node(
@@ -65,8 +75,9 @@ class Node:
                     state_value=reward,
                 )
                 self.children.append(new_child)
-            if done:
-                return new_child
+            # if done:
+            #     solution_child = new_child
+
         self.expanded = True
         if not child_added and not done:
             # ? How to handle dead ends? -> Remove for now
@@ -89,9 +100,7 @@ class Node:
         return no_solution_possible
 
     def select_child(self):
-        # TODO
         # Select one of the available childs and return it
-        # ? Selection may be based on the formula?
         children_visit_sum = 0
         for child in self.children:
             children_visit_sum += child.N
@@ -115,27 +124,35 @@ class Node:
 
 
 class MonteCarloTreeSearch:
+    # NOTE Idea is to train the network sucht that it behaves exactly like mcts
     def __init__(self, env, game_state, model):
         self.env = env
         self.game_state = game_state
         self.model = model
         return
 
-    def run(self, num_runs=100, is_train=True, tau=1.0):
+    def run(self, num_runs=1600, is_train=True, tau=1.0):
         # TODO
         # Run the monte carlo search tree
         # ? What should be returned?
         # ? Does num_simluations refer to the depth of the tree or on node.simulate()?
 
         root = Node(self.env, self.game_state, self.model)
+        # new_env = copy_env(self.env)
         self.env.render()
+        # self.env.step(1)
+        # self.env.render()
+        # new_env.render()
+        # new_env.step(10)
+        # # new_env.step(11)
+        # new_env.render()
+        # self.env.render()
 
-        for _ in range(num_runs):
+        for _ in tqdm(range(num_runs)):
             node = root
             # search_path = [node]
 
             # PHASE I: SELECT (a sequence of moves from the root to a leave)
-            # FIXME Node might be none type object! What do do if you reach the leaves of the tree?
             while node.expanded:
                 node = node.select_child()
 
@@ -150,10 +167,15 @@ class MonteCarloTreeSearch:
                 while node is not None:
                     node.env.render()
                     node = node.parent
+                solution_node.env.render()
                 return
 
             # PHASE III: BACKUP (update all nodes on the path)
-            self.backup(node)
+            if added_child:
+                # Only backup if a step was taken
+                self.backup(node)
+
+        node.env.render()
 
         # PHASE IV: PLAY (final after repeating above ~1600 times)
         if not is_train:
