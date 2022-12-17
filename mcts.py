@@ -51,6 +51,7 @@ class Node:
             env = deepcopy(self.env)
             state, reward, done, legal, info = env.step(action)
             if legal:
+                child_added = True
                 new_child = Node(
                     env=env,
                     game_state=state,
