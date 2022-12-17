@@ -71,7 +71,7 @@ def train(env, model):
 
 
 def train_model(width, height, num_conv_layers, transfer_model_path=None):
-    env = make_gym(8, 8)
+    env = make_gym(32, 32)
 
     if MODEL_ID == "QDN":
         model = DeepQNetwork(env)
