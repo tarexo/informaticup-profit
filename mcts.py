@@ -171,3 +171,14 @@ class MonteCarloTreeSearch:
             node.W += v  # FIXME v is a tensor
             node.Q = node.W / node.N
             node = node.parent
+
+
+def copy_env(env):
+    new_env = make_gym(
+        width=env.unwrapped.width,
+        height=env.unwrapped.height,
+        copy=True,
+        old_env=env,
+    )
+    new_env.reset(copy=True)
+    return new_env
