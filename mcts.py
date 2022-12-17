@@ -26,9 +26,9 @@ class Node:
         self.parent = parent
         self.children = []
 
-        self.N = 0  # Number of times the node was visited
+        self.N = 1  # Number of times the node was visited
         self.W = state_value  # Raw value
-        self.Q = 0  # W / N
+        self.Q = self.W / self.N  # W / N
         self.P = prior_probability
 
         self.expanded = False
@@ -49,6 +49,7 @@ class Node:
 
         # ? Alternatively take the reward given from the env as state value?
         # FIXME Is 'W' reward of action or given by the value network?
+        value = val.numpy()[0][0]
         # self.W = val
 
         action_probs = action_probs.numpy().flatten().tolist()  # tensor -> np array
@@ -63,6 +64,10 @@ class Node:
             state, reward, done, legal, info = env.step(action)
             if legal:
                 child_added = True
+
+                if done:
+                    value = reward
+
                 new_child = Node(
                     env=env,
                     game_state=state,
@@ -71,7 +76,7 @@ class Node:
                     action_taken=action,
                     prior_probability=action_probs[action],
                     final_state=done,
-                    state_value=reward,
+                    state_value=value,
                 )
                 self.children.append(new_child)
             # if done:
