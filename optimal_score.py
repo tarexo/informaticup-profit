@@ -2,6 +2,7 @@ import classes.buildings as buildings
 import os
 import numpy as np
 import itertools
+import math
 import helper.functions.file_handler as fh
 
 
@@ -31,17 +32,77 @@ def optimal_score(env):
             product_combinations.append(subset)
     best_score = 0
     for combination in product_combinations:
-        temp_score = calc_best_score(combination, turns, env_resources)
+        temp_score = calc_best_score(env,combination, turns, env_resources)
         print('\n\n')
         if temp_score > best_score:
             best_score = temp_score
     return best_score
 
-def calc_best_score(combination, turns, all_resources):
+def calc_best_score(env,combination, turns, all_resources):
     myturns = turns-2
     resources = all_resources.copy()
+    if len(combination)==0:
+        return 0
+    elif len(combination)==1:
+        return calc_best_score_of_single_product(env, combination[0], myturns, resources)
+    
+    ind = np.argwhere(combination[0].resources>0)
+    for i in range(1,len(combination)):
+        np.append(ind,np.argwhere(combination[i].resources>0))
+    l=len(ind)
+    ind = np.unique(ind)
+    if l == len(ind):
+        score = 0
+        for p in combination:
+            score+=calc_best_score_of_single_product(env,p, myturns, resources)
+        return score
+    
+    
+    
+
+def calc_best_score_of_single_product(env, product:Product, myturns, resources):
     score = 0
-    counter = []
+    mines = np.array([0,0,0,0,0,0,0,0])
+    ind = np.argwhere(product.resources>0)
+    points = product.points
+    product_resouces= np.array([0,0,0,0,0,0,0,0])
+    deposits = get_deposits(env)
+    turns = np.zeros(product.resources.shape)
+    
+    product_resouces += product.resources
+    for d in deposits:
+        for i in ind:
+            if(d.subtype)== i:
+                mines[i] += d.width + d.height
+    for i in range(len(turns)):
+        m = mines[i]
+        if m == 0:
+            turns[i]=0
+        else:
+            turns[i]= np.ceil(resources[i]/m*3)
+    products_build = []
+    if np.amax(turns)<= myturns:
+        for i in range(len(turns)):
+            pr = product_resouces[i]
+            if pr == 0:
+                turns[i]=0
+            else:
+                products_build.append(np.floor(resources[i]/pr))
+
+        products_build = np.array(products_build)
+        score = np.amin(products_build)*points
+    else:
+        a=myturns*mines*3
+        for i in range(len(turns)):
+            pr = product_resouces[i]
+            if pr == 0:
+                turns[i]=0
+            else:
+                products_build.append(np.floor(a/product.resources))
+        products_build = np.array(products_build)
+        score = np.amin(products_build)*points
+    return score
+    '''counter = []
     rest =[]
     for _ in range(len(combination)):
         counter.append(0)
@@ -69,7 +130,7 @@ def calc_best_score(combination, turns, all_resources):
             resources = tmp  
         myturns-=1
         if resources.max()==0:break 
-    return score
+    return score'''
 
 
     '''temp_score= 0
@@ -84,6 +145,11 @@ def calc_best_score(combination, turns, all_resources):
                     temp_score += p.points
     return temp_score'''
 
+def calc_best_score_of_multible_products(env, products, myturns, resources):
+    score = 0
+    mines = np.array([0,0,0,0,0,0,0,0])
+
+
 def get_products(env):
     products = []
     for i in range(len(env.products)):  # get products and fill product_resouces matrix
@@ -91,11 +157,18 @@ def get_products(env):
         products.append(new_product)
     return products
 
-def get_env_resources(env):
-    env_resources = np.zeros(8)
+def get_deposits(env):
+    deposits = []
     for building in env.buildings:
         if building.__class__ == buildings.Deposit:
-            env_resources[building.subtype] += building.width * building.height * 5
+            deposits.append(building)
+    return deposits
+
+def get_env_resources(env):
+    env_resources = np.zeros(8)
+    deposits =get_deposits(env)
+    for d in deposits:
+        env_resources[d.subtype] += d.width * d.height * 5
     return env_resources
 
 def is_resource_value_negative(resources):
@@ -112,7 +185,7 @@ def set_procduct_resouces(a):
     return r
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","hard", "profit.task.1671272940276.json")#filename = os.path.join(".", "tasks", "001.task.json")
+    filename = os.path.join(".", "tasks","hard", "profit.task.1671364203528.json")#tasks\easy\profit.task.1671031243173.json
     env = fh.environment_from_json(filename)
     print(optimal_score(env))
 
