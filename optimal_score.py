@@ -33,7 +33,6 @@ def optimal_score(env):
     best_score = 0
     for combination in product_combinations:
         temp_score = calc_best_score(env,combination, turns, env_resources)
-        print('\n\n')
         if temp_score > best_score:
             best_score = temp_score
     return best_score
@@ -46,9 +45,12 @@ def calc_best_score(env,combination, turns, all_resources):
     elif len(combination)==1:
         return calc_best_score_of_single_product(env, combination[0], myturns, resources)
     
-    ind = np.argwhere(combination[0].resources>0)
-    for i in range(1,len(combination)):
-        np.append(ind,np.argwhere(combination[i].resources>0))
+    ind = []
+    for i in range(len(combination)):
+        v=np.argwhere(combination[i].resources>0)
+        for a in v:
+            ind.append(a)
+    ind = np.array(ind)
     l=len(ind)
     ind = np.unique(ind)
     if l == len(ind):
@@ -56,6 +58,7 @@ def calc_best_score(env,combination, turns, all_resources):
         for p in combination:
             score+=calc_best_score_of_single_product(env,p, myturns, resources)
         return score
+    return calc_best_score_of_multible_products(env, combination, myturns, resources)
     
     
     
@@ -65,11 +68,10 @@ def calc_best_score_of_single_product(env, product:Product, myturns, resources):
     mines = np.array([0,0,0,0,0,0,0,0])
     ind = np.argwhere(product.resources>0)
     points = product.points
-    product_resouces= np.array([0,0,0,0,0,0,0,0])
     deposits = get_deposits(env)
     turns = np.zeros(product.resources.shape)
-    
-    product_resouces += product.resources
+    product_resouces = product.resources
+
     for d in deposits:
         for i in ind:
             if(d.subtype)== i:
@@ -102,52 +104,25 @@ def calc_best_score_of_single_product(env, product:Product, myturns, resources):
         products_build = np.array(products_build)
         score = np.amin(products_build)*points
     return score
-    '''counter = []
-    rest =[]
-    for _ in range(len(combination)):
-        counter.append(0)
-        rest.append(0)
-    while(myturns!=0):
-        for i in range(len(combination)):
-            product = combination[i]
-            highest_value =np.amax(product.resources)
-            product_resource = set_procduct_resouces(product.resources)
-            val = 3
-            tmp = np.subtract(resources,product_resource*val)
-            if np.amin(tmp)<0:
-                val = 2
-                tmp = np.subtract(resources,product_resource*val)
-                if np.amin(tmp)<0:
-                    val = 1
-                    tmp = np.subtract(resources,product_resource)
-                    if np.amin(tmp)<0:
-                        continue
-            rest[i] += val
-            if  rest[i]>=highest_value:
-                n = rest[i]//highest_value
-                counter[i] +=n
-                rest[i]= rest[i]%highest_value      
-            resources = tmp  
-        myturns-=1
-        if resources.max()==0:break 
-    return score'''
 
-
-    '''temp_score= 0
-    temp_env_resources = all_resources
-    for _ in range(turns):
-            for p in combination:
-                n = #subtract_resources(temp_env_resources, p.resources)
-                if is_resource_value_negative(n):
-                    break
-                else:
-                    temp_env_resources = n
-                    temp_score += p.points
-    return temp_score'''
 
 def calc_best_score_of_multible_products(env, products, myturns, resources):
+    indices = []
+    quotient = np.zeros(len(resources))
+    for product in products:
+        v=np.argwhere(product.resources>0)
+        for a in v:
+            indices.append(a)
+    for i in indices:
+        quotient[i]+=1
+    quotient=np.where(quotient>1,quotient,1)
+    new_resouces = resources/quotient
     score = 0
-    mines = np.array([0,0,0,0,0,0,0,0])
+    for p in products:
+        score+=calc_best_score_of_single_product(env,p, myturns, new_resouces)
+    return score
+        
+
 
 
 def get_products(env):
@@ -185,7 +160,7 @@ def set_procduct_resouces(a):
     return r
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","hard", "profit.task.1671364203528.json")#tasks\easy\profit.task.1671031243173.json
+    filename = os.path.join(".", "tasks","hard", "profit.task.1671272940276.json")#tasks\hard\profit.task.1671272940276.json
     env = fh.environment_from_json(filename)
     print(optimal_score(env))
 
