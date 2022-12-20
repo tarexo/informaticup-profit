@@ -76,31 +76,23 @@ def calc_best_score_of_single_product(env, product:Product, myturns, resources):
         for i in ind:
             if(d.subtype)== i:
                 mines[i] += d.width + d.height
-    for i in range(len(turns)):
-        m = mines[i]
-        if m == 0:
+    for i in range(len(mines)):
+        if mines[i]== 0:
             turns[i]=0
         else:
-            turns[i]= np.ceil(resources[i]/m*3)
+            turns[i]=np.ceil(resources[i]/(mines[i]*3))
     products_build = []
     if np.amax(turns)<= myturns:
-        for i in range(len(turns)):
-            pr = product_resouces[i]
-            if pr == 0:
-                turns[i]=0
-            else:
-                products_build.append(np.floor(resources[i]/pr))
-
+        for i in range(len(resources)):
+            if product_resouces[i]>0:
+                products_build.append(np.floor(resources[i]/product_resouces[i]))
         products_build = np.array(products_build)
         score = np.amin(products_build)*points
     else:
         a=myturns*mines*3
-        for i in range(len(turns)):
-            pr = product_resouces[i]
-            if pr == 0:
-                turns[i]=0
-            else:
-                products_build.append(np.floor(a/product.resources))
+        for i in range(len(resources)):
+            if product_resouces[i]>0:
+                products_build.append(np.floor(a[i]/product_resouces[i]))
         products_build = np.array(products_build)
         score = np.amin(products_build)*points
     return score
@@ -160,7 +152,7 @@ def set_procduct_resouces(a):
     return r
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","hard", "profit.task.1671272940276.json")#tasks\hard\profit.task.1671272940276.json
+    filename = os.path.join(".", "tasks", "004.task.json")
     env = fh.environment_from_json(filename)
     print(optimal_score(env))
 
