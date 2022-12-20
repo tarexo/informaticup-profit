@@ -40,25 +40,22 @@ def optimal_score(env):
 def calc_best_score(env,combination, turns, all_resources):
     myturns = turns-2
     resources = all_resources.copy()
-    if len(combination)==0:
-        return 0
-    elif len(combination)==1:
-        return calc_best_score_of_single_product(env, combination[0], myturns, resources)
-    
-    ind = []
-    for i in range(len(combination)):
-        v=np.argwhere(combination[i].resources>0)
+    if len(combination)== 0: return 0
+    if len(combination)== 1: return calc_best_score_of_single_product(env,combination[0], myturns, resources)
+    indices = []
+    quotient = np.zeros(len(resources))
+    for product in combination:
+        v=np.argwhere(product.resources>0)
         for a in v:
-            ind.append(a)
-    ind = np.array(ind)
-    l=len(ind)
-    ind = np.unique(ind)
-    if l == len(ind):
-        score = 0
-        for p in combination:
-            score+=calc_best_score_of_single_product(env,p, myturns, resources)
-        return score
-    return calc_best_score_of_multible_products(env, combination, myturns, resources)
+            indices.append(a)
+    for i in indices:
+        quotient[i]+=1
+    quotient=np.where(quotient>1,quotient,1)
+    new_resouces = resources/quotient
+    score = 0
+    for p in combination:
+        score+=calc_best_score_of_single_product(env,p, myturns, new_resouces)
+    return score
     
     
     
@@ -96,24 +93,6 @@ def calc_best_score_of_single_product(env, product:Product, myturns, resources):
         products_build = np.array(products_build)
         score = np.amin(products_build)*points
     return score
-
-
-def calc_best_score_of_multible_products(env, products, myturns, resources):
-    indices = []
-    quotient = np.zeros(len(resources))
-    for product in products:
-        v=np.argwhere(product.resources>0)
-        for a in v:
-            indices.append(a)
-    for i in indices:
-        quotient[i]+=1
-    quotient=np.where(quotient>1,quotient,1)
-    new_resouces = resources/quotient
-    score = 0
-    for p in products:
-        score+=calc_best_score_of_single_product(env,p, myturns, new_resouces)
-    return score
-        
 
 
 
