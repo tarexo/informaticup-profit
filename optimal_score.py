@@ -25,17 +25,29 @@ class Product:
 def optimal_score(env):
     products = get_products(env)
     env_resources = get_env_resources(env)
+    product_scores =[]
     turns = env.turns #get resource to mine and from mine to factory takes 2 turn minimum
     product_combinations = []
     for i in range(len(products) + 1):  # fill combinations
         for subset in itertools.combinations(products, i):
             product_combinations.append(subset)
-    best_score = 0
     for combination in product_combinations:
-        temp_score = calc_best_score(env,combination, turns, env_resources)
-        if temp_score > best_score:
-            best_score = temp_score
-    return best_score
+        score = calc_best_score(env,combination, turns, env_resources)
+        product_scores = add_to_score_list(product_scores,score, combination)
+    return product_scores
+
+def add_to_score_list(product_scores,score, combination):
+    if len(product_scores) ==0:
+        product_scores.append([score, combination])
+        return product_scores
+    insert_at = len(product_scores)
+    for i in range(len(product_scores)):
+        if product_scores[i][0]< score:
+            insert_at = i
+            break
+    product_scores.insert(insert_at,[score, combination])
+    return product_scores
+
 
 def calc_best_score(env,combination, turns, all_resources):
     myturns = turns-2
@@ -133,5 +145,10 @@ def set_procduct_resouces(a):
 if __name__ == "__main__":
     filename = os.path.join(".", "tasks", "004.task.json")
     env = fh.environment_from_json(filename)
-    print(optimal_score(env))
+    score_list =  optimal_score(env)
+    for s in score_list:
+        print(s[0])
+        for p in s[1]:
+            print(p.subtype)
+        print('\n')
 

@@ -9,19 +9,19 @@ class Optimal_Score_Tests(unittest.TestCase):
     def test_scores_of_environments(self):
         filename = os.path.join(".", "tasks", "001.task.json")
         env = fh.environment_from_json(filename)
-        self.assertEqual(opt.optimal_score(env), 410)
+        self.assertEqual(opt.optimal_score(env)[0][0], 410)
 
         filename = os.path.join(".", "tasks", "002.task.json")
         env = fh.environment_from_json(filename)
-        self.assertEqual(opt.optimal_score(env), 120)
+        self.assertEqual(opt.optimal_score(env)[0][0], 120)
 
         filename = os.path.join(".", "tasks", "003.task.json")
         env = fh.environment_from_json(filename)
-        self.assertEqual(opt.optimal_score(env), 60)
+        self.assertEqual(opt.optimal_score(env)[0][0], 60)
 
         filename = os.path.join(".", "tasks", "004.task.json")
         env = fh.environment_from_json(filename)
-        self.assertEqual(opt.optimal_score(env), 720)
+        self.assertEqual(opt.optimal_score(env)[0][0], 720)
 
 
 if __name__ == "__main__":
