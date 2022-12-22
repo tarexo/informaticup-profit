@@ -84,9 +84,9 @@ class Node:
             #     solution_child = new_child
 
         self.expanded = True
-        if not child_added and not done:
-            # ? How to handle dead ends? -> Remove for now
-            no_solution_possible = self.remove_dead_end()
+        # if not child_added and not done:
+        #     # ? How to handle dead ends? -> Will be ignored for now
+        #     no_solution_possible = self.remove_dead_end()
 
         return solution_child, child_added, no_solution_possible
 
@@ -186,9 +186,10 @@ class MonteCarloTreeSearch:
             #     return
 
             # PHASE III: BACKUP (update all nodes on the path)
-            if added_child:
-                # Only backup if a step was taken
-                self.backup(node)
+            # if added_child:
+            # Only backup if a step was taken
+            # self.backup(node)
+            self.backup(node)
 
         # node.env.render()
 
