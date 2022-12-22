@@ -211,7 +211,7 @@ class Environment_Tests(unittest.TestCase):
             "combiners are allowed to be connected with a combiner exit",
         )
 
-    def test_conveyor_overlapping(self):
+    def _test_conveyor_overlapping(self):
         env3 = fh.environment_from_json(filename3)
         conveyor = buildings.Combiner((3, 11), 6)
         self.assertEqual(
@@ -231,6 +231,23 @@ class Environment_Tests(unittest.TestCase):
             mine,
             "mines are allowd to be next to deposits",
         )
+
+    def test_conveyor_stacking(self):
+        env3 = fh.environment_from_json(filename3)
+        conveyor = buildings.Combiner((13, 7), 0)
+        self.assertEqual(
+            env3.add_building(conveyor),
+            conveyor,
+        )
+        conveyor2 = buildings.Combiner((13, 6), 2)
+        self.assertEqual(
+            env3.add_building(conveyor2), conveyor2, 
+        )
+        conveyor3 = buildings.Combiner((13, 5), 0)
+        self.assertEqual(
+            env3.add_building(conveyor3), None, 'stacking of conveyors are not allowed. Two exit at one entry.'
+        )
+        
 
 
 if __name__ == "__main__":
