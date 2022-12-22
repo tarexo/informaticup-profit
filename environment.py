@@ -9,6 +9,8 @@ from helper.dicts.placement_rules import *
 from helper.constants.settings import *
 from helper.functions.file_handler import *
 
+from classes.buildings.conveyor import Conveyor
+
 import os
 import random
 
@@ -45,7 +47,7 @@ class Environment:
         self.height = height
         self.turns = turns
 
-        self.task_generator = task_generator.TaskGenerator(self)#, seed=12)
+        self.task_generator = task_generator.TaskGenerator(self)  # , seed=4)
 
         if not copy:
             self.empty()
@@ -188,7 +190,10 @@ class Environment:
                 if type(other_building) not in LEGAL_CONNECTIONS[type(building)]:
                     return True
             if self.would_connect_to(other_building, building):
-                if type(building) not in LEGAL_CONNECTIONS[type(other_building)]:
+                if (
+                    type(building) not in LEGAL_CONNECTIONS[type(other_building)]
+                    or len(other_building.connections) > 0
+                ):
                     return True
         return False
 
