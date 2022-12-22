@@ -10,18 +10,44 @@ import random
 class GameSolver:
     def __init__(self,env:environment.Environment):
         self.env = env
-        self.orderd_products = self.get_product_order()
-        self.optimal_score = optimal_score(env)
+        #self.orderd_products = self.get_product_order()
+        self.score_list= optimal_score(env)
         print(self.optimal_score)
         #self.solve()
 
+        
+    def solve(self):
+        print('solve Game')
+        #build pairs
+        for product_list in self.score_list:
+            products_scores = []
+            for p in product_list[1]:
+                score = calc_best_score_of_single_product(env, p, self.env.turns -2, self.env.resources)
+                products_scores.append([score,p])
+            products_scores = self.sort_product_list(products_scores)
+
+            for p in products_scores:
+                deposits = []
+                all_deposits= get_deposits(env)
+                for d in all_deposits:
+                    if d.subtype == p.subtype:
+                        deposits.append(d)
+                
+
+
+
+        '''for pair in self.pairs:
+            success = self.build_pairs(pair)
+            if success == False:
+                self.update(pair)
+            else: self.pairs.remove(pair)'''
 
 
     def update(self, pairs):
         print('to be done')
         #update product order if one or more pairs don't work
 
-    def get_product_order(self):
+    '''def get_product_order(self):
         order = []
         products = get_products(self.env)
         all_resources = get_env_resources(self.env)
@@ -30,7 +56,7 @@ class GameSolver:
             score = calc_best_score([p], turns, all_resources)
             order.append([p,score])
         order = self.sort_product_list(order)
-        return order
+        return order'''
 
 
     def sort_product_list(self,order):
@@ -45,14 +71,7 @@ class GameSolver:
             sorted[i] = order[args[n]]
         return sorted
 
-    def solve(self):
-        print('solve Game')
-        #build pairs
-        for pair in self.pairs:
-            success = self.build_pairs(pair)
-            if success == False:
-                self.update(pair)
-            else: self.pairs.remove(pair)
+
         
 
 
