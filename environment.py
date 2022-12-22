@@ -45,7 +45,7 @@ class Environment:
         self.height = height
         self.turns = turns
 
-        self.task_generator = task_generator.TaskGenerator(self, seed=12)
+        self.task_generator = task_generator.TaskGenerator(self)#, seed=12)
 
         if not copy:
             self.empty()

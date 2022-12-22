@@ -16,6 +16,7 @@ from copy import deepcopy
 from helper.constants.settings import NUM_ACTIONS
 from random import shuffle
 from tqdm import tqdm
+import random
 
 
 class BaseModel(tf.keras.Model):
@@ -222,6 +223,8 @@ class ActorCritic(BaseModel):
             action_probs = action_probs / np.sum(action_probs)
             # - Store: (game state, action probs)
             train_examples.append((board_state, action_probs))
+            # TODO At some point no valid child is found eventhough there are legal actions left
+            # ? How do we handle dead ends in the tree?
             # - Take an action based on the root node
             state, reward, done, legal, info = self.env.step(action)
             self.env.render()
