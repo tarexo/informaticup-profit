@@ -213,7 +213,7 @@ class ActorCritic(BaseModel):
             board_state = state
             # - run mcts for set num of episodes
             mcts = MonteCarloTreeSearch(deepcopy(self.env), state, self.model)
-            root, action = mcts.run(num_runs=50)
+            root, action = mcts.run(num_runs=1600)
             # - transform N of root to action probabilities
             action_probs = [0 for _ in range(NUM_ACTIONS)]
             for child in root.children:
@@ -227,16 +227,18 @@ class ActorCritic(BaseModel):
             # ? How do we handle dead ends in the tree?
             # - Take an action based on the root node
             state, reward, done, legal, info = self.env.step(action)
-            self.env.render()
+            # self.env.render()
 
             # - If reward == SUCCESS_REWARD [CUSTOM]: or no more moves possible
             if reward == SUCCESS_REWARD:
+                # print(f"|--- SUCCESS: {reward} ---|")
                 ret = []
                 for board_state, action_probs in train_examples:
                     ret.append((board_state, action_probs, reward))
                 return ret
 
             if not self.legal_action_possible(copy_env(self.env)):
+                # print(f"|--- FAIL: {reward} ---|")
                 ret = []
                 for board_state, action_probs in train_examples:
                     ret.append((board_state, action_probs, -1))

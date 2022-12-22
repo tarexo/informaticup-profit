@@ -90,14 +90,20 @@ def train_custom(env, model):
             batch_index = 0
 
             while batch_index < int(len(train_examples) / BATCH_SIZE):
-                sample_ids = np.random.randint(len(train_examples), size=BATCH_SIZE)
+                sample_ids = np.random.randint(
+                    len(train_examples)
+                )  # , size=BATCH_SIZE)
                 board_states, target_action_probs, target_rewards = list(
-                    zip(*[train_examples[i] for i in sample_ids])
+                    zip(*[train_examples[sample_ids]])  # for i in sample_ids])
                 )
                 target_action_probs = tf.convert_to_tensor(
                     np.array(target_action_probs)
                 )
                 target_rewards = tf.convert_to_tensor(np.array(target_rewards))
+
+                # BUG Problem with right shape for board state
+                board_states = tf.convert_to_tensor(board_states)
+                board_states = tf.expand_dims(board_states, 0)
 
                 with tf.GradientTape() as tape:
                     # loss, episode_reward = model.run_episode(iteration, 0.5 * running_mean_reward)
