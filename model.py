@@ -196,7 +196,7 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss - entropies
 
-    def run_episode(self, state, exploration_rate, greedy=False):
+    def run_episode(self, state, exploration_rate, greedy=False, force_legal=False):
         exploration_rate = 0.0
 
         episode_action_probs = []
@@ -216,6 +216,16 @@ class ActorCritic(BaseModel):
                 action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
 
             state, reward, done, legal, info = self.env.step(action)
+
+            illegal_actions = 0
+            while (
+                not legal
+                and force_legal
+                and illegal_actions != action_probs.shape[1] - 1
+            ):
+                illegal_actions += 1
+                action = np.argsort(action_probs[0])[illegal_actions]
+                state, reward, done, legal, info = self.env.step(action)
 
             action_log_probs = tf.math.log(action_probs)
             entropy = (
@@ -269,7 +279,7 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, state, exploration_rate, greedy=False):
+    def run_episode(self, state, exploration_rate, greedy=False, force_legal=False):
         episode_q_values = []
         episode_rewards = []
         for step in range(MAX_STEPS_EACH_EPISODE):
@@ -282,6 +292,12 @@ class DeepQNetwork(BaseModel):
                 action = np.argmax(q_values)
 
             state, reward, done, legal, info = self.env.step(action)
+
+            illegal_actions = 0
+            while not legal and force_legal and illegal_actions + 1 < NUM_ACTIONS:
+                illegal_actions += 1
+                action = np.argsort(q_values[0])[illegal_actions]
+                state, reward, done, legal, info = self.env.step(action)
 
             episode_q_values.append(q_values[0, action])
             episode_rewards.append(reward)

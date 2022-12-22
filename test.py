@@ -31,11 +31,13 @@ def test_model_sanity(env, model, difficulty):
     env.render()
 
 
-def test(env, model, difficulty, num_episodes):
+def test(env, model, difficulty, num_episodes, force_legal=False):
     rewards = []
     for episode in range(num_episodes):
         state, _ = env.reset(difficulty=difficulty)
-        _, episode_reward = model.run_episode(state, exploration_rate=0, greedy=True)
+        _, episode_reward = model.run_episode(
+            state, exploration_rate=0, greedy=True, force_legal=force_legal
+        )
 
         rewards.append(episode_reward)
     return statistics.mean(rewards)
@@ -43,7 +45,9 @@ def test(env, model, difficulty, num_episodes):
 
 def test_model(env, model, num_episodes=100):
     print(f"Testing model for {num_episodes} episodes...")
-    test_score = test(env, model, difficulty=1.0, num_episodes=num_episodes)
+    test_score = test(
+        env, model, difficulty=1.0, num_episodes=num_episodes, force_legal=True
+    )
     print(f"Model achieved a Test score of {test_score}\n")
 
     return test_score

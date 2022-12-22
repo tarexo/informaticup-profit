@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # suppress AVX_WARNING!
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-    min_episodes = min(500, int(0.2 * MAX_EPISODES))
+    min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
     model_sanity_check_frequency = 150
