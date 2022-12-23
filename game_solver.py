@@ -6,6 +6,7 @@ import helper.functions.file_handler as fh
 from  optimal_score import *
 import collections
 import random
+from helper.functions.building_placer import *
 
 class GameSolver:
     def __init__(self,env:environment.Environment):
@@ -32,6 +33,18 @@ class GameSolver:
                 for d in all_deposits:
                     if d.subtype == p.subtype:
                         deposits.append(d)
+                self.solve_product(p,deposits)
+            
+    
+    def solve_product(self, product:Product, deposits):
+        min_connections = np.count_nonzero(product.resources)
+        #build factory
+        factory_positions = get_all_factory_positions(self.env)
+        #build mine
+        for deposit in deposits:
+            mine_positions = get_all_mines_positions(self.env, deposit)
+            #build connection
+
                 
 
 
@@ -71,18 +84,17 @@ class GameSolver:
             sorted[i] = order[args[n]]
         return sorted
 
-
-        
-
-
-
     def build_pair(self):
         n = random.randint(0,1)
         if n == 1: return True
         return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","hard", "profit.task.1671272940276.json")#tasks\hard\profit.task.1671032210813.json
+    filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
     env = fh.environment_from_json(filename)
-    solver = GameSolver(env)
+    deposits = get_deposits(env)
+    factory_positions = get_all_factory_positions(env,deposits)
+    for a in factory_positions:
+        print(a)
+    
     
