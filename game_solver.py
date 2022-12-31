@@ -93,8 +93,10 @@ if __name__ == "__main__":
     filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
     env = fh.environment_from_json(filename)
     deposits = get_deposits(env)
-    factory_positions = get_all_factory_positions(env,deposits)
-    for a in factory_positions:
-        print(a)
+    for deposit in deposits:
+        mine_positions = get_all_mines_positions(env, deposit)
+    #factory_positions = get_all_factory_positions(env,deposits)
+    #for a in factory_positions:
+        #print(a)
     
     
