@@ -40,18 +40,19 @@ class GameSolver:
             
     
     def solve_product(self, product:Product, deposits):
-        min_connections = np.count_nonzero(product.resources)
-        #build factory
         factory_positions = get_all_factory_positions(self.env,self.all_deposits)
-        #build mine
         connected = False
         for deposit in deposits:
             for factory_pos in factory_positions:
                 factory = buildings.Mine((factory_pos[0], factory_pos[1]), product.subtype)
                 if factory == None: continue
+                factory_positions.remove(factory_pos)
                 connected = self.make_connection(deposit, factory)
                 if connected == True:
+                    factory_positions = get_all_factory_positions(self.env,self.all_deposits)
                     break 
+                else:
+                    self.env.remove_building(self, factory)
             if not connected :
                 self.update(product, deposit)
                 return False
@@ -64,7 +65,7 @@ class GameSolver:
             #build mine
             mine = buildings.Mine((mine_pos[0], mine_pos[1]), mine_pos[2])
             if mine == None:continue
-            connected =self.build_connection(mine, factory)
+            connected = self.build_connection(mine, factory)
             if connected == True: return True
         return False
 
@@ -93,12 +94,13 @@ class GameSolver:
         return sorted
 
     def build_connection(self, mine, factory):
+        print("Mine: "+str(mine.x)+", "+str(mine.y)+" Subtype: "+str(mine.subtype) +"  to Factory: "+str(factory.x)+", "+str(factory.y)+" Subtype: "+str(factory.subtype) )
         n = random.randint(0,1)
         if n == 1: return True
         return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","003.task.json")#tasks\hard\profit.task.1671032210813.json
+    filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
     env = fh.environment_from_json(filename)
     solver = GameSolver(env)
     solver.solve()
