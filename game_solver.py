@@ -14,7 +14,7 @@ class GameSolver:
         #self.orderd_products = self.get_product_order()
         self.score_list= optimal_score(env)
         print(self.optimal_score)
-        #self.solve()
+        self.solve()
 
         
     def solve(self):
@@ -30,10 +30,12 @@ class GameSolver:
             for p in products_scores:
                 deposits = []
                 all_deposits= get_deposits(env)
+                index = np.argwhere(p.resouces>0)
                 for d in all_deposits:
-                    if d.subtype == p.subtype:
+                    if d.subtype in index:
                         deposits.append(d)
-                self.solve_product(p,deposits)
+                connected = self.solve_product(p,deposits)
+                if not connected : break 
             
     
     def solve_product(self, product:Product, deposits):
@@ -41,35 +43,34 @@ class GameSolver:
         #build factory
         factory_positions = get_all_factory_positions(self.env)
         #build mine
+        connected = False
         for deposit in deposits:
-            mine_positions = get_all_mines_positions(self.env, deposit)
-            #build connection
+            for factory_pos in factory_positions():
+                factory = buildings.Mine((factory_pos[0], factory_pos[1]), product.subtype)
+                if factory == None: continue
+                connected = self.make_connection(deposit, factory)
+                if connected == True:
+                    break 
+            if not connected :
+                self.update(product, deposit)
+                return False
+        return True
+                  
 
-                
+    def make_connection(self, deposit, factory):
+        mine_positions = get_all_mines_positions(self.env, deposit)
+        for mine_pos in mine_positions:
+            #build mine
+            mine = buildings.Mine((mine_pos[0], mine_pos[1]), mine_pos[2])
+            if mine == None:continue
+            connected =self.build_connection(mine, factory)
+            if connected == True: return True
+        return False
 
-
-
-        '''for pair in self.pairs:
-            success = self.build_pairs(pair)
-            if success == False:
-                self.update(pair)
-            else: self.pairs.remove(pair)'''
-
-
-    def update(self, pairs):
+    def update(self, product):
         print('to be done')
         #update product order if one or more pairs don't work
 
-    '''def get_product_order(self):
-        order = []
-        products = get_products(self.env)
-        all_resources = get_env_resources(self.env)
-        turns = self.env.turns
-        for p in products:
-            score = calc_best_score([p], turns, all_resources)
-            order.append([p,score])
-        order = self.sort_product_list(order)
-        return order'''
 
 
     def sort_product_list(self,order):
@@ -84,17 +85,19 @@ class GameSolver:
             sorted[i] = order[args[n]]
         return sorted
 
-    def build_pair(self):
+    def build_connection(self, mine, factory):
         n = random.randint(0,1)
         if n == 1: return True
         return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
+    filename = os.path.join(".", "tasks","003.task.json")#tasks\hard\profit.task.1671032210813.json
     env = fh.environment_from_json(filename)
     deposits = get_deposits(env)
     for deposit in deposits:
         mine_positions = get_all_mines_positions(env, deposit)
+        for x,y,sub in mine_positions:
+            print(str(x)+', '+str(y)+':  '+str(sub))
     #factory_positions = get_all_factory_positions(env,deposits)
     #for a in factory_positions:
         #print(a)

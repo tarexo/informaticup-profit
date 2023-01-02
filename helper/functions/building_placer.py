@@ -3,24 +3,74 @@
 def get_all_mines_positions(env, deposit):
     mine_positions = []
     for subtype in range(4):
-        positions = get_mine_positions_subtype(env,deposit, subtype)
+        positions = get_mine_positions_subtype(deposit, subtype)
         for x,y in positions:
             success = check_mine_position(env, x,y, subtype)
-            if success: mine_positions([x,y,subtype])
+            if success: mine_positions.append([x,y,subtype])
     return mine_positions
 
 def check_mine_position(env, x,y, subtype):
-    pass
+    width = env.width-1
+    height = env.height-1
+    if subtype == 0:
+        if y>height or y<0 or x>width or x<0: return False
+        field = env.grid[y][x]
+        if field != ' ': return False
+        if y>height or y<0 or x+1>width or x+1<0: return False
+        field = env.grid[y][x+1]
+        if field != ' ': return False
+        for i in range(x-1, x+2):
+            if y+1>height or y+1<0 or i>width or i<0: return False
+            field = env.grid[y+1][i]
+            if field != ' ': return False
+        return True
+    if subtype == 1:
+        if y>height or y<0 or x+1>width or x+1<0: return False
+        field = env.grid[y][x+1]
+        if field != ' ': return False
+        if y+1>height or y+1<0 or x+1>width or x+1<0: return False
+        field = env.grid[y+1][x+1]
+        if field != ' ': return False
+        for i in range(y-1, y+2):
+            if i>height or i<0 or x>width or x<0: return False
+            field = env.grid[i][x]
+            if field != ' ': return False
+        return True
+    if subtype == 2:
+        if y+1>height or y+1<0 or x>width or x<0: return False
+        field = env.grid[y+1][x]
+        if field != ' ': return False
+        if y+1>height or y+1<0 or x+1>width or x+1<0: return False
+        field = env.grid[y+1][x+1]
+        if field != ' ': return False
+        for i in range(x-1, x+2):
+            if y>height or y<0 or i>width or i<0: return False
+            field = env.grid[y][i]
+            if field != ' ': return False
+        return True 
+    if subtype == 3:
+        if y>height or y<0 or x>width or x<0: return False
+        field = env.grid[y][x]
+        if field != ' ': return False
+        if y+1>height or y+1<0 or x>width or x<0: return False
+        field = env.grid[y+1][x]
+        if field != ' ': return False
+        for i in range(y-1, y+2):
+            if i>height or i<0 or x+1>width or x+1<0: return False
+            field = env.grid[i][x+1]
+            if field != ' ': return False
+        return True
+    return False
 
-def get_mine_positions_subtype(env,deposit, subtype:int):
+def get_mine_positions_subtype(deposit, subtype:int):
     x = deposit.x
     y = deposit.y
-    width = deposit.width
-    height = deposit.height
+    width = x+deposit.width
+    height = y+deposit.height
     pos = []
     if subtype == 0:
-        for i in range(x+1, width+1):
-            pos.append([i,y+2])
+        for i in range(x+1, width):
+            pos.append([i,y-2])
         for j in range(y-1,height-1):
             pos.append([width+2,j])
         pos.append([width+1,height])
@@ -30,7 +80,7 @@ def get_mine_positions_subtype(env,deposit, subtype:int):
             pos.append([width+1,i])
         for j in range(x,width):
             pos.append([j,height+2])
-        pos.append([x-1,height+1])
+        pos.append([x-1,height])
         return pos
     if subtype == 2:
         for i in range(x-2,width-2):
