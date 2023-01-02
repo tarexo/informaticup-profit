@@ -47,11 +47,10 @@ class GameSolver:
         connected = False
         tmp_env = copy.copy(self.env)
         for factory_pos in factory_positions:
+            factory = buildings.Factory((factory_pos[0], factory_pos[1]), product.subtype)
+            success = self.env.add_building(factory)
+            if success == None: continue
             for deposit in deposits:
-                factory = buildings.Factory((factory_pos[0], factory_pos[1]), product.subtype)
-                success = self.env.add_building(factory)
-                if success == None: continue
-                factory_positions.remove(factory_pos)
                 connected = self.make_connection(deposit, factory)
                 if not connected:
                     self.env = tmp_env
@@ -107,7 +106,7 @@ class GameSolver:
         return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks" ,"004.task.json")#tasks\004.task.json
+    filename = os.path.join(".", "tasks" ,"003.task.json")#tasks\004.task.json
     env = fh.environment_from_json(filename)
     solver = GameSolver(env)
     solver.solve()
