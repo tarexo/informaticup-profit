@@ -22,22 +22,25 @@ class GameSolver:
             self.model = ActorCritic(self.env)
         self.model.load(model_path)
 
-    def solve_task(self, task_name):
-        filename = os.path.join(".", "tasks", task_name)
+    def solve_task(self, filename):
         self.env.from_json(filename)
 
-        # ToDo: sort_products
-        # for product in self.env.get_products():
-        product = {}
-        product["subtype"] = 0
-        product["resources"] = [1, 1, 1, 0, 0, 0, 0, 0]
-        success = self.solve_single_product(filename, product)
-        print(success)
         print(self.env)
+        print("solving task...")
 
-    def solve_single_product(self, filename, product):
+        # ToDo: sort_products
+        for product in self.env.products:
+            success = self.solve_single_product(product)
+
+        # print(self.env)
+        print("SUCCESS" if success else "FAILURE")
+        print("\n")
+
+        return success
+
+    def solve_single_product(self, product):
         original_task = deepcopy(self.env)
-        for factory in self.env.get_possible_factories(product["subtype"]):
+        for factory in self.env.get_possible_factories(product["subtype"], max=10):
             self.env.add_building(factory)
             for deposit_subtype, amount in enumerate(product["resources"]):
                 if amount == 0:
@@ -53,11 +56,14 @@ class GameSolver:
 
             self.env = deepcopy(original_task)
             self.model.env = self.env
+        return False
 
     def connect_resource_to_factory(self, deposits, factory):
+        self.env.remove_building(factory)
         resource_task = deepcopy(self.env)
         for deposit in deposits:
             for mine in self.env.get_possible_mines(deposit):
+                self.env.add_building(factory)
                 self.env.add_building(mine)
                 self.env.set_task(mine, factory)
 
@@ -67,10 +73,10 @@ class GameSolver:
                     state, exploration_rate=0, greedy=True, force_legal=True
                 )
 
-                print(self.env)
-
+                # print(self.env)
                 if episode_reward == 1:
                     return True
+
                 self.env = deepcopy(resource_task)
                 self.model.env = self.env
         return False
@@ -88,4 +94,17 @@ if __name__ == "__main__":
 
     register_gym()
     solver = GameSolver(model_name="NORMAL__12x12__DQN_512-3x3_128")
-    solver.solve_task("test_task.json")
+
+    task_dir = os.path.join(".", "tasks", "easy")
+    tasks = [
+        f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
+    ]
+
+    score = 0
+    for task_name in tasks:
+        filename = os.path.join(task_dir, task_name)
+        success = solver.solve_task(filename)
+        if success:
+            score += 1
+
+    print(f"Score: {score}/{len(tasks)}")

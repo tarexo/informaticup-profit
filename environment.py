@@ -10,6 +10,7 @@ from helper.constants.settings import *
 from helper.functions.file_handler import *
 
 import os
+import random
 import json
 
 # create a nice output when displaying the entire grid
@@ -277,7 +278,7 @@ class Environment:
             b for b in self.buildings if type(b) == Deposit and b.subtype == subtype
         ]
 
-    def get_possible_factories(self, subtype):
+    def get_possible_factories(self, subtype, max=10):
         factories = []
         for y in range(self.height):
             for x in range(self.width):
@@ -285,7 +286,8 @@ class Environment:
                 if self.is_legal_position(factory):
                     factories.append(factory)
 
-        return factories
+        random.shuffle(factories)
+        return factories[:max]
 
     def get_possible_mines(self, deposit):
         mines = []
