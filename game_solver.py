@@ -4,6 +4,8 @@ from helper.functions.file_handler import *
 from model import *
 from profit_gym import make_gym, register_gym
 
+from copy import deepcopy
+
 
 class GameSolver:
     def __init__(self, model_name):
@@ -34,8 +36,8 @@ class GameSolver:
         print(self.env)
 
     def solve_single_product(self, filename, product):
+        original_task = deepcopy(self.env)
         for factory in self.env.get_possible_factories(product["subtype"]):
-            self.env.from_json(filename)
             self.env.add_building(factory)
             for deposit_subtype, amount in enumerate(product["resources"]):
                 if amount == 0:
@@ -44,9 +46,16 @@ class GameSolver:
                 success = self.connect_resource_to_factory(deposits, factory)
 
                 if not success:
-                    return False
+                    break
+
+            if success:
+                return True
+
+            self.env = deepcopy(original_task)
+            self.model.env = self.env
 
     def connect_resource_to_factory(self, deposits, factory):
+        resource_task = deepcopy(self.env)
         for deposit in deposits:
             for mine in self.env.get_possible_mines(deposit):
                 self.env.add_building(mine)
@@ -54,11 +63,17 @@ class GameSolver:
 
                 state = self.env.grid_to_observation()
 
-                success = self.model.run_episode(
+                _, episode_reward = self.model.run_episode(
                     state, exploration_rate=0, greedy=True, force_legal=True
                 )
-                if success:
+
+                print(self.env)
+
+                if episode_reward == 1:
                     return True
+                self.env = deepcopy(resource_task)
+                self.model.env = self.env
+        return False
 
 
 if __name__ == "__main__":
