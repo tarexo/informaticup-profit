@@ -37,16 +37,18 @@ class GameSolver:
                 if d.subtype in index:
                     deposits.append(d)
             connected = self.solve_product(p,deposits)
+            print(self.env)
             if not connected : break 
             
     
     def solve_product(self, product:Product, deposits):
         factory_positions = get_all_factory_positions(self.env,self.all_deposits)
+        factory_positions = random.sample(factory_positions, len(factory_positions))
         connected = False
         tmp_env = copy.copy(self.env)
         for factory_pos in factory_positions:
             for deposit in deposits:
-                factory = buildings.Mine((factory_pos[0], factory_pos[1]), product.subtype)
+                factory = buildings.Factory((factory_pos[0], factory_pos[1]), product.subtype)
                 success = self.env.add_building(factory)
                 if success == None: continue
                 factory_positions.remove(factory_pos)
@@ -54,6 +56,7 @@ class GameSolver:
                 if not connected:
                     self.env = tmp_env
                     break
+            if connected: break
         if not connected :
             self.update(product)
             return False
@@ -62,6 +65,7 @@ class GameSolver:
 
     def make_connection(self, deposit, factory):
         mine_positions = get_all_mines_positions(self.env, deposit)
+        mine_positions = random.sample(mine_positions, len(mine_positions))
         for mine_pos in mine_positions:
             #build mine
             mine = buildings.Mine((mine_pos[0], mine_pos[1]), mine_pos[2])
@@ -69,6 +73,7 @@ class GameSolver:
             if success == None:continue
             connected = self.build_connection(mine, factory)
             if connected == True: return True
+            else: self.env.remove_building(mine)
         return False
 
     def update(self, product):
@@ -97,13 +102,12 @@ class GameSolver:
 
     def build_connection(self, mine, factory):
         print("Mine: "+str(mine.x)+", "+str(mine.y)+" Subtype: "+str(mine.subtype) +"  to Factory: "+str(factory.x)+", "+str(factory.y)+" Subtype: "+str(factory.subtype) )
-        return True
-        '''n = random.randint(0,1)
+        n = random.randint(0,1)
         if n == 1: return True
-        return False'''
+        return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "easy","profit.task.1672670811891.json")#tasks\easy\profit.task.1672670811891.json
+    filename = os.path.join(".", "tasks" ,"004.task.json")#tasks\004.task.json
     env = fh.environment_from_json(filename)
     solver = GameSolver(env)
     solver.solve()
