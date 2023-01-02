@@ -37,7 +37,6 @@ class GameSolver:
                 if d.subtype in index:
                     deposits.append(d)
             connected = self.solve_product(p,deposits)
-            print(self.env)
             if not connected : break 
             
     
@@ -99,7 +98,7 @@ class GameSolver:
             sorted[i] = order[args[n]]
         return sorted
 
-    def build_connection(self, mine, factory):
+    def build_connection(self, mine, factory): #replace with real function to build connection
         print("Mine: "+str(mine.x)+", "+str(mine.y)+" Subtype: "+str(mine.subtype) +"  to Factory: "+str(factory.x)+", "+str(factory.y)+" Subtype: "+str(factory.subtype) )
         n = random.randint(0,1)
         if n == 1: return True
