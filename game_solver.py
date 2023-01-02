@@ -45,7 +45,8 @@ class GameSolver:
         for deposit in deposits:
             for factory_pos in factory_positions:
                 factory = buildings.Mine((factory_pos[0], factory_pos[1]), product.subtype)
-                if factory == None: continue
+                success = self.env.add_building(factory)
+                if success == None: continue
                 factory_positions.remove(factory_pos)
                 connected = self.make_connection(deposit, factory)
                 if connected == True:
@@ -64,7 +65,8 @@ class GameSolver:
         for mine_pos in mine_positions:
             #build mine
             mine = buildings.Mine((mine_pos[0], mine_pos[1]), mine_pos[2])
-            if mine == None:continue
+            success = self.env.add_building(mine)
+            if success == None:continue
             connected = self.build_connection(mine, factory)
             if connected == True: return True
         return False
@@ -95,9 +97,10 @@ class GameSolver:
 
     def build_connection(self, mine, factory):
         print("Mine: "+str(mine.x)+", "+str(mine.y)+" Subtype: "+str(mine.subtype) +"  to Factory: "+str(factory.x)+", "+str(factory.y)+" Subtype: "+str(factory.subtype) )
-        n = random.randint(0,1)
+        return True
+        '''n = random.randint(0,1)
         if n == 1: return True
-        return False
+        return False'''
 
 if __name__ == "__main__":
     filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
