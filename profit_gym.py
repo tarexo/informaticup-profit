@@ -32,10 +32,7 @@ class ProfitGym(Environment, gym.Env):
         # We have 16 different buildings (TODO: +4 for combiners) at four possible positions (at most 3 valid) adjacent to the input tile
         self.action_space = spaces.MultiDiscrete((NUM_SUBBUILDINGS, NUM_DIRECTIONS))
 
-    def reset(self, difficulty=0.0, seed=None, options=None):
-        super().reset(seed=seed)
-
-        start_building, factory = self.task_generator.generate_task(difficulty)
+    def set_task(self, start_building, factory):
         self.current_building = start_building
         self.target_building = factory
 
@@ -45,6 +42,12 @@ class ProfitGym(Environment, gym.Env):
         self.target_distance = self.get_min_distance(
             self.current_building, self.target_building
         )
+
+    def reset(self, difficulty=0.0, seed=None, options=None):
+        super().reset(seed=seed)
+
+        start_building, factory = self.task_generator.generate_task(difficulty)
+        self.set_task(start_building, factory)
 
         state = self.grid_to_observation()
         info = {}

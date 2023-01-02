@@ -10,7 +10,7 @@ from helper.constants.settings import *
 from helper.functions.file_handler import *
 
 import os
-import random
+import json
 
 # create a nice output when displaying the entire grid
 np.set_printoptions(
@@ -271,6 +271,60 @@ class Environment:
             ):
                 return True
         return False
+
+    def get_deposits(self, subtype):
+        return [
+            b for b in self.buildings if type(b) == Deposit and b.subtype == subtype
+        ]
+
+    def get_possible_factories(self, subtype):
+        factories = []
+        for y in range(self.height):
+            for x in range(self.width):
+                factory = Factory((x, y), subtype)
+                if self.is_legal_position(factory):
+                    factories.append(factory)
+
+        return factories
+
+    def get_possible_mines(self, deposit):
+        mines = []
+
+        out_positions = deposit.get_output_positions()
+        for x, y in self.get_adjacent_positions(out_positions, empty_only=True):
+            for BuildingClass in LEGAL_CONNECTIONS[type(deposit)]:
+                for subtype in range(BuildingClass.NUM_SUBTYPES):
+                    building = BuildingClass.from_input_position(x, y, subtype)
+                    if self.is_legal_position(building):
+                        mines.append(building)
+
+        return mines
+
+    def from_json(self, filename):
+        with open(filename) as f:
+            task = json.load(f)
+
+        self.width = task["width"]
+        self.height = task["height"]
+        self.turns = task["turns"]
+        self.products = task["products"]
+
+        self.empty()
+
+        for obj in task["objects"]:
+            classname = obj["type"].capitalize()
+            args = []
+            args.append((obj["x"], obj["y"]))
+
+            if "subtype" not in obj:
+                args.append(0)
+            else:
+                args.append(obj["subtype"])
+            if "width" in obj:
+                args.extend([obj["width"], obj["height"]])
+
+            building = globals()[classname](*args)
+            self.add_building(building, force=True)
 
     def __str__(self):
         """printable representation;
