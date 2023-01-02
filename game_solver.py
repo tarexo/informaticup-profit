@@ -45,7 +45,7 @@ class GameSolver:
         factory_positions = get_all_factory_positions(self.env,self.all_deposits)
         factory_positions = random.sample(factory_positions, len(factory_positions))
         connected = False
-        tmp_env = copy.copy(self.env)
+        tmp_env = copy.deepcopy(self.env)
         for factory_pos in factory_positions:
             factory = buildings.Factory((factory_pos[0], factory_pos[1]), product.subtype)
             success = self.env.add_building(factory)
@@ -106,7 +106,7 @@ class GameSolver:
         return False
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks" ,"003.task.json")#tasks\004.task.json
+    filename = os.path.join(".", "tasks" ,"002.task.json")#tasks\004.task.json
     env = fh.environment_from_json(filename)
     solver = GameSolver(env)
     solver.solve()
