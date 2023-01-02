@@ -6,6 +6,7 @@ import helper.functions.file_handler as fh
 from  optimal_score import *
 import collections
 import random
+import copy
 from helper.functions.building_placer import *
 
 class GameSolver:
@@ -42,21 +43,20 @@ class GameSolver:
     def solve_product(self, product:Product, deposits):
         factory_positions = get_all_factory_positions(self.env,self.all_deposits)
         connected = False
-        for deposit in deposits:
-            for factory_pos in factory_positions:
+        tmp_env = copy.copy(self.env)
+        for factory_pos in factory_positions:
+            for deposit in deposits:
                 factory = buildings.Mine((factory_pos[0], factory_pos[1]), product.subtype)
                 success = self.env.add_building(factory)
                 if success == None: continue
                 factory_positions.remove(factory_pos)
                 connected = self.make_connection(deposit, factory)
-                if connected == True:
-                    factory_positions = get_all_factory_positions(self.env,self.all_deposits)
-                    break 
-                else:
-                    self.env.remove_building(self, factory)
-            if not connected :
-                self.update(product, deposit)
-                return False
+                if not connected:
+                    self.env = tmp_env
+                    break
+        if not connected :
+            self.update(product)
+            return False
         return True
                   
 
@@ -77,7 +77,7 @@ class GameSolver:
             if product not in products:
                 new_score_list.append(products)
         self.score_list = new_score_list
-        self.solves
+        self.solve
 
         #update product order if one or more pairs don't work
 
@@ -103,16 +103,16 @@ class GameSolver:
         return False'''
 
 if __name__ == "__main__":
-    filename = os.path.join(".", "tasks","004.task.json")#tasks\hard\profit.task.1671032210813.json
+    filename = os.path.join(".", "tasks", "easy","profit.task.1672670811891.json")#tasks\easy\profit.task.1672670811891.json
     env = fh.environment_from_json(filename)
     solver = GameSolver(env)
     solver.solve()
 
-    '''deposits = get_deposits(env)
-    for deposit in deposits:
-        mine_positions = get_all_mines_positions(env, deposit)
-        for x,y,sub in mine_positions:
-            print(str(x)+', '+str(y)+':  '+str(sub))'''
+    #deposits = get_deposits(env)
+    #for deposit in deposits:
+    #    mine_positions = get_all_mines_positions(env, deposit)
+    #    for x,y,sub in mine_positions:
+    #       print(str(x)+', '+str(y)+':  '+str(sub))
     #factory_positions = get_all_factory_positions(env,deposits)
     #for a in factory_positions:
         #print(a)

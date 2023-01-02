@@ -69,32 +69,32 @@ def get_mine_positions_subtype(deposit, subtype:int):
     height = y+deposit.height
     pos = []
     if subtype == 0:
-        for i in range(x+1, width):
+        for i in range(x+1, width+1):
             pos.append([i,y-2])
         for j in range(y-1,height-1):
-            pos.append([width+2,j])
-        pos.append([width+1,height])
+            pos.append([width+1,j])
+        pos.append([width,height-1])
         return pos
     if subtype == 1:
         for i in range(y+1,height+1):
-            pos.append([width+1,i])
+            pos.append([width,i])
         for j in range(x,width):
-            pos.append([j,height+2])
+            pos.append([j,height+1])
         pos.append([x-1,height])
         return pos
     if subtype == 2:
         for i in range(x-2,width-2):
-            pos.append([i,height+1])
+            pos.append([i,height])
         for j in range(y, height):
             pos.append([x-3,j])
-        pos.append([x-1,y-1])
+        pos.append([x-2,y-1])
         return pos
     if subtype == 3:
         for i in range(y-2,height-2):
             pos.append([x-2,i])
         for j in range(x-1,width-1):
             pos.append([j,y-3])
-        pos.append([width,y-2])
+        pos.append([width-1,y-2])
         return pos
     return None
 
