@@ -21,10 +21,12 @@ class ProfitGym(Environment, gym.Env):
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
         self.vision_shape = (self.field_of_vision, self.field_of_vision, NUM_CHANNELS)
+        self.legal_action_shape = (NUM_ACTIONS,)
         self.target_pos_shape = ((2 * self.target_detection_distance + 1) * 2,)
         self.observation_space = spaces.Tuple(
             [
                 spaces.MultiBinary(self.vision_shape),
+                spaces.MultiBinary(self.legal_action_shape),
                 spaces.MultiBinary(self.target_pos_shape),
             ],
         )
@@ -122,10 +124,20 @@ class ProfitGym(Environment, gym.Env):
         end_x = agent_x + self.field_of_vision
         end_y = agent_y + self.field_of_vision
 
-        field_of_vision = padded_grid[agent_y:end_y, agent_x:end_x]
-        field_of_vision = np.where(field_of_vision != " ", 1.0, 0.0)
+        grid_fov = padded_grid[agent_y:end_y, agent_x:end_x]
+        obstacles_fov = np.where(grid_fov != " ", 1.0, 0.0)
+        # tunnels_fov = np.where(grid_fov in ["<", ">", "v", "^"], 1.0, 0.0)
 
-        return field_of_vision[:, :, np.newaxis].astype(np.int8)
+        return obstacles_fov[:, :, np.newaxis].astype(np.int8)
+
+    def get_legal_actions(self):
+        legal_actions = np.zeros(self.legal_action_shape, dtype=np.int8)
+        for action in range(NUM_ACTIONS):
+            new_building = self.get_building_from_action(action)
+            if self.is_legal_position(new_building):
+                legal_actions[action] = 1
+
+        return legal_actions
 
     def get_target_distance(self):
         max_dist = self.target_detection_distance
@@ -149,7 +161,11 @@ class ProfitGym(Environment, gym.Env):
         return target_position
 
     def grid_to_observation(self):
-        return (self.get_field_of_vison(), self.get_target_distance())
+        return (
+            self.get_field_of_vison(),
+            self.get_legal_actions(),
+            self.get_target_distance(),
+        )
 
 
 def register_gym():

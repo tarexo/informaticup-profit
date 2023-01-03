@@ -32,7 +32,7 @@ class GameSolver:
         for product in self.env.products:
             success = self.solve_single_product(product)
 
-        # print(self.env)
+        print(self.env)
         print("SUCCESS" if success else "FAILURE")
         print("\n")
 
@@ -62,7 +62,7 @@ class GameSolver:
         self.env.remove_building(factory)
         resource_task = deepcopy(self.env)
         for deposit in deposits:
-            for mine in self.env.get_possible_mines(deposit):
+            for mine in self.env.get_possible_mines(deposit, max=10):
                 self.env.add_building(factory)
                 self.env.add_building(mine)
                 self.env.set_task(mine, factory)
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
     register_gym()
-    solver = GameSolver(model_name="NORMAL__12x12__DQN_512-3x3_128")
+    solver = GameSolver(model_name="NORMAL__15x15__DQN_64-3x3_128")
 
-    task_dir = os.path.join(".", "tasks", "easy")
+    task_dir = os.path.join(".", "tasks")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]

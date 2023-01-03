@@ -33,7 +33,7 @@ ENTROPY_WEIGHT = 1.0
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
-LEGAL_REWARD = 0.01
+LEGAL_REWARD = -0.01
 DISTANCE_REDUCTION_REWARD = 0.005
 ILLEGAL_REWARD = -1
 

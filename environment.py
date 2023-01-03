@@ -63,7 +63,11 @@ class Environment:
             return None
 
         for (tile_x, tile_y, element) in iter(building):
-            self.grid[tile_y, tile_x] = element
+            if self.grid[tile_y, tile_x] == " ":
+                self.grid[tile_y, tile_x] = element
+            else:
+                # conveyor tunnel
+                self.grid[tile_y, tile_x] = "O"
 
         if type(building) == Obstacle:
             self.obstacles.append(building)
@@ -298,7 +302,7 @@ class Environment:
         random.shuffle(factories)
         return factories[:max]
 
-    def get_possible_mines(self, deposit):
+    def get_possible_mines(self, deposit, max=10):
         mines = []
 
         out_positions = deposit.get_output_positions()
@@ -309,7 +313,8 @@ class Environment:
                     if self.is_legal_position(building):
                         mines.append(building)
 
-        return mines
+        random.shuffle(mines)
+        return mines[:max]
 
     def from_json(self, filename):
         with open(filename) as f:

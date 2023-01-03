@@ -11,8 +11,11 @@ def test_model_sanity(env, model, difficulty):
     state, _ = env.reset(difficulty=difficulty)
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
-        print(f"\nField of Vision:")
-        print(state[0][:, :, 0])
+        # print(f"\nField of Vision:")
+        # print(state[0][:, :, 0])
+
+        # print(f"\nlegal_actions:")
+        # print(state[1])
 
         greedy_action = model.verbose_greedy_prediction(state)
         state, reward, done, legal, info = env.step(greedy_action)
