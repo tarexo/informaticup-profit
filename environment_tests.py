@@ -211,6 +211,17 @@ class Environment_Tests(unittest.TestCase):
             "combiners are allowed to be connected with a combiner exit",
         )
 
+    def test_conveyor_tunneling(self):
+        env3 = fh.environment_from_json(filename3)
+        conv1 = buildings.Conveyor((15, 1), 1)
+        env3.add_building(conv1)
+        conv2 = buildings.Conveyor((15, 1), 0)
+        self.assertEqual(
+            env3.add_building(conv2),
+            conv2,
+            "conveyors should be allowed be tunneled under other conveyors center piece(s)",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

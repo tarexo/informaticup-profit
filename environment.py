@@ -178,7 +178,16 @@ class Environment:
     def intersects_with_building(self, building):
         for (tile_x, tile_y, element) in iter(building):
             if not self.is_tile_empty(tile_x, tile_y):
+                if self.conveyor_tunneling(tile_x, tile_y, element):
+                    continue
                 return True
+        return False
+
+    def conveyor_tunneling(self, tile_x, tile_y, element):
+        if element in ["<", ">", "^", "v"]:
+            if not self.coords_out_off_bounds(tile_x, tile_y):
+                if self.grid[tile_y, tile_x] in ["<", ">", "^", "v"]:
+                    return True
         return False
 
     def violates_legal_connection(self, building):
