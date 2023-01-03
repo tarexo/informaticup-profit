@@ -38,6 +38,8 @@ class ProfitGym(Environment, gym.Env):
         self.current_building = start_building
         self.target_building = factory
 
+        self.current_path = [start_building]
+
         num_outlets = len(self.current_building.get_output_positions())
         self.outlet = random.randrange(num_outlets)
 
@@ -64,6 +66,7 @@ class ProfitGym(Environment, gym.Env):
             legal = True
             self.add_building(new_building)
             self.current_building = new_building
+            self.current_path.append(new_building)
             num_outlets = len(self.current_building.get_output_positions())
             self.outlet = random.randrange(num_outlets)
 
@@ -125,10 +128,26 @@ class ProfitGym(Environment, gym.Env):
         end_y = agent_y + self.field_of_vision
 
         grid_fov = padded_grid[agent_y:end_y, agent_x:end_x]
-        obstacles_fov = np.where(grid_fov != " ", 1.0, 0.0)
-        # tunnels_fov = np.where(grid_fov in ["<", ">", "v", "^"], 1.0, 0.0)
+        grid_fov[grid_fov == "<"] = "~"
+        grid_fov[grid_fov == ">"] = "~"
+        grid_fov[grid_fov == "^"] = "~"
+        grid_fov[grid_fov == "v"] = "~"
 
-        return obstacles_fov[:, :, np.newaxis].astype(np.int8)
+        obstacles_fov = np.where(grid_fov != " ", 1.0, 0.0)
+        target_fov = np.where(grid_fov == "+", 1.0, 0.0)
+        tunnels_fov = np.where(grid_fov == "~", 1.0, 0.0)
+
+        for building in self.current_path:
+            false_targets = building.get_input_positions()
+            idx = false_targets - (agent_x - padding, agent_y - padding)
+            for x, y in idx:
+                if x > 0 and y > 0:
+                    if x < self.field_of_vision and y < self.field_of_vision:
+                        target_fov[y, x] = 0.0
+
+        return np.stack([obstacles_fov, target_fov, tunnels_fov], axis=2).astype(
+            np.int8
+        )
 
     def get_legal_actions(self):
         legal_actions = np.zeros(self.legal_action_shape, dtype=np.int8)

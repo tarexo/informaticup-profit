@@ -21,10 +21,15 @@ class TaskGenerator:
         self.env.empty()
 
         deposit = self.place_at_random_position(Deposit, 0)
-        constraint = self.distance_constraint(distance_range, deposit)  # None
+        constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
+
+        other_deposit = self.place_at_random_position(Deposit, 0)
+        _other_connections = self.connect_deposit_factory(
+            other_deposit, factory, can_fail=True
+        )
 
         if not NO_OBSTACLES:
             self.add_obstacles(p=obstacle_probability)
@@ -48,12 +53,16 @@ class TaskGenerator:
 
         return obstacle_probability, distance_range
 
-    def connect_deposit_factory(self, deposit: Building, factory: Building):
+    def connect_deposit_factory(self, deposit, factory, can_fail=False):
         connections = []
         new_building = deposit
         while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
             if not best_buildings:
+                if can_fail:
+                    for building in connections:
+                        self.env.remove_building(building)
+                    return []
                 print(self.env)
             assert best_buildings
             new_building = random.choice(best_buildings)

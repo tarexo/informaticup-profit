@@ -73,7 +73,7 @@ class GameSolver:
                     state, exploration_rate=0, greedy=True, force_legal=True
                 )
 
-                # print(self.env)
+                print(self.env)
                 if episode_reward == 1:
                     return True
 

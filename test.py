@@ -12,7 +12,7 @@ def test_model_sanity(env, model, difficulty):
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
         # print(f"\nField of Vision:")
-        # print(state[0][:, :, 0])
+        # print(state[0][:, :, 1])
 
         # print(f"\nlegal_actions:")
         # print(state[1])

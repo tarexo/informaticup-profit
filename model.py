@@ -24,16 +24,21 @@ class BaseModel(tf.keras.Model):
         self.eps = np.finfo(np.float32).eps.item()
 
     def create(self):
+        # x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
+        # for i in range(2):
+        #     x = Conv2D(NUM_CONV_FILTERS, KERNEL_SIZE, strides=2, activation="relu")(x)
+        # fov_features = Flatten(name="fov_features")(x)
+
         x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
-        for i in range(2):
-            x = Conv2D(NUM_CONV_FILTERS, KERNEL_SIZE, strides=2, activation="relu")(x)
-        fov_features = Flatten(name="fov_features")(x)
+        x = Flatten(name="fov_inputs")(x)
+        x = Dense(256, activation="relu", name="fov_hidden")(x)
+        fov_features = Dense(128, activation="relu", name="fov_features")(x)
 
         legal_actions = Input(self.env.legal_action_shape, name="legal_actions")
         target_distance = Input(self.env.target_pos_shape, name="target_distance")
 
         x = tf.concat([fov_features, legal_actions, target_distance], axis=1)
-        x = Dense(units=NUM_FEATURES, activation="relu", name="Features")(x)
+        x = Dense(64, activation="relu", name="Features")(x)
 
         x = tf.concat([x, legal_actions], axis=1)
         outputs = self.create_heads(x)

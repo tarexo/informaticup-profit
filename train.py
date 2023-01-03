@@ -142,7 +142,7 @@ if __name__ == "__main__":
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)
     else:
-        field_of_vision = 15  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 13  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 

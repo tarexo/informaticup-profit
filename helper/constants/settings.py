@@ -13,7 +13,7 @@ NO_OBSTACLES = False
 # Model
 NUM_CONV_FILTERS = 128
 KERNEL_SIZE = 3
-NUM_FEATURES = 128
+NUM_FEATURES = 256
 
 # Hyperparameters
 MAX_EPISODES = 10000
@@ -47,4 +47,4 @@ else:
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
 # NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
-NUM_CHANNELS = 1
+NUM_CHANNELS = 3
