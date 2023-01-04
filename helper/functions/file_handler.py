@@ -68,8 +68,9 @@ def environment_to_placeable_buildings_list(env, filename):
         env (Environment): the environment that shall be parsed to a json file
         filename (str): path to where the file should be stored
     """
+
     building_list = [
         building.to_json() for building in env.buildings if building.is_placeable()
     ]
-    with open(filename, "w") as jsonfile:
-        json.dump(building_list, jsonfile, separators=(",", ":"))
+    with open(filename, "w") as f:
+        f.write(json.dumps(building_list))

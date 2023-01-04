@@ -96,8 +96,8 @@ class SimpleFactory(Factory):
     def to_json(self):
         building_dict = {
             "type": "simple_factory",
-            "x": self.x,
-            "y": self.y,
+            "x": int(self.x),
+            "y": int(self.y),
             "subtype": self.subtype,
         }
         return building_dict

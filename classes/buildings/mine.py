@@ -26,8 +26,8 @@ class Mine(Building):
     def to_json(self):
         building_dict = {
             "type": "mine",
-            "x": self.x,
-            "y": self.y,
+            "x": int(self.x),
+            "y": int(self.y),
             "subtype": self.subtype,
         }
         return building_dict
