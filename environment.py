@@ -95,7 +95,10 @@ class Environment:
         assert building in self.buildings or building in self.obstacles
 
         for (tile_x, tile_y, element) in iter(building):
-            self.grid[tile_y, tile_x] = " "
+            if self.grid[tile_y, tile_x] == "O":
+                self.grid[tile_y, tile_x] = "<"
+            else:
+                self.grid[tile_y, tile_x] = " "
 
         if type(building) == Obstacle:
             self.obstacles.remove(building)
@@ -210,12 +213,20 @@ class Environment:
             if self.would_connect_to(building, other_building):
                 outgoing_connections += 1
             elif self.would_connect_to(other_building, building):
-                if len(other_building.connections) > 0:
-                    return True
+                for connection in other_building.connections:
+                    if self.is_diagonal_input(connection, building):
+                        return True
 
         if outgoing_connections > 1:
             return True
         return False
+
+    def is_diagonal_input(self, building1, building2):
+        inp1 = building1.get_input_positions()[0]
+        inp2 = building2.get_input_positions()[0]
+
+        x_diff, y_diff = inp1 - inp2
+        return True if abs(x_diff) == 1 and abs(y_diff) == 1 else False
 
     def creates_connection_loop(self, building):
         for other_building in self.buildings:
@@ -315,6 +326,11 @@ class Environment:
 
         random.shuffle(mines)
         return mines[:max]
+
+    def make_untargetable(self, false_targets):
+        for false_target in false_targets:
+            for x, y in false_target.get_input_positions():
+                self.grid[(y, x)] = "#"
 
     def from_json(self, filename):
         with open(filename) as f:

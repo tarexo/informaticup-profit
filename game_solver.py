@@ -31,10 +31,15 @@ class GameSolver:
         # ToDo: sort_products
         for product in self.env.products:
             success = self.solve_single_product(product)
+            false_targets = self.env.buildings
+
+            self.env.make_untargetable(false_targets)
 
         print(self.env)
         print("SUCCESS" if success else "FAILURE")
         print("\n")
+
+        print(environment_to_placeable_buildings_list(self.env, "solution.json"))
 
         return success
 
@@ -52,7 +57,7 @@ class GameSolver:
                     break
 
             if success:
-                return True
+                return success
 
             self.env = deepcopy(original_task)
             self.model.env = self.env
@@ -73,7 +78,7 @@ class GameSolver:
                     state, exploration_rate=0, greedy=True, force_legal=True
                 )
 
-                print(self.env)
+                # print(self.env)
                 if episode_reward == 1:
                     return True
 
@@ -93,9 +98,9 @@ if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
     register_gym()
-    solver = GameSolver(model_name="NORMAL__15x15__DQN_64-3x3_128")
+    solver = GameSolver(model_name="NORMAL__13x13__DQN_128-3x3_256")
 
-    task_dir = os.path.join(".", "tasks")
+    task_dir = os.path.join(".", "tasks", "easy")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]

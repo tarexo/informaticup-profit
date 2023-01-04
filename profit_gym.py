@@ -16,18 +16,17 @@ class ProfitGym(Environment, gym.Env):
         super().__init__(width, height, turns, products)
 
         self.field_of_vision = field_of_vision
-        self.target_detection_distance = 8
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
         self.vision_shape = (self.field_of_vision, self.field_of_vision, NUM_CHANNELS)
         self.legal_action_shape = (NUM_ACTIONS,)
-        self.target_pos_shape = ((2 * self.target_detection_distance + 1) * 2,)
+        self.target_dir_shape = (6,)
         self.observation_space = spaces.Tuple(
             [
                 spaces.MultiBinary(self.vision_shape),
                 spaces.MultiBinary(self.legal_action_shape),
-                spaces.MultiBinary(self.target_pos_shape),
+                spaces.MultiBinary(self.target_dir_shape),
             ],
         )
 
@@ -158,24 +157,27 @@ class ProfitGym(Environment, gym.Env):
 
         return legal_actions
 
-    def get_target_distance(self):
-        max_dist = self.target_detection_distance
-
+    def get_target_direction(self):
         agent_x, agent_y = self.current_building.get_output_positions()[self.outlet]
         target_x, target_y = self.target_building.get_center_position()
 
         x_distance = agent_x - target_x
         y_distance = agent_y - target_y
 
-        x_distance = max(-max_dist, min(max_dist, x_distance))
-        y_distance = max(-max_dist, min(max_dist, y_distance))
+        target_position = np.zeros(self.target_dir_shape, dtype=np.int8)
+        if x_distance > 0:
+            target_position[0] = 1
+        elif x_distance == 0:
+            target_position[1] = 1
+        else:
+            target_position[2] = 1
 
-        x_id = x_distance + max_dist
-        y_id = (max_dist * 2 + 1) + y_distance + max_dist
-
-        target_position = np.zeros(self.target_pos_shape, dtype=np.int8)
-        target_position[x_id] = 1
-        target_position[y_id] = 1
+        if y_distance > 0:
+            target_position[3] = 1
+        elif y_distance == 0:
+            target_position[4] = 1
+        else:
+            target_position[5] = 1
 
         return target_position
 
@@ -183,7 +185,7 @@ class ProfitGym(Environment, gym.Env):
         return (
             self.get_field_of_vison(),
             self.get_legal_actions(),
-            self.get_target_distance(),
+            self.get_target_direction(),
         )
 
 

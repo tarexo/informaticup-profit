@@ -31,20 +31,20 @@ class BaseModel(tf.keras.Model):
 
         x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
         x = Flatten(name="fov_inputs")(x)
-        x = Dense(256, activation="relu", name="fov_hidden")(x)
+        # x = Dense(256, activation="relu", name="fov_hidden")(x)
         fov_features = Dense(128, activation="relu", name="fov_features")(x)
 
         legal_actions = Input(self.env.legal_action_shape, name="legal_actions")
-        target_distance = Input(self.env.target_pos_shape, name="target_distance")
+        target_direction = Input(self.env.target_dir_shape, name="target_direction")
 
-        x = tf.concat([fov_features, legal_actions, target_distance], axis=1)
+        x = tf.concat([fov_features, legal_actions, target_direction], axis=1)
         x = Dense(64, activation="relu", name="Features")(x)
 
         x = tf.concat([x, legal_actions], axis=1)
         outputs = self.create_heads(x)
 
         self.model = Model(
-            inputs=[field_of_vision, legal_actions, target_distance],
+            inputs=[field_of_vision, legal_actions, target_direction],
             outputs=outputs,
             name=self.architecture_name,
         )

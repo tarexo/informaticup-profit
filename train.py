@@ -85,12 +85,13 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
 
     model_path = model.get_model_path()
     if os.path.isdir(model_path):
-        print(f"{model.get_model_description()} has already been trained!")
-        return model_path
+        # print(f"{model.get_model_description()} has already been trained!")
+        # return model_path
+        transfer_model_path = None  # model_path
 
     print(f"\nTraining {model.get_model_description()}...\n")
     if transfer_model_path is not None:
-        model.transfer(transfer_model_path, trainable=False)
+        model.transfer(transfer_model_path, trainable=True)
     model.summary()
 
     # Main Training
@@ -132,7 +133,7 @@ if __name__ == "__main__":
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
-    model_sanity_check_frequency = 100
+    model_sanity_check_frequency = 50
     model_save_frequency = 2500
 
     register_gym()

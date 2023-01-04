@@ -16,11 +16,11 @@ KERNEL_SIZE = 3
 NUM_FEATURES = 256
 
 # Hyperparameters
-MAX_EPISODES = 100000
+MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
-MAX_OBSTACLE_PROBABILITY = 0.35
+MAX_OBSTACLE_PROBABILITY = 0.3
 # what is the minimum reward before increasing difficulty?
 INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?
@@ -33,8 +33,8 @@ ENTROPY_WEIGHT = 1.0
 
 # Rewards (try to keep it rewards between [-1; 1])
 SUCCESS_REWARD = 1
-LEGAL_REWARD = -0.01
-DISTANCE_REDUCTION_REWARD = 0.005
+LEGAL_REWARD = -0.05
+DISTANCE_REDUCTION_REWARD = 0.01
 ILLEGAL_REWARD = -1
 
 
