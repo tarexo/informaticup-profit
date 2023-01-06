@@ -2,6 +2,7 @@ from classes.buildings import *
 import environment
 
 import json
+import os
 
 
 def environment_from_json(filename):
@@ -72,5 +73,8 @@ def environment_to_placeable_buildings_list(env, filename):
     building_list = [
         building.to_json() for building in env.buildings if building.is_placeable()
     ]
-    with open(filename, "w") as f:
+    path = os.path.join(".", "tasks", "solutions")
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    with open(os.path.join(path, filename), "w") as f:
         f.write(json.dumps(building_list))

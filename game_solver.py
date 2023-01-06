@@ -39,7 +39,7 @@ class GameSolver:
         print("SUCCESS" if success else "FAILURE")
         print("\n")
 
-        print(environment_to_placeable_buildings_list(self.env, "solution.json"))
+        environment_to_placeable_buildings_list(self.env, filename.split("\\")[-1])
 
         return success
 
@@ -57,7 +57,7 @@ class GameSolver:
                     break
 
             if success:
-                return success
+                return True
 
             self.env = deepcopy(original_task)
             self.model.env = self.env
@@ -67,7 +67,7 @@ class GameSolver:
         self.env.remove_building(factory)
         resource_task = deepcopy(self.env)
         for deposit in deposits:
-            for mine in self.env.get_possible_mines(deposit, max=10):
+            for mine in self.env.get_possible_mines(deposit, max=30):
                 self.env.add_building(factory)
                 self.env.add_building(mine)
                 self.env.set_task(mine, factory)
@@ -78,7 +78,7 @@ class GameSolver:
                     state, exploration_rate=0, greedy=True, force_legal=True
                 )
 
-                # print(self.env)
+                print(self.env)
                 if episode_reward == 1:
                     return True
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     register_gym()
     solver = GameSolver(model_name="NORMAL__13x13__DQN_128-3x3_256")
 
-    task_dir = os.path.join(".", "tasks", "easy")
+    task_dir = os.path.join(".", "tasks")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
