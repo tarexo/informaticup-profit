@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     register_gym()
 
-    width = height = 30
+    width = height = 40
 
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)
