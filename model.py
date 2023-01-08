@@ -31,14 +31,15 @@ class BaseModel(tf.keras.Model):
 
         x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
         x = Flatten(name="fov_inputs")(x)
-        # x = Dense(256, activation="relu", name="fov_hidden")(x)
-        fov_features = Dense(128, activation="relu", name="fov_features")(x)
+        fov_features = Dense(NUM_FOV_FEATURES, activation="relu", name="fov_features")(
+            x
+        )
 
         legal_actions = Input(self.env.legal_action_shape, name="legal_actions")
         target_direction = Input(self.env.target_dir_shape, name="target_direction")
 
         x = tf.concat([fov_features, legal_actions, target_direction], axis=1)
-        x = Dense(64, activation="relu", name="Features")(x)
+        x = Dense(NUM_COMBINED_FEATURES, activation="relu", name="Features")(x)
 
         x = tf.concat([x, legal_actions], axis=1)
         outputs = self.create_heads(x)
@@ -86,8 +87,8 @@ class BaseModel(tf.keras.Model):
         env_str = "SIMPLE" if SIMPLE_GAME else "NORMAL"
         grid_str = f"{self.env.field_of_vision}x{self.env.field_of_vision}"
         architecture_str = self.architecture_name
-        architecture_str += f"_{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
-        architecture_str += f"_{NUM_FEATURES}"
+        architecture_str += f"_{NUM_FOV_FEATURES}"
+        architecture_str += f"_{NUM_COMBINED_FEATURES}"
 
         return env_str + "__" + grid_str + "__" + architecture_str
 
@@ -163,11 +164,15 @@ class ActorCritic(BaseModel):
 
     def create_heads(self, x):
         # unique policy network
-        p = Dense(units=NUM_FEATURES, activation="relu", name="Policy-Features")(x)
+        p = Dense(
+            units=NUM_COMBINED_FEATURES, activation="relu", name="Policy-Features"
+        )(x)
         p = Dense(self.action_size, activation="softmax", name="Policy-Head")(p)
 
         # unique value network
-        v = Dense(units=NUM_FEATURES, activation="relu", name="Value-Features")(x)
+        v = Dense(
+            units=NUM_COMBINED_FEATURES, activation="relu", name="Value-Features"
+        )(x)
         v = Dense(1, activation="tanh", name="Value-Head")(v)
 
         return [p, v]

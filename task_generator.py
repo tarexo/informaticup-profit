@@ -16,14 +16,6 @@ class TaskGenerator:
         self.env = env
 
     def generate_task(self, difficulty):
-        task = random.choice([self.task_no_obs, self.task_factory, self.task_connect])
-        start_building, factory = task(difficulty)
-
-        while self.env.is_connected(start_building, factory):
-            start_building, factory = task(difficulty)
-        return start_building, factory
-
-    def task_no_obs(self, difficulty):
         obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
 
         self.env.empty()
@@ -34,34 +26,20 @@ class TaskGenerator:
 
         connections = self.connect_deposit_factory(deposit, factory)
 
-        other_deposit = self.place_at_random_position(Deposit, 0)
-        other_factory = self.place_at_random_position(Factory, 0)
-        false_targets = self.connect_deposit_factory(
-            other_deposit, other_factory, can_fail=True
-        )
-        self.env.make_untargetable(false_targets + [other_factory])
+        if random.random() < 0.25:
+            other_deposit = self.place_at_random_position(Deposit, 0)
+            other_factory = self.place_at_random_position(Factory, 0)
+            false_targets = self.connect_deposit_factory(
+                other_deposit, other_factory, can_fail=True
+            )
+            self.env.make_untargetable(false_targets + [other_factory])
 
-        assert len(connections) >= 1
-        start_building = mine = connections[0]
-
-        for building in connections[1:-1]:
-            self.env.remove_building(building)
-
-        if self.env.is_connected(start_building, factory):
-            self.env.remove_building(connections[-1])
-
-        return start_building, factory
-
-    def task_factory(self, difficulty):
-        obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
-
-        self.env.empty()
-
-        deposit = self.place_at_random_position(Deposit, 0)
-        constraint = self.distance_constraint(distance_range, deposit)
-        factory = self.place_at_random_position(Factory, 0, constraint)
-
-        connections = self.connect_deposit_factory(deposit, factory)
+        other_connections = []
+        if random.random() < 0.35:
+            another_deposit = self.place_at_random_position(Deposit, 0)
+            other_connections = self.connect_deposit_factory(
+                another_deposit, factory, can_fail=True
+            )
 
         if not NO_OBSTACLES:
             self.add_obstacles(p=obstacle_probability)
@@ -71,43 +49,12 @@ class TaskGenerator:
 
         for building in connections[1:]:
             self.env.remove_building(building)
-
-        return start_building, factory
-
-    def task_connect(self, difficulty):
-        obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
-
-        self.env.empty()
-
-        deposit = self.place_at_random_position(Deposit, 0)
-        constraint = self.distance_constraint(distance_range, deposit)
-        factory = self.place_at_random_position(Factory, 0, constraint)
-
-        connections = self.connect_deposit_factory(deposit, factory)
-
-        other_deposit = self.place_at_random_position(Deposit, 0)
-        other_factory = self.place_at_random_position(Factory, 0)
-        false_targets = self.connect_deposit_factory(
-            other_deposit, other_factory, can_fail=True
-        )
-        self.env.make_untargetable(false_targets + [other_factory])
-
-        another_deposit = self.place_at_random_position(Deposit, 0)
-        other_connections = self.connect_deposit_factory(
-            another_deposit, factory, can_fail=True
-        )
-
-        if not NO_OBSTACLES:
-            self.add_obstacles(p=0.1)
-
-        assert len(connections) >= 1
-        start_building = mine = connections[0]
-
-        for building in connections[1:]:
-            self.env.remove_building(building)
             if other_connections:
                 if not self.env.is_connected(other_connections[-1], factory):
                     self.env.add_building(building)
+
+        while self.env.is_connected(start_building, factory):
+            return self.generate_task(difficulty)
 
         return start_building, factory
 

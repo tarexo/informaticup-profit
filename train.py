@@ -60,7 +60,7 @@ def train(env, model, max_episodes):
         mean_train_reward = statistics.mean(train_rewards)
 
         progress_info = collections.OrderedDict()
-        progress_info["difficulty"] = "%.2f" % difficulty
+        progress_info["diff"] = "%.2f" % difficulty
         progress_info["ε"] = "%.2f" % exploration_rate
         progress_info["train_reward"] = "%.2f" % mean_train_reward
         progress_info["test_reward"] = "%.2f" % mean_test_reward
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
-    model_sanity_check_frequency = 50
+    model_sanity_check_frequency = 10000
     model_save_frequency = 2500
 
     register_gym()
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     if TRANSFER_LEARNING:
         train_transfer_models(width, height)
     else:
-        field_of_vision = 13  # (width + 1) // (KERNEL_SIZE - 1)
+        field_of_vision = 15  # (width + 1) // (KERNEL_SIZE - 1)
         transfer_model_path = None
         # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
 

@@ -98,9 +98,9 @@ if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
     register_gym()
-    solver = GameSolver(model_name="NORMAL__13x13__DQN_128-3x3_256")
+    solver = GameSolver(model_name="NORMAL__15x15__DQN_256_128")
 
-    task_dir = os.path.join(".", "tasks")
+    task_dir = os.path.join(".", "tasks", "easy")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
