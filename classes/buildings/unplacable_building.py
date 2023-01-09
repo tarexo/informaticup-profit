@@ -19,7 +19,7 @@ class UnplacableBuilding(Building):
         The resources currently held by the building
     """
 
-    def __init__(self, position, subtype, width, height):
+    def __init__(self, position, subtype, width=1, height=1):
         self.width = width
         self.height = height
 

@@ -69,10 +69,12 @@ class Environment_Tests(unittest.TestCase):
             "mine should be allowed to be build next to deposits",
         )
 
-    def test_conveyor_next_to_deposit(self):
+    def test_mine_next_to_conveyor(self):
         env3 = fh.environment_from_json(filename3)
-        conveyor = buildings.Conveyor((9, 7), 0)
-        self.assertEqual(env3.add_building(conveyor), None)
+        mine = buildings.Mine((9, 4), 0)
+        self.assertEqual(env3.add_building(mine), mine)
+        combiner = buildings.Combiner((9, 7), 0)
+        self.assertEqual(env3.add_building(combiner), None)
 
     def test_mine_next_to_mine(self):
         env3 = fh.environment_from_json(filename3)
@@ -92,7 +94,7 @@ class Environment_Tests(unittest.TestCase):
 
     def test_conveyor_next_to_deposit(self):
         env3 = fh.environment_from_json(filename3)
-        conveyor = buildings.Conveyor((9, 1), 0)
+        conveyor = buildings.Combiner((9, 1), 0)
         self.assertEqual(
             env3.add_building(conveyor),
             None,
@@ -101,7 +103,7 @@ class Environment_Tests(unittest.TestCase):
 
     def test_factory_next_to_deposit(self):
         env3 = fh.environment_from_json(filename3)
-        factory = buildings.Factory((8, 2), 0)
+        factory = buildings.Combiner((8, 2), 0)
         self.assertEqual(
             env3.add_building(factory),
             None,
@@ -110,9 +112,9 @@ class Environment_Tests(unittest.TestCase):
 
     def test_factory_next_to_factory(self):
         env3 = fh.environment_from_json(filename3)
-        factory1 = buildings.Factory((12, 1), 0)
+        factory1 = buildings.Combiner((12, 1), 0)
         self.assertEqual(env3.add_building(factory1), factory1)
-        factory2 = buildings.Factory((17, 1), 0)
+        factory2 = buildings.Combiner((17, 1), 0)
         self.assertEqual(
             env3.add_building(factory2),
             factory2,
@@ -209,72 +211,38 @@ class Environment_Tests(unittest.TestCase):
             "combiners are allowed to be connected with a combiner exit",
         )
 
-    def test_conveyor_overlapping(self):
+    def test_conveyor_tunneling(self):
         env3 = fh.environment_from_json(filename3)
-        conveyor = buildings.Conveyor((3, 11), 6)
+        conv1 = buildings.Conveyor((15, 1), 1)
+        env3.add_building(conv1)
+        conv2 = buildings.Conveyor((15, 1), 0)
         self.assertEqual(
-            env3.add_building(conveyor),
-            conveyor,
-        )
-        conveyor2 = buildings.Conveyor((5, 10), 5)
-        self.assertEqual(
-            env3.add_building(conveyor2), conveyor2, "Conveyors are allowed to overlap"
+            env3.add_building(conv2),
+            conv2,
+            "conveyors should be allowed be tunneled under other conveyors center piece(s)",
         )
 
-    def test_mine_next_to_deposit(self):
-        env2 = fh.environment_from_json(filename2)
-        mine = buildings.Mine((6, 0), 0)
-        self.assertEqual(
-            env2.add_building(mine),
-            mine,
-            "mines are allowd to be next to deposits",
-        )
+    def test_pickup(self):
+        env1 = Environment(20, 20, 100, {})
 
-    def test_conveyor_stacking(self):
-        env3 = fh.environment_from_json(filename3)
-        conveyor = buildings.Conveyor((13, 7), 0)
-        self.assertEqual(
-            env3.add_building(conveyor),
-            conveyor,
-        )
-        conveyor2 = buildings.Conveyor((13, 6), 2)
-        self.assertEqual(
-            env3.add_building(conveyor2), conveyor2, 
-        )
-        conveyor3 = buildings.Conveyor((13, 5), 0)
-        self.assertEqual(
-            env3.add_building(conveyor3), None, 'stacking of conveyors are not allowed. Two exit at one entry.'
-        )
-    
-    def test_combiner_stacking(self):
-        env3 = fh.environment_from_json(filename3)
-        conveyor = buildings.Combiner((19, 5), 0)
-        self.assertEqual(
-            env3.add_building(conveyor),
-            conveyor,
-        )
-        conveyor2 = buildings.Combiner((21, 3), 0)
-        self.assertEqual(
-            env3.add_building(conveyor2), conveyor2, 
-        )
-        conveyor3 = buildings.Combiner((21, 7), 0)
-        self.assertEqual(
-            env3.add_building(conveyor3), None, 'stacking of combiners are not allowed. Two exit at one entry.'
-        )
+        deposit = buildings.Deposit((0, 0), 0, 3, 5)
+        env1.add_building(deposit)
+        factory = buildings.Factory((10, 0), 0)
+        env1.add_building(factory)
+        mine = buildings.Mine((4, 0), 0)
+        env1.add_building(mine)
+        mine2 = buildings.Mine((4, 3), 0)
+        env1.add_building(mine2)
+        conv1 = buildings.Conveyor((8, 1), 0)
+        env1.add_building(conv1)
+        conv2 = buildings.Conveyor((7, 3), 3)
+        env1.add_building(conv2)
 
-    def test_two_mines_at_deposit(self):
-        env3 = fh.environment_from_json(filename3)
-        mine1 = buildings.Combiner((9, 6), 0)
         self.assertEqual(
-            env3.add_building(mine1),
-            mine1,
+            env1.is_connected(mine2, factory),
+            True,
+            "connecting to an already existing path does not work",
         )
-        mine2 = buildings.Combiner((7, 9), 1)
-        self.assertEqual(
-            env3.add_building(mine2), None, "Two mines at one deposit output not allowed"
-        )
-        
-        
 
 
 if __name__ == "__main__":

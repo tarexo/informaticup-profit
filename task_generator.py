@@ -15,51 +15,70 @@ class TaskGenerator:
         random.seed(seed)
         self.env = env
 
-    def generate_super_simple_task(self, obstacle_probability=0.0):
-        # one building missing
-        # random.seed(42)
-        return self.generate_task(obstacle_probability, distance_range=[8])
+    def generate_task(self, difficulty):
+        obstacle_probability, distance_range = self.get_difficulty_params(difficulty)
 
-    def generate_simple_task(self, obstacle_probability=0.0):
-        # one building missing
-        # random.seed(42)
-        return self.generate_task(obstacle_probability, distance_range=[6, 7, 8, 9])
-
-    def generate_easy_task(self, obstacle_probability=0.05):
-        # two buildings missing
-        # random.seed(42)
-        return self.generate_task(obstacle_probability, distance_range=[10, 11, 12, 13])
-
-    def generate_medium_task(self, obstacle_probability=0.10):
-        # at least three buildings missing, more obstacles
-        return self.generate_task(obstacle_probability, distance_range=[14, 15, 16, 17])
-
-    def generate_hard_task(self, obstacle_probability=0.15):
-        # multiple buildings missing, many obstacles
-        assert MAX_WIDTH > 40
-        distance_range = range(18, MAX_WIDTH)
-        return self.generate_task(obstacle_probability, distance_range)
-
-    def generate_task(self, obstacle_probability, distance_range=None):
         self.env.empty()
-        deposit = self.env.add_building(Deposit((13, 0), 0, 3, 3))
+
+        deposit = self.place_at_random_position(Deposit, 0)
         constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
-        self.add_obstacles(p=obstacle_probability)
+
+        if random.random() < 0.25:
+            other_deposit = self.place_at_random_position(Deposit, 0)
+            other_factory = self.place_at_random_position(Factory, 0)
+            false_targets = self.connect_deposit_factory(
+                other_deposit, other_factory, can_fail=True
+            )
+            self.env.make_untargetable(false_targets + [other_factory])
+
+        other_connections = []
+        if random.random() < 0.35:
+            another_deposit = self.place_at_random_position(Deposit, 0)
+            other_connections = self.connect_deposit_factory(
+                another_deposit, factory, can_fail=True
+            )
+
+        if not NO_OBSTACLES:
+            self.add_obstacles(p=obstacle_probability)
 
         assert len(connections) >= 1
-        mine = connections[0]
-        self.remove_connecting_buildings(mine, factory)
+        start_building = mine = connections[0]
 
-        return mine, factory
+        for building in connections[1:]:
+            self.env.remove_building(building)
+            if other_connections:
+                if not self.env.is_connected(other_connections[-1], factory):
+                    self.env.add_building(building)
 
-    def connect_deposit_factory(self, deposit: Building, factory: Building):
+        while self.env.is_connected(start_building, factory):
+            return self.generate_task(difficulty)
+
+        return start_building, factory
+
+    def get_difficulty_params(self, difficulty):
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * difficulty
+        max_distance = 7 + int((self.env.width + self.env.height) * difficulty)
+        if SIMPLE_GAME:
+            distance_range = range(3, max_distance, 2)
+        else:
+            distance_range = range(6, max_distance)
+
+        return obstacle_probability, distance_range
+
+    def connect_deposit_factory(self, deposit, factory, can_fail=False):
         connections = []
         new_building = deposit
         while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
+            if not best_buildings:
+                if can_fail:
+                    for building in connections:
+                        self.env.remove_building(building)
+                    return []
+                print(self.env)
             assert best_buildings
             new_building = random.choice(best_buildings)
             self.env.add_building(new_building)
@@ -77,16 +96,22 @@ class TaskGenerator:
             for x in range(self.env.width):
                 if self.env.is_tile_empty(x, y) and random.random() < p:
                     obstacle = Obstacle((x, y), 0, 1, 1)
-                    self.env.add_building(obstacle)
+                    self.env.add_building(obstacle, force=True)
 
-    def place_at_random_position(self, BuildingClass, subtype, constraint):
+    def place_at_random_position(self, BuildingClass, subtype, constraint=None):
         building = self.get_random_legal_building(BuildingClass, subtype)
-        if not constraint(building):
+        if constraint and not constraint(building):
             return self.place_at_random_position(BuildingClass, subtype, constraint)
         self.env.add_building(building)
         return building
 
-    def get_random_legal_building(self, BuildingClass, subtype):
+    def place_obstacle_in_middle(self):
+        obstacle = Obstacle((self.env.width // 2, self.env.height // 2), 0, 1, 1)
+        return self.env.add_building(obstacle)
+
+    def get_random_legal_building(
+        self, BuildingClass, subtype, width=None, height=None
+    ):
         """suggests a random (but legal) building position.
         simple brute_force approach for now: pick a random position and test its legality
 
@@ -100,8 +125,6 @@ class TaskGenerator:
         Throws:
             MaxRecursionError
         """
-        assert not issubclass(BuildingClass, UnplacableBuilding)
-
         x, y = random.randint(0, self.env.width), random.randint(0, self.env.height)
         building = BuildingClass((x, y), subtype)
         if not self.env.is_legal_position(building):
@@ -150,7 +173,7 @@ class TaskGenerator:
         out_positions = start_building.get_output_positions()
         for x, y in self.env.get_adjacent_positions(out_positions, empty_only=True):
             for BuildingClass in LEGAL_CONNECTIONS[type(start_building)]:
-                if BuildingClass == Factory:
+                if BuildingClass == Factory or BuildingClass == SimpleFactory:
                     continue
                 for subtype in range(BuildingClass.NUM_SUBTYPES):
                     building = BuildingClass.from_input_position(x, y, subtype)
@@ -161,6 +184,11 @@ class TaskGenerator:
                                 best_buildings = []
                             min_distance = distance
                             best_buildings.append(building)
+
+        # if not best_buildings:
+        #     print(self.env)
+        #     print(start_building.get_output_positions())
+        #     print(target_building.get_input_positions())
 
         return best_buildings
 
@@ -175,8 +203,8 @@ class TaskGenerator:
 
 if __name__ == "__main__":
     env = environment.Environment(
-        MAX_WIDTH,
-        MAX_HEIGHT,
+        32,
+        32,
         50,
         [
             {
@@ -189,5 +217,8 @@ if __name__ == "__main__":
     )
 
     task_gen = TaskGenerator(env)
-    task_gen.generate_medium_task(obstacle_probability=0.0)
-    print(task_gen.env)
+    for i in range(100):
+        task_gen.generate_task(
+            obstacle_probability=0.0, distance_range=[3, 5, 7, 9, 11, 13, 15, 17, 19]
+        )
+        print(task_gen.env)

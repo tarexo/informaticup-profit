@@ -11,6 +11,7 @@ from helper.functions.file_handler import *
 
 import os
 import random
+import json
 
 # create a nice output when displaying the entire grid
 np.set_printoptions(
@@ -42,25 +43,35 @@ class Environment:
         self.empty()
 
     def empty(self):
-        self.buildings: List(Building) = []
+        self.buildings = []
+        self.obstacles = []
         self.grid = np.full((self.height, self.width), " ")
 
-    def add_building(self, building: Building):
+    def add_building(self, building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
 
         Args:
             building (Building): Factory, Deposit, Obstacle, ...
+            force: only use this option if you are certain that it is a legal position (reduce computation)
 
         Returns:
             Building: returns building object or None if building could not be added
         """
         assert building not in self.buildings
 
-        if not self.is_legal_position(building):
+        if not force and not self.is_legal_position(building):
             return None
 
         for (tile_x, tile_y, element) in iter(building):
-            self.grid[tile_y, tile_x] = element
+            if self.grid[tile_y, tile_x] == " ":
+                self.grid[tile_y, tile_x] = element
+            else:
+                # conveyor tunnel
+                self.grid[tile_y, tile_x] = "O"
+
+        if type(building) == Obstacle:
+            self.obstacles.append(building)
+            return building
 
         for other_building in self.buildings:
             if self.would_connect_to(other_building, building):
@@ -81,10 +92,17 @@ class Environment:
         Returns:
             Building: returns removed building object
         """
-        assert building in self.buildings
+        assert building in self.buildings or building in self.obstacles
 
         for (tile_x, tile_y, element) in iter(building):
-            self.grid[tile_y, tile_x] = " "
+            if self.grid[tile_y, tile_x] == "O":
+                self.grid[tile_y, tile_x] = "<"
+            else:
+                self.grid[tile_y, tile_x] = " "
+
+        if type(building) == Obstacle:
+            self.obstacles.remove(building)
+            return building
 
         for other_building in self.buildings:
             if building in other_building.connections:
@@ -95,7 +113,7 @@ class Environment:
 
         return building
 
-    def is_legal_position(self, building: Building):
+    def is_legal_position(self, building):
         """Check whether a building that is not yet part of the enviornment has a valid position
 
         Args:
@@ -113,6 +131,9 @@ class Environment:
         if self.violates_legal_connection(building):
             return False
         if self.violates_single_input(building):
+            return False
+        # technically not illegal, but very dumb move!
+        if self.creates_connection_loop(building):
             return False
         return True
 
@@ -164,7 +185,16 @@ class Environment:
     def intersects_with_building(self, building):
         for (tile_x, tile_y, element) in iter(building):
             if not self.is_tile_empty(tile_x, tile_y):
+                if self.conveyor_tunneling(tile_x, tile_y, element):
+                    continue
                 return True
+        return False
+
+    def conveyor_tunneling(self, tile_x, tile_y, element):
+        if element in ["<", ">", "^", "v"]:
+            if not self.coords_out_off_bounds(tile_x, tile_y):
+                if self.grid[tile_y, tile_x] in ["<", ">", "^", "v"]:
+                    return True
         return False
 
     def violates_legal_connection(self, building):
@@ -177,16 +207,31 @@ class Environment:
                     return True
         return False
 
-    def violates_single_input(self, building: Building):
-        for out_x, out_y in building.get_output_positions():
-            if len(self.get_adjacent_inputs(out_x, out_y)) > 1:
-                return True
+    def violates_single_input(self, building):
+        outgoing_connections = 0
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                outgoing_connections += 1
+            elif self.would_connect_to(other_building, building):
+                for connection in other_building.connections:
+                    if self.is_diagonal_input(connection, building):
+                        return True
 
-        for in_x, in_y in building.get_input_positions():
-            for out_x, out_y in self.get_adjacent_outputs(in_x, in_y):
-                # assume building has not been placed yet!
-                assert building not in self.buildings
-                if len(self.get_adjacent_inputs(out_x, out_y)) > 0:
+        if outgoing_connections > 1:
+            return True
+        return False
+
+    def is_diagonal_input(self, building1, building2):
+        inp1 = building1.get_input_positions()[0]
+        inp2 = building2.get_input_positions()[0]
+
+        x_diff, y_diff = inp1 - inp2
+        return True if abs(x_diff) == 1 and abs(y_diff) == 1 else False
+
+    def creates_connection_loop(self, building):
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                if self.would_connect_to(other_building, building):
                     return True
         return False
 
@@ -206,7 +251,7 @@ class Environment:
 
         return adjacent_positions
 
-    def get_min_distance(self, output_building: Building, input_building: Building):
+    def get_min_distance(self, output_building, input_building):
         min_distance = None
         for out_x, out_y in output_building.get_output_positions():
             for in_x, in_y in input_building.get_input_positions():
@@ -251,6 +296,67 @@ class Environment:
             ):
                 return True
         return False
+
+    def get_deposits(self, subtype):
+        return [
+            b for b in self.buildings if type(b) == Deposit and b.subtype == subtype
+        ]
+
+    def get_possible_factories(self, subtype, max=10):
+        factories = []
+        for y in range(self.height):
+            for x in range(self.width):
+                factory = Factory((x, y), subtype)
+                if self.is_legal_position(factory):
+                    factories.append(factory)
+
+        random.shuffle(factories)
+        return factories[:max]
+
+    def get_possible_mines(self, deposit, max=10):
+        mines = []
+
+        out_positions = deposit.get_output_positions()
+        for x, y in self.get_adjacent_positions(out_positions, empty_only=True):
+            for BuildingClass in LEGAL_CONNECTIONS[type(deposit)]:
+                for subtype in range(BuildingClass.NUM_SUBTYPES):
+                    building = BuildingClass.from_input_position(x, y, subtype)
+                    if self.is_legal_position(building):
+                        mines.append(building)
+
+        random.shuffle(mines)
+        return mines[:max]
+
+    def make_untargetable(self, false_targets):
+        for false_target in false_targets:
+            for x, y in false_target.get_input_positions():
+                self.grid[(y, x)] = "#"
+
+    def from_json(self, filename):
+        with open(filename) as f:
+            task = json.load(f)
+
+        self.width = task["width"]
+        self.height = task["height"]
+        self.turns = task["turns"]
+        self.products = task["products"]
+
+        self.empty()
+
+        for obj in task["objects"]:
+            classname = obj["type"].capitalize()
+            args = []
+            args.append((obj["x"], obj["y"]))
+
+            if "subtype" not in obj:
+                args.append(0)
+            else:
+                args.append(obj["subtype"])
+            if "width" in obj:
+                args.extend([obj["width"], obj["height"]])
+
+            building = globals()[classname](*args)
+            self.add_building(building, force=True)
 
     def __str__(self):
         """printable representation;
