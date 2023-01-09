@@ -191,7 +191,7 @@ class ProfitGym(Environment, gym.Env):
 
 
 def register_gym():
-    register(id=GYM_ID, entry_point="profit_gym:ProfitGym")
+    register(id=GYM_ID, entry_point="environment.profit_gym:ProfitGym")
 
 
 def make_gym(width, height, field_of_vision):

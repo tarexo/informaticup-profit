@@ -1,5 +1,6 @@
-from classes.buildings import *
-from helper.constants.settings import SIMPLE_GAME, NUM_DIRECTIONS, NUM_SUBBUILDINGS
+from buildings import *
+from model.settings import SIMPLE_GAME, NUM_DIRECTIONS, NUM_SUBBUILDINGS
+
 from pandas import DataFrame
 
 POSITIONAL_ACTION_TO_DIRECTION = {

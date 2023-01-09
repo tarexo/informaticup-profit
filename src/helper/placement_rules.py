@@ -1,4 +1,4 @@
-from classes.buildings import *
+from buildings import *
 
 LEGAL_CONNECTIONS = {
     Deposit: [Mine],
@@ -16,7 +16,7 @@ SIMPLE_LEGAL_CONNECTIONS = {
     Obstacle: [],
 }
 
-from helper.constants.settings import SIMPLE_GAME
+from model.settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     LEGAL_CONNECTIONS = SIMPLE_LEGAL_CONNECTIONS

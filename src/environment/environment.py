@@ -1,9 +1,7 @@
-from typing import List
-
-from shapes import *
+import environment.task_generator as task_generator
+from .shapes import *
+from .simulator import Simulator
 from buildings import *
-from simulator import Simulator
-import task_generator
 
 from helper.placement_rules import *
 from helper.file_handler import *

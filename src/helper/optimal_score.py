@@ -1,8 +1,8 @@
-import classes.buildings as buildings
+import buildings as buildings
 import os
 import numpy as np
 import itertools
-import helper.functions.file_handler as fh
+import helper.file_handler as fh
 
 
 class Product:

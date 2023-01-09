@@ -1,5 +1,5 @@
-from classes.buildings import *
-import environment
+from buildings import *
+import environment.environment as environment
 
 import json
 import os
