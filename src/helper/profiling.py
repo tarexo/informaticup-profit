@@ -1,6 +1,8 @@
 import cProfile
 import pstats
 
+import os
+
 
 def profile(func):
     def wrapper(*args, **kwargs):
@@ -9,6 +11,6 @@ def profile(func):
 
         stats = pstats.Stats(pr)
         stats.sort_stats(pstats.SortKey.TIME)
-        stats.dump_stats(filename="profiling.prof")
+        stats.dump_stats(filename=os.path.join("debug", "profiling.prof"))
 
     return wrapper

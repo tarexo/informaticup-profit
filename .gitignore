@@ -136,11 +136,11 @@ docs/*.blg
 docs/*.bbl
 
 #models
-/saved_models
-/saved_models_backup
+src/saved_models
+src/saved_models_backup
 
 # tasks
-/tasks/solutions
+src/tasks/solutions
 
 #profiling
 *.prof
