@@ -9,8 +9,8 @@ from keras.layers import (
 import os
 import numpy as np
 
-from helper.constants.settings import *
-from helper.dicts.convert_actions import named_array
+from .settings import *
+from helper.convert_actions import named_array
 
 
 class BaseModel(tf.keras.Model):

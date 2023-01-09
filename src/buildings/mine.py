@@ -1,7 +1,6 @@
 from .building import *
-from shapes import *
 import numpy as np
-import helper.functions.simulation_logs as simlog
+import helper.simulation_logs as simlog
 
 
 class Mine(Building):

@@ -26,7 +26,7 @@ class UnplacableBuilding(Building):
         from .deposit import Deposit
         from .obstacle import Obstacle
 
-        from helper.dicts.building_shapes import (
+        from helper.building_shapes import (
             create_deposit_shape,
             create_obstacle_shape,
         )

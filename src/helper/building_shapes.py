@@ -1,5 +1,5 @@
-from shapes import *
-from classes.buildings import *
+from environment.shapes import *
+from buildings import *
 
 
 # ' ' = free space

@@ -21,7 +21,7 @@ class Building:
         self.subtype = subtype
 
         if shape is None:
-            from helper.dicts.building_shapes import BUILDING_SHAPES
+            from helper.building_shapes import BUILDING_SHAPES
 
             shape = BUILDING_SHAPES[type(self)][subtype]
 
@@ -72,7 +72,7 @@ class Building:
         Returns:
             building: a building placed at input position x and y
         """
-        from helper.dicts.building_shapes import BUILDING_SHAPES
+        from helper.building_shapes import BUILDING_SHAPES
 
         shape = BUILDING_SHAPES[BuildingClass][subtype]
 

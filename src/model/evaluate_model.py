@@ -1,7 +1,7 @@
-from model import ActorCritic, DeepQNetwork
-from profit_gym import register_gym, make_gym
-from helper.constants.settings import *
-from helper.dicts.convert_actions import action_to_description
+from .settings import *
+from .model import ActorCritic, DeepQNetwork
+from environment.profit_gym import register_gym, make_gym
+from helper.convert_actions import action_to_description
 
 import statistics
 import os

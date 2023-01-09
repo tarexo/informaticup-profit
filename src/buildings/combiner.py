@@ -1,6 +1,6 @@
 from .building import Building
 import numpy as np
-import helper.functions.simulation_logs as simlog
+import helper.simulation_logs as simlog
 
 
 class Combiner(Building):

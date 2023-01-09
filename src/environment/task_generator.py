@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import environment
-from classes.buildings import *
-from helper.constants.settings import *
-from helper.dicts.placement_rules import *
+import environment.environment
+from buildings import *
+from model.settings import *
+from helper.placement_rules import *
 
 import random
 

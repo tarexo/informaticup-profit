@@ -1,5 +1,5 @@
 # from environment import Environment
-from classes.buildings import Factory, Obstacle
+from buildings import Factory, Obstacle
 import numpy as np
 
 

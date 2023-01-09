@@ -1,6 +1,6 @@
 from .building import Building
 import numpy as np
-import helper.functions.simulation_logs as simlog
+import helper.simulation_logs as simlog
 
 
 class Conveyor(Building):
@@ -90,7 +90,7 @@ class SimpleConveyor(Conveyor):
         return building_dict
 
 
-from helper.constants.settings import SIMPLE_GAME
+from model.settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Conveyor = SimpleConveyor

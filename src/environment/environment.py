@@ -1,13 +1,13 @@
 from typing import List
 
 from shapes import *
-from classes.buildings import *
+from buildings import *
 from simulator import Simulator
 import task_generator
 
-from helper.dicts.placement_rules import *
-from helper.constants.settings import *
-from helper.functions.file_handler import *
+from helper.placement_rules import *
+from helper.file_handler import *
+from model.settings import *
 
 import os
 import random

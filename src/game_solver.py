@@ -1,9 +1,9 @@
-from optimal_score import *
-from helper.functions.file_handler import *
+from helper.file_handler import *
+from model.model import DeepQNetwork, ActorCritic
+from environment.profit_gym import make_gym, register_gym
 
-from model import *
-from profit_gym import make_gym, register_gym
-
+import numpy as np
+import tensorflow as tf
 from copy import deepcopy
 
 

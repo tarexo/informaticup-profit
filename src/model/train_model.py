@@ -1,8 +1,8 @@
-from model import ActorCritic, DeepQNetwork
-from test import *
-from profit_gym import register_gym, make_gym
-from helper.constants.settings import *
-from helper.functions.profiling import profile
+from .settings import *
+from .model import ActorCritic, DeepQNetwork
+from .evaluate_model import *
+from environment.profit_gym import register_gym, make_gym
+from helper.profiling import profile
 
 import numpy as np
 import tensorflow as tf

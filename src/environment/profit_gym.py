@@ -1,7 +1,8 @@
-from environment import Environment
-from helper.dicts.convert_actions import *
-from helper.constants.settings import *
+from environment.environment import Environment
+from helper.convert_actions import *
+from model.settings import *
 
+import numpy as np
 import gym
 from gym import spaces
 from gym.envs.registration import register

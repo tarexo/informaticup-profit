@@ -1,6 +1,6 @@
 from .unplacable_building import UnplacableBuilding
 import numpy as np
-import helper.functions.simulation_logs as simlog
+import helper.simulation_logs as simlog
 
 
 class Deposit(UnplacableBuilding):
@@ -96,7 +96,7 @@ class SimpleDeposit(Deposit):
 
     def __init__(self, position, subtype, width=1, height=1):
         super().__init__(position, subtype, 1, 1)
-        from shapes import Shape
+        from environment.shapes import Shape
 
         self.shape = Shape(0, 0, np.array([["D"]]))
         self.resources[subtype] += 5
@@ -118,7 +118,7 @@ class SimpleDeposit(Deposit):
         return self.get_element_positions("D")
 
 
-from helper.constants.settings import SIMPLE_GAME
+from model.settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Deposit = SimpleDeposit

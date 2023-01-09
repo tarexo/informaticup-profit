@@ -1,6 +1,6 @@
 from .building import Building
 import numpy as np
-import helper.functions.simulation_logs as simlog
+import helper.simulation_logs as simlog
 
 
 class Factory(Building):
@@ -109,7 +109,7 @@ class SimpleFactory(Factory):
         return self.get_element_positions("F")
 
 
-from helper.constants.settings import SIMPLE_GAME
+from model.settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Factory = SimpleFactory
