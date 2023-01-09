@@ -57,9 +57,3 @@ def is_resource_value_negative(resources):
         if value < 0:
             return True
     return False
-
-
-if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "001.task.json")
-    env = fh.environment_from_json(filename)
-    print(optimal_score(env))

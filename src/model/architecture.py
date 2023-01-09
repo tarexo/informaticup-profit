@@ -1,3 +1,6 @@
+from .settings import *
+from helper.convert_actions import named_array
+
 import tensorflow as tf
 from keras.models import Model, load_model, save_model
 from keras.layers import (
@@ -8,9 +11,6 @@ from keras.layers import (
 )
 import os
 import numpy as np
-
-from .settings import *
-from helper.convert_actions import named_array
 
 
 class BaseModel(tf.keras.Model):

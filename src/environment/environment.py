@@ -364,20 +364,3 @@ class Environment:
             str: string repesentation of the environment
         """
         return f"\n{self.grid}\n".replace("'", "")
-
-
-if __name__ == "__main__":
-    # single input for each output test
-    env = Environment(10, 10, 50, {})
-    env.add_building(Deposit((2, 2), 0, 1, 1))
-    assert env.add_building(Mine((2, 4), 1)) is not None
-    assert env.add_building(Mine((4, 1), 0)) is None
-
-    # load and display sample task
-    filename = os.path.join(".", "tasks", "manual solutions", "task_1.json")
-    env = environment_from_json(filename)
-    print(env)
-
-    sim = Simulator(env)
-    points, rounds = sim.run()
-    print(f"Score: {points} at turn {rounds}")

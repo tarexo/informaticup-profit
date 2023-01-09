@@ -1,5 +1,5 @@
 from helper.file_handler import *
-from model.model import DeepQNetwork, ActorCritic
+from model.architecture import DeepQNetwork, ActorCritic
 from environment.profit_gym import make_gym, register_gym
 
 import numpy as np

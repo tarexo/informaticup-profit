@@ -199,26 +199,3 @@ class TaskGenerator:
             lambda building: self.env.get_min_distance(other_building, building)
             in distances
         )
-
-
-if __name__ == "__main__":
-    env = environment.Environment(
-        32,
-        32,
-        50,
-        [
-            {
-                "type": "product",
-                "subtype": 0,
-                "resources": [1, 0, 0, 0, 0, 0, 0, 0],
-                "points": 10,
-            }
-        ],
-    )
-
-    task_gen = TaskGenerator(env)
-    for i in range(100):
-        task_gen.generate_task(
-            obstacle_probability=0.0, distance_range=[3, 5, 7, 9, 11, 13, 15, 17, 19]
-        )
-        print(task_gen.env)

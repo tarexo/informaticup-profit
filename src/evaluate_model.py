@@ -1,5 +1,5 @@
-from .settings import *
-from .model import ActorCritic, DeepQNetwork
+from model.settings import *
+from model.architecture import ActorCritic, DeepQNetwork
 from environment.profit_gym import register_gym, make_gym
 from helper.convert_actions import action_to_description
 

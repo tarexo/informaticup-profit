@@ -1,6 +1,6 @@
-from .settings import *
-from .model import ActorCritic, DeepQNetwork
-from .evaluate_model import *
+from model.settings import *
+from model.architecture import ActorCritic, DeepQNetwork
+from evaluate_model import *
 from environment.profit_gym import register_gym, make_gym
 from helper.profiling import profile
 
