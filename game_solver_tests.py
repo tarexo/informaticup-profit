@@ -14,10 +14,11 @@ class GameSolver_Tests(unittest.TestCase):
         env = fh.environment_from_json(filename)
         deposits = get_deposits(env)
         self.assertEqual(len(deposits),1)
-        mine_positions = get_all_mines_positions(env, deposits[0])
+        mine_positions = env.get_possible_mines(deposits[0], max=30)
         self.assertEqual(len(mine_positions),28)
-        for pos in mine_positions:
-            self.assertTrue(pos in mine_positions_expected)
+        for mine in mine_positions:
+            tuple = [mine.x,mine.y, mine.subtype]
+            self.assertTrue(tuple in mine_positions_expected)
         
 
         

@@ -7,7 +7,6 @@ from  optimal_score import *
 import collections
 import random
 import copy
-from helper.functions.building_placer import *
 
 class GameSolver:
     def __init__(self,env:environment.Environment):
@@ -41,14 +40,12 @@ class GameSolver:
             
     
     def solve_product(self, product:Product, deposits):
-        factory_positions = get_all_factory_positions(self.env,self.all_deposits)
+        factory_positions = self.env.get_possible_factories(product.subtype, max=20)
         factory_positions = random.sample(factory_positions, len(factory_positions))
         connected = False
         tmp_env = copy.deepcopy(self.env)
-        for factory_pos in factory_positions:
-            factory = buildings.Factory((factory_pos[0], factory_pos[1]), product.subtype)
-            success = self.env.add_building(factory)
-            if success == None: continue
+        for factory in factory_positions:
+            self.env.add_building(factory)
             for deposit in deposits:
                 connected = self.make_connection(deposit, factory)
                 if not connected:
@@ -62,13 +59,10 @@ class GameSolver:
                   
 
     def make_connection(self, deposit, factory):
-        mine_positions = get_all_mines_positions(self.env, deposit)
-        mine_positions = random.sample(mine_positions, len(mine_positions))
-        for mine_pos in mine_positions:
-            #build mine
-            mine = buildings.Mine((mine_pos[0], mine_pos[1]), mine_pos[2])
-            success = self.env.add_building(mine)
-            if success == None:continue
+        mines = self.env.get_possible_mines(deposit, max=30)
+        mines = random.sample(mines, len(mines))
+        for mine in mines:
+            self.env.add_building(mine)
             connected = self.build_connection(mine, factory)
             if connected == True: return True
             else: self.env.remove_building(mine)
@@ -81,10 +75,6 @@ class GameSolver:
                 new_score_list.append(products)
         self.score_list = new_score_list
         self.solve
-
-        #update product order if one or more pairs don't work
-
-
 
     def sort_product_list(self,order):
         sorted = order.copy()
