@@ -1,6 +1,6 @@
 from settings import *
 from model.architecture import ActorCritic, DeepQNetwork
-from evaluate_model import *
+from evaluate_models import *
 from environment.profit_gym import register_gym, make_gym
 from helper.profiling import profile
 
@@ -41,12 +41,12 @@ def train(env, model, max_episodes):
             exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
 
         if episode % model_test_frequency == 0:
-            test_reward = test(env, model, difficulty, num_episodes=1)
+            test_reward = evaluate(env, model, difficulty, num_episodes=1)
             test_rewards.append(test_reward)
             mean_test_reward = statistics.mean(test_rewards)
 
         if episode % model_sanity_check_frequency == 0:
-            test_model_sanity(env, model, difficulty)
+            check_model_sanity(env, model, difficulty)
 
         with tf.GradientTape() as tape:
             state, _ = env.reset(difficulty=difficulty)
@@ -85,9 +85,9 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
 
     model_path = model.get_model_path()
     if os.path.isdir(model_path):
-        # print(f"{model.get_model_description()} has already been trained!")
-        # return model_path
-        transfer_model_path = None  # model_path
+        print(f"{model.get_model_description()} has already been trained!")
+        print("remove it from the 'saved_model'-directory in order to retrain")
+        return model_path
 
     print(f"\nTraining {model.get_model_description()}...\n")
     if transfer_model_path is not None:
@@ -97,14 +97,14 @@ def train_model(width, height, field_of_vision, transfer_model_path=None):
     # Main Training
     train(env, model, MAX_EPISODES)
     model.save(model_path)
-    test_model(env, model)
+    evaluate_model(env, model)
 
     # Fine Tune
     if model.has_frozen_layers():
         model.unfreeze()
         train(env, model, FINE_TUNE_EPISODES)
         model.save(model_path)
-        test_model(env, model)
+        evaluate_model(env, model)
 
     return model_path
 

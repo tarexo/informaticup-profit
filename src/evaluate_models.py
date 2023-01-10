@@ -7,7 +7,7 @@ import statistics
 import os
 
 
-def test(env, model, difficulty, num_episodes, force_legal=False):
+def evaluate(env, model, difficulty, num_episodes, force_legal=False):
     rewards = []
     for _episode in range(num_episodes):
         state, _ = env.reset(difficulty=difficulty)
@@ -19,22 +19,22 @@ def test(env, model, difficulty, num_episodes, force_legal=False):
     return statistics.mean(rewards)
 
 
-def test_model(env, model, num_episodes=100):
+def evaluate_model(env, model, num_episodes=100):
     print(f"Testing model for {num_episodes} episodes...")
-    test_score = test(
+    validation_score = evaluate(
         env, model, difficulty=1.0, num_episodes=num_episodes, force_legal=True
     )
-    print(f"Model achieved a Test score of {test_score}\n")
+    print(f"Model achieved a Test score of {validation_score}\n")
 
-    return test_score
+    return validation_score
 
 
-def test_models(width, height, model_paths):
+def evaluate_models(width, height, model_paths):
     best_score = 0.0
     best_model = None
     best_model_name = None
 
-    print(f"\nTesting all models on a {width}x{height} grid...\n")
+    print(f"\nComparing all models on a {width}x{height} grid...\n")
     for model_path in model_paths:
         model_name = model_path.split("\\")[-1]
         game_type, field_of_vision, network = model_name.split("__")
@@ -48,9 +48,9 @@ def test_models(width, height, model_paths):
             model = ActorCritic(env)
         model.load(model_path)
 
-        test_score = test_model(env, model)
-        if test_score > best_score:
-            best_score = test_score
+        validation_score = evaluate_model(env, model)
+        if validation_score > best_score:
+            best_score = validation_score
             best_model = model
             best_model_name = model_name
 
@@ -62,10 +62,10 @@ def compare_all_saved_model(width, height):
     models_path = os.path.join(".", "saved_models")
     model_names = os.listdir(models_path)
     model_paths = [os.path.join(models_path, model_name) for model_name in model_names]
-    test_models(width, height, model_paths)
+    evaluate_models(width, height, model_paths)
 
 
-def test_model_sanity(env, model, difficulty):
+def check_model_sanity(env, model, difficulty):
     state, _ = env.reset(difficulty=difficulty)
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
@@ -74,7 +74,7 @@ def test_model_sanity(env, model, difficulty):
             print(state[0][:, :, 1])
 
         greedy_action = model.verbose_greedy_prediction(state)
-        state, reward, done, legal, info = env.step(greedy_action)
+        state, reward, done, legal, _info = env.step(greedy_action)
 
         direction_id, subbuilding_id = env.split_action(greedy_action)
         action_description = action_to_description(direction_id, subbuilding_id)
