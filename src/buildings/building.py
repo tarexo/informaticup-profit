@@ -14,7 +14,6 @@ class Building:
         The resources currently held by the building
     """
 
-    # PlacableBuilding Constructor
     def __init__(self, position, subtype, shape=None):
         self.x = position[0]
         self.y = position[1]
