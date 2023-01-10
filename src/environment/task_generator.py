@@ -185,11 +185,6 @@ class TaskGenerator:
                             min_distance = distance
                             best_buildings.append(building)
 
-        # if not best_buildings:
-        #     print(self.env)
-        #     print(start_building.get_output_positions())
-        #     print(target_building.get_input_positions())
-
         return best_buildings
 
     def distance_constraint(self, distances, other_building):

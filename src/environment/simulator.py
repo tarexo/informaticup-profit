@@ -1,4 +1,3 @@
-# from environment import Environment
 from buildings import Factory, Obstacle
 import numpy as np
 
