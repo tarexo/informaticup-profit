@@ -1,36 +1,35 @@
 GYM_ID = "Profit"
 PRINT_ROUND_LOG = False
 DEBUG = False
+
 # Replace Deposit/Factory with single cell variant + only 4 placable buildings: conveyors are 2x1
 SIMPLE_GAME = False
-
-
-MODEL_ID = "DQN"  # "DQN" or "A-C"
-# Gradually increase Field of Vision in order to train convolutional layers one after the other
-TRANSFER_LEARNING = False
 # see how envionment performs without any obstacles
 NO_OBSTACLES = False
 
 # Model
+MODEL_ID = "DQN"  # "DQN" or "A-C"
+# hidden layer unit count
 NUM_FOV_FEATURES = 256
 NUM_COMBINED_FEATURES = 128
-# NUM_CONV_FILTERS = 128
-# KERNEL_SIZE = 3
 
 # Hyperparameters
 MAX_EPISODES = 10000
-PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
 MAX_OBSTACLE_PROBABILITY = 0.3
-# what is the minimum reward before increasing difficulty?
+
+# what is the minimum reward before increasing task generator difficulty?
+# (difficulty ^= distance to factory + number of obstacles)
 INCREASE_DIFFICULTY_AT = 0.0
 # at what reward level should the difficulty be at its maximum?
 MAX_DIFFICULTY_AT = 0.7
 
 LEARNING_RATE = 0.001
-FINAL_EXPLORATION_RATE = 0.001
 GAMMA = 0.9
+FINAL_EXPLORATION_RATE = 0.001
+
+# Actor-Critic approach for maximizing entropy in order to stabilize the policy
 ENTROPY_WEIGHT = 1.0
 
 # Rewards (try to keep it rewards between [-1; 1])
@@ -40,7 +39,7 @@ DISTANCE_REDUCTION_REWARD = 0.01
 ILLEGAL_REWARD = -1
 
 
-# Action/Observation Space (only change when the game structure has changed)
+# Action/Observation Space
 if SIMPLE_GAME:
     NUM_SUBBUILDINGS = 4
 else:
@@ -48,5 +47,3 @@ else:
     NUM_SUBBUILDINGS = 8
 NUM_DIRECTIONS = 4
 NUM_ACTIONS = NUM_DIRECTIONS * NUM_SUBBUILDINGS
-# NUM_CHANNELS should match channel-dimension of profit_gym.grid_to_observation()
-NUM_CHANNELS = 3

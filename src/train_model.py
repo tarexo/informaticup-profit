@@ -133,18 +133,12 @@ if __name__ == "__main__":
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
-    model_sanity_check_frequency = 10000
+    model_sanity_check_frequency = 100
     model_save_frequency = 2500
 
     register_gym()
 
     width = height = 40
-
-    if TRANSFER_LEARNING:
-        train_transfer_models(width, height)
-    else:
-        field_of_vision = 15  # (width + 1) // (KERNEL_SIZE - 1)
-        transfer_model_path = None
-        # transfer_model_path = ".\\saved_models\\SIMPLE__20x20__DQN_256-3x3_128"
-
-        train_model(width, height, field_of_vision, transfer_model_path)
+    field_of_vision = 15
+    transfer_model_path = None
+    train_model(width, height, field_of_vision, transfer_model_path)

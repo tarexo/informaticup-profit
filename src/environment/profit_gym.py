@@ -20,7 +20,7 @@ class ProfitGym(Environment, gym.Env):
 
         # [obstacles, inputs, agent's single output] each in a 100x100 grid
         # channels last for tensorflow
-        self.vision_shape = (self.field_of_vision, self.field_of_vision, NUM_CHANNELS)
+        self.vision_shape = (self.field_of_vision, self.field_of_vision, 3)
         self.legal_action_shape = (NUM_ACTIONS,)
         self.target_dir_shape = (6,)
         self.observation_space = spaces.Tuple(
