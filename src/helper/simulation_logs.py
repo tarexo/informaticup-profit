@@ -1,4 +1,4 @@
-from model.settings import PRINT_ROUND_LOG
+from settings import PRINT_ROUND_LOG
 
 
 def log_start_round(building, round, store_indices, cache_indices):

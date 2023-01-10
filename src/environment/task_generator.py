@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import environment.environment
 from buildings import *
-from model.settings import *
+from settings import *
 from helper.placement_rules import *
 
 import random

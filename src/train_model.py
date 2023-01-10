@@ -1,4 +1,4 @@
-from .settings import *
+from settings import *
 from model.architecture import ActorCritic, DeepQNetwork
 from evaluate_model import *
 from environment.profit_gym import register_gym, make_gym

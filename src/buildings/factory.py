@@ -109,7 +109,7 @@ class SimpleFactory(Factory):
         return self.get_element_positions("F")
 
 
-from model.settings import SIMPLE_GAME
+from settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Factory = SimpleFactory

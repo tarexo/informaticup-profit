@@ -118,7 +118,7 @@ class SimpleDeposit(Deposit):
         return self.get_element_positions("D")
 
 
-from model.settings import SIMPLE_GAME
+from settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Deposit = SimpleDeposit

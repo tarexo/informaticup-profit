@@ -16,7 +16,7 @@ SIMPLE_LEGAL_CONNECTIONS = {
     Obstacle: [],
 }
 
-from model.settings import SIMPLE_GAME
+from settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     LEGAL_CONNECTIONS = SIMPLE_LEGAL_CONNECTIONS

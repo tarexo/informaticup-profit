@@ -90,7 +90,7 @@ class SimpleConveyor(Conveyor):
         return building_dict
 
 
-from model.settings import SIMPLE_GAME
+from settings import SIMPLE_GAME
 
 if SIMPLE_GAME:
     Conveyor = SimpleConveyor

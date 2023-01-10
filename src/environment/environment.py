@@ -1,13 +1,11 @@
 import environment.task_generator as task_generator
 from .shapes import *
-from .simulator import Simulator
 from buildings import *
 
 from helper.placement_rules import *
 from helper.file_handler import *
-from model.settings import *
+from settings import *
 
-import os
 import random
 import json
 

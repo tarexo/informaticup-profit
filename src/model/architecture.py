@@ -1,4 +1,4 @@
-from .settings import *
+from settings import *
 from helper.convert_actions import named_array
 
 import tensorflow as tf

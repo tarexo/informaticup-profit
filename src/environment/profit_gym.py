@@ -1,6 +1,6 @@
 from environment.environment import Environment
 from helper.convert_actions import *
-from model.settings import *
+from settings import *
 
 import numpy as np
 import gym

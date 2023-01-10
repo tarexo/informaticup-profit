@@ -1,5 +1,5 @@
 from buildings import *
-from model.settings import SIMPLE_GAME, NUM_DIRECTIONS, NUM_SUBBUILDINGS
+from settings import SIMPLE_GAME, NUM_DIRECTIONS, NUM_SUBBUILDINGS
 
 from pandas import DataFrame
 
