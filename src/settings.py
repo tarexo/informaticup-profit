@@ -1,8 +1,9 @@
 GYM_ID = "Profit"
 PRINT_ROUND_LOG = False
-
-# Replace Deposit/Factory with single celled variant + only 4 placable buildings: conveyors are 2x1
+DEBUG = False
+# Replace Deposit/Factory with single cell variant + only 4 placable buildings: conveyors are 2x1
 SIMPLE_GAME = False
+
 
 MODEL_ID = "DQN"  # "DQN" or "A-C"
 # Gradually increase Field of Vision in order to train convolutional layers one after the other
@@ -17,7 +18,7 @@ NUM_COMBINED_FEATURES = 128
 # KERNEL_SIZE = 3
 
 # Hyperparameters
-MAX_EPISODES = 300000
+MAX_EPISODES = 10000
 PRE_TRAIN_EPISODES = MAX_EPISODES // 10
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300

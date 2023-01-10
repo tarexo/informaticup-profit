@@ -1,4 +1,4 @@
-from model.settings import *
+from .settings import *
 from model.architecture import ActorCritic, DeepQNetwork
 from environment.profit_gym import register_gym, make_gym
 from helper.convert_actions import action_to_description
@@ -7,36 +7,9 @@ import statistics
 import os
 
 
-def test_model_sanity(env, model, difficulty):
-    state, _ = env.reset(difficulty=difficulty)
-
-    for _ in range(MAX_STEPS_EACH_EPISODE):
-        # print(f"\nField of Vision:")
-        # print(state[0][:, :, 1])
-
-        # print(f"\nlegal_actions:")
-        # print(state[1])
-
-        greedy_action = model.verbose_greedy_prediction(state)
-        state, reward, done, legal, info = env.step(greedy_action)
-
-        direction_id, subbuilding_id = env.split_action(greedy_action)
-        action_description = action_to_description(direction_id, subbuilding_id)
-
-        print(
-            f"\nGreedy Action: {action_description}"
-            + (" (illegal)" if not legal else "")
-        )
-        print("--> Reward:", reward)
-        if done or not legal:
-            break
-
-    env.render()
-
-
 def test(env, model, difficulty, num_episodes, force_legal=False):
     rewards = []
-    for episode in range(num_episodes):
+    for _episode in range(num_episodes):
         state, _ = env.reset(difficulty=difficulty)
         _, episode_reward = model.run_episode(
             state, exploration_rate=0, greedy=True, force_legal=force_legal
@@ -90,6 +63,31 @@ def compare_all_saved_model(width, height):
     model_names = os.listdir(models_path)
     model_paths = [os.path.join(models_path, model_name) for model_name in model_names]
     test_models(width, height, model_paths)
+
+
+def test_model_sanity(env, model, difficulty):
+    state, _ = env.reset(difficulty=difficulty)
+
+    for _ in range(MAX_STEPS_EACH_EPISODE):
+        if DEBUG:
+            print(f"\nField of Vision:")
+            print(state[0][:, :, 1])
+
+        greedy_action = model.verbose_greedy_prediction(state)
+        state, reward, done, legal, info = env.step(greedy_action)
+
+        direction_id, subbuilding_id = env.split_action(greedy_action)
+        action_description = action_to_description(direction_id, subbuilding_id)
+
+        print(
+            f"\nGreedy Action: {action_description}"
+            + (" (illegal)" if not legal else "")
+        )
+        print("--> Reward:", reward)
+        if done or not legal:
+            break
+
+    env.render()
 
 
 if __name__ == "__main__":

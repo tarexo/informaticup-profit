@@ -1,8 +1,8 @@
 import unittest
 import os
-from environment import Environment
-import optimal_score as opt
-import helper.functions.file_handler as fh
+
+import helper.optimal_score as opt
+import helper.file_handler as fh
 
 
 class Optimal_Score_Tests(unittest.TestCase):
@@ -22,7 +22,3 @@ class Optimal_Score_Tests(unittest.TestCase):
         filename = os.path.join(".", "tasks", "004.task.json")
         env = fh.environment_from_json(filename)
         self.assertEqual(opt.optimal_score(env), 720)
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -1,19 +1,22 @@
 import unittest
 import os
-from environment import Environment
-import classes.buildings as buildings
+from environment.environment import Environment
+import buildings as buildings
 import numpy as np
-import helper.functions.file_handler as fh
+import helper.file_handler as fh
 
-filename3 = os.path.join(".", "tasks", "003.task.json")
-filename2 = os.path.join(".", "tasks", "002.task.json")
+filename2 = os.path.join(".", "tasks", "cup", "002.task.json")
+filename3 = os.path.join(".", "tasks", "cup", "003.task.json")
+
+env_test2 = os.path.join(".", "test", "env_test_task002.npy")
+env_test3 = os.path.join(".", "test", "env_test_task003.npy")
 
 
 class Environment_Tests(unittest.TestCase):
     def test_initialize_environment(self):
 
         env = fh.environment_from_json(filename2)
-        with open("env_test_task002.npy", "rb") as f:
+        with open(env_test2, "rb") as f:
             expected = np.load(f)
         np.testing.assert_array_equal(env.grid, expected)
         self.assertEqual(env.grid.shape, expected.shape)
@@ -23,7 +26,7 @@ class Environment_Tests(unittest.TestCase):
 
         env = fh.environment_from_json(filename3)
 
-        with open("env_test_task003.npy", "rb") as f:
+        with open(env_test3, "rb") as f:
             expected = np.load(f)
         np.testing.assert_array_equal(env.grid, expected)
         self.assertEqual(env.grid.shape, expected.shape)
@@ -222,7 +225,7 @@ class Environment_Tests(unittest.TestCase):
             "conveyors should be allowed be tunneled under other conveyors center piece(s)",
         )
 
-    def test_pickup(self):
+    def test_existing_factory_connection(self):
         env1 = Environment(20, 20, 100, {})
 
         deposit = buildings.Deposit((0, 0), 0, 3, 5)
@@ -241,9 +244,5 @@ class Environment_Tests(unittest.TestCase):
         self.assertEqual(
             env1.is_connected(mine2, factory),
             True,
-            "connecting to an already existing path does not work",
+            "connecting to an already existing factory-path does not work",
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
