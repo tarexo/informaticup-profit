@@ -1,8 +1,6 @@
 import buildings as buildings
-import os
 import numpy as np
 import itertools
-import helper.file_handler as fh
 
 
 class Product:
@@ -51,7 +49,6 @@ def optimal_score(env):
     return best_score
 
 
-@staticmethod
 def is_resource_value_negative(resources):
     for value in resources:
         if value < 0:
