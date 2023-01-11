@@ -37,30 +37,36 @@ class Environment:
         self.turns = turns
         self.products = products
 
-        self.task_generator = task_generator.TaskGenerator(self)
+        self.task_generator = task_generator.TaskGenerator(self, seed=42)
 
         self.empty()
 
     def empty(self):
-        self.buildings: List(Building) = []
+        self.buildings = []
+        self.obstacles = []
         self.grid = np.full((self.height, self.width), " ")
 
-    def add_building(self, building: Building):
+    def add_building(self, building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
 
         Args:
             building (Building): Factory, Deposit, Obstacle, ...
+            force: only use this option if you are certain that it is a legal position (reduce computation)
 
         Returns:
             Building: returns building object or None if building could not be added
         """
         assert building not in self.buildings
 
-        if not self.is_legal_position(building):
+        if not force and not self.is_legal_position(building):
             return None
 
         for (tile_x, tile_y, element) in iter(building):
             self.grid[tile_y, tile_x] = element
+
+        if type(building) == Obstacle:
+            self.obstacles.append(building)
+            return building
 
         for other_building in self.buildings:
             if self.would_connect_to(other_building, building):
@@ -81,10 +87,14 @@ class Environment:
         Returns:
             Building: returns removed building object
         """
-        assert building in self.buildings
+        assert building in self.buildings or building in self.obstacles
 
         for (tile_x, tile_y, element) in iter(building):
             self.grid[tile_y, tile_x] = " "
+
+        if type(building) == Obstacle:
+            self.obstacles.remove(building)
+            return building
 
         for other_building in self.buildings:
             if building in other_building.connections:
@@ -95,7 +105,7 @@ class Environment:
 
         return building
 
-    def is_legal_position(self, building: Building):
+    def is_legal_position(self, building):
         """Check whether a building that is not yet part of the enviornment has a valid position
 
         Args:
@@ -113,6 +123,9 @@ class Environment:
         if self.violates_legal_connection(building):
             return False
         if self.violates_single_input(building):
+            return False
+        # technically not illegal, but very dumb move!
+        if self.creates_connection_loop(building):
             return False
         return True
 
@@ -177,16 +190,23 @@ class Environment:
                     return True
         return False
 
-    def violates_single_input(self, building: Building):
-        for out_x, out_y in building.get_output_positions():
-            if len(self.get_adjacent_inputs(out_x, out_y)) > 1:
-                return True
+    def violates_single_input(self, building):
+        outgoing_connections = 0
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                outgoing_connections += 1
+            elif self.would_connect_to(other_building, building):
+                if len(other_building.connections) > 0:
+                    return True
 
-        for in_x, in_y in building.get_input_positions():
-            for out_x, out_y in self.get_adjacent_outputs(in_x, in_y):
-                # assume building has not been placed yet!
-                assert building not in self.buildings
-                if len(self.get_adjacent_inputs(out_x, out_y)) > 0:
+        if outgoing_connections > 1:
+            return True
+        return False
+
+    def creates_connection_loop(self, building):
+        for other_building in self.buildings:
+            if self.would_connect_to(building, other_building):
+                if self.would_connect_to(other_building, building):
                     return True
         return False
 
@@ -206,7 +226,7 @@ class Environment:
 
         return adjacent_positions
 
-    def get_min_distance(self, output_building: Building, input_building: Building):
+    def get_min_distance(self, output_building, input_building):
         min_distance = None
         for out_x, out_y in output_building.get_output_positions():
             for in_x, in_y in input_building.get_input_positions():
@@ -231,8 +251,9 @@ class Environment:
         """
         return self.get_min_distance(output_building, input_building) == 1
 
-    def is_connected(self, output_building, input_building):
+    def is_connected(self, output_building, input_building, visited_buildings=[]):
         """tests whether output_building is connected to input_building via other buildings
+        Automatically checks for connection loops
 
         Args:
             output_building (building):  building with outgoing connections
@@ -245,14 +266,11 @@ class Environment:
         for next_building in output_building.connections:
             if next_building == input_building:
                 return True
-            elif self.is_connected(next_building, input_building):
+            elif next_building not in visited_buildings and self.is_connected(
+                next_building, input_building, visited_buildings + [output_building]
+            ):
                 return True
         return False
-
-    def has_connection_loop(self, building_1, building_2):
-        forward_connection = self.is_connected(building_1, building_2)
-        backward_connection = self.is_connected(building_2, building_1)
-        return forward_connection and backward_connection
 
     def __str__(self):
         """printable representation;
