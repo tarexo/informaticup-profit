@@ -8,6 +8,10 @@ SIMPLE_GAME = False
 NO_OBSTACLES = False
 
 # Model
+# For usage of senior agent
+GAME_SOLVER_MODEL = "NORMAL__15x15__DQN_256_128"
+
+# For Training
 MODEL_ID = "DQN"  # "DQN" or "A-C"
 # hidden layer unit count
 NUM_FOV_FEATURES = 256

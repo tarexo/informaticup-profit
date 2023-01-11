@@ -1,6 +1,7 @@
 from helper.file_handler import *
 from model.architecture import DeepQNetwork, ActorCritic
 from environment.profit_gym import make_gym, register_gym
+from settings import GAME_SOLVER_MODEL
 
 import numpy as np
 import tensorflow as tf
@@ -98,9 +99,9 @@ if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
     register_gym()
-    solver = GameSolver(model_name="NORMAL__15x15__DQN_256_128")
+    solver = GameSolver(model_name=GAME_SOLVER_MODEL)
 
-    task_dir = os.path.join(".", "tasks", "easy")
+    task_dir = os.path.join(".", "tasks", "hard")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
