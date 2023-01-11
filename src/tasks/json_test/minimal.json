@@ -1,0 +1,45 @@
+{
+    "width": 12,
+    "height": 5,
+    "objects": [
+        {
+            "type": "deposit",
+            "x": 0,
+            "y": 0,
+            "subtype": 0,
+            "width": 3,
+            "height": 3
+        },
+        {
+            "type": "factory",
+            "x": 7,
+            "y": 0,
+            "subtype": 0
+        },
+        {
+            "type": "mine",
+            "x": 4,
+            "y": 0,
+            "subtype": 0
+        }
+    ],
+    "products": [
+        {
+            "type": "product",
+            "subtype": 0,
+            "resources": [
+                10,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "points": 10
+        }
+    ],
+    "turns": 100,
+    "time": 300
+}
