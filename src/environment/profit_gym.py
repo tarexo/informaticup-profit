@@ -5,7 +5,6 @@ from settings import *
 import numpy as np
 import gym
 from gym import spaces
-from gym.envs.registration import register
 
 import random
 
@@ -186,18 +185,3 @@ class ProfitGym(Environment, gym.Env):
             self.get_legal_actions(),
             self.get_target_direction(),
         )
-
-
-def register_gym():
-    register(id=GYM_ID, entry_point="environment.profit_gym:ProfitGym")
-
-
-def make_gym(width, height, field_of_vision):
-    return gym.make(
-        GYM_ID,
-        width=width,
-        height=height,
-        field_of_vision=field_of_vision,
-        turns=50,
-        products={},
-    )

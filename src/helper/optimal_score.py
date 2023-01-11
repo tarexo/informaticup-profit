@@ -19,7 +19,7 @@ class Product:
         return Product(subtype, resouces, points)
 
 
-def optimal_score(env):
+def calculate_optimal_score(env):
     products = get_products(env)
     env_resources = get_env_resources(env)
     product_scores = []

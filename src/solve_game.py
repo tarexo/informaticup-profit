@@ -1,10 +1,10 @@
-from helper.file_handler import *
+from environment.simulator import Simulator
 from model.architecture import DeepQNetwork, ActorCritic
-from environment.profit_gym import make_gym, register_gym
-from settings import GAME_SOLVER_MODEL
+from settings import GAME_SOLVER_MODEL_NAME, DEBUG
+from helper.file_handler import *
+from helper.optimal_score import calculate_optimal_score
+from environment.setup import set_default_options, make_gym
 
-import numpy as np
-import tensorflow as tf
 from copy import deepcopy
 
 
@@ -27,17 +27,41 @@ class GameSolver:
         self.env.from_json(filename)
 
         print(self.env)
-        print("solving task...")
+        print(f"solving task: '{filename}'...")
 
-        # ToDo: sort_products
-        for product in self.env.products:
-            success = self.solve_single_product(product)
-            false_targets = self.env.buildings
+        optimal_score_options = calculate_optimal_score(self.env)
+        optimal_score = optimal_score_options[0][0]
 
-            self.env.make_untargetable(false_targets)
+        for _optimal_score, sorted_products in optimal_score_options:
+            for product in sorted_products:
+                success = self.solve_single_product(product)
+                false_targets = self.env.buildings
 
+                self.env.make_untargetable(false_targets)
+
+            score, turns = Simulator(self.env).run()
+            if score != 0:
+                print("initial solution:")
+                print(self.env)
+                print(f"theoretical optimal score: {int(optimal_score)}")
+                print(f"our solution scored {score} points in {turns} turns")
+
+                simple_solution = deepcopy(self.env)
+                self.enhance_solution()
+
+                new_score, new_turns = Simulator(self.env).run()
+                if new_score < score or (new_score == score and new_turns > turns):
+                    self.env = simple_solution
+                else:
+                    score = new_score
+                    turns = new_turns
+                break
+
+        print("enhanced solution:")
         print(self.env)
-        print("SUCCESS" if success else "FAILURE")
+        print("SUCCESS" if success and score != 0 else "FAILURE")
+        print(f"theoretical optimal score: {int(optimal_score)}")
+        print(f"our solution scored {score} points in {turns} turns")
         print("\n")
 
         environment_to_placeable_buildings_list(self.env, filename.split("\\")[-1])
@@ -46,9 +70,9 @@ class GameSolver:
 
     def solve_single_product(self, product):
         original_task = deepcopy(self.env)
-        for factory in self.env.get_possible_factories(product["subtype"], max=10):
+        for factory in self.env.get_possible_factories(product.subtype, max=20):
             self.env.add_building(factory)
-            for deposit_subtype, amount in enumerate(product["resources"]):
+            for deposit_subtype, amount in enumerate(product.resources):
                 if amount == 0:
                     continue
                 deposits = self.env.get_deposits(deposit_subtype)
@@ -65,43 +89,67 @@ class GameSolver:
         return False
 
     def connect_resource_to_factory(self, deposits, factory):
-        self.env.remove_building(factory)
-        resource_task = deepcopy(self.env)
+        at_least_one_connection = False
         for deposit in deposits:
+            self.env.remove_building(factory)
+            backup_env = deepcopy(self.env)
             for mine in self.env.get_possible_mines(deposit, max=30):
                 self.env.add_building(factory)
                 self.env.add_building(mine)
                 self.env.set_task(mine, factory)
+                success = self.connect_mine_to_factory(mine, factory, backup_env)
 
-                state = self.env.grid_to_observation()
+                if success:
+                    at_least_one_connection = True
+                    break
+        return at_least_one_connection
 
-                _, episode_reward = self.model.run_episode(
-                    state, exploration_rate=0, greedy=True, force_legal=True
-                )
+    def connect_mine_to_factory(self, mine, factory, backup_env):
+        state = self.env.grid_to_observation()
 
-                print(self.env)
-                if episode_reward == 1:
-                    return True
+        _, episode_reward = self.model.run_episode(
+            state, exploration_rate=0, greedy=True, force_legal=True
+        )
 
-                self.env = deepcopy(resource_task)
-                self.model.env = self.env
-        return False
+        if DEBUG:
+            print(self.env)
+        if episode_reward == 1:
+            return True
+
+        self.env = deepcopy(backup_env)
+        self.model.env = self.env
+
+    def enhance_solution(self):
+        deposits = self.env.get_deposits()
+        factories = self.env.get_factories()
+
+        for factory in factories:
+            for deposit in deposits:
+                if self.env.is_connected(deposit, factory):
+                    backup_env = deepcopy(self.env)
+                    true_targets = [
+                        b
+                        for b in self.env.buildings
+                        if self.env.is_connected(b, factory)
+                    ]
+                    for mine in self.env.get_possible_mines(deposit, max=10):
+                        self.env.make_targetable(true_targets)
+                        self.env.add_building(mine)
+                        self.env.set_task(mine, factory)
+                        success = self.connect_mine_to_factory(
+                            mine, factory, backup_env
+                        )
+
+                        if success:
+                            break
+                    self.env.make_untargetable(true_targets)
 
 
 if __name__ == "__main__":
-    np.set_printoptions(precision=4, suppress=True)
+    set_default_options()
+    solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
 
-    np.random.seed(42)
-    tf.random.set_seed(42)
-    # for some reason eager execution is not enabled in my (Leo's) installation
-    tf.config.run_functions_eagerly(True)
-    # suppress AVX_WARNING!
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
-    register_gym()
-    solver = GameSolver(model_name=GAME_SOLVER_MODEL)
-
-    task_dir = os.path.join(".", "tasks", "hard")
+    task_dir = os.path.join(".", "tasks", "cup")
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]

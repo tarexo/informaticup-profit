@@ -1,8 +1,8 @@
 from settings import *
 from model.architecture import ActorCritic, DeepQNetwork
 from evaluate_models import *
-from environment.profit_gym import register_gym, make_gym
 from helper.profiling import profile
+from environment.setup import set_default_options, make_gym
 
 import numpy as np
 import tensorflow as tf
@@ -121,22 +121,13 @@ def train_transfer_models(width, height):
 
 
 if __name__ == "__main__":
-    np.set_printoptions(precision=4, suppress=True)
-
-    np.random.seed(42)
-    tf.random.set_seed(42)
-    # for some reason eager execution is not enabled in my (Leo's) installation
-    tf.config.run_functions_eagerly(True)
-    # suppress AVX_WARNING!
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+    set_default_options()
 
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
     model_sanity_check_frequency = 100
     model_save_frequency = 2500
-
-    register_gym()
 
     width = height = 40
     field_of_vision = 15

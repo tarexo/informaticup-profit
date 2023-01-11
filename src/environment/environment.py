@@ -293,9 +293,19 @@ class Environment:
                 return True
         return False
 
-    def get_deposits(self, subtype):
+    def get_deposits(self, subtype=None):
+        return self.get_all_building_types(Deposit, subtype)
+
+    def get_factories(self, subtype=None):
+        return self.get_all_building_types(Factory, subtype)
+
+    def get_all_building_types(self, building_cls, subtype=None):
+        if subtype is None:
+            return [b for b in self.buildings if type(b) == building_cls]
         return [
-            b for b in self.buildings if type(b) == Deposit and b.subtype == subtype
+            b
+            for b in self.buildings
+            if type(b) == building_cls and b.subtype == subtype
         ]
 
     def get_possible_factories(self, subtype, max=10):
@@ -327,6 +337,11 @@ class Environment:
         for false_target in false_targets:
             for x, y in false_target.get_input_positions():
                 self.grid[(y, x)] = "#"
+
+    def make_targetable(self, true_targets):
+        for true_target in true_targets:
+            for x, y in true_target.get_input_positions():
+                self.grid[(y, x)] = "+"
 
     def from_json(self, filename):
         with open(filename) as f:
