@@ -70,7 +70,7 @@ class GameSolver:
 
     def solve_single_product(self, product):
         original_task = deepcopy(self.env)
-        for factory in self.env.get_possible_factories(product.subtype, max=20):
+        for factory in self.env.get_possible_factories(product.subtype, max=10):
             self.env.add_building(factory)
             for deposit_subtype, amount in enumerate(product.resources):
                 if amount == 0:
@@ -93,7 +93,7 @@ class GameSolver:
         for deposit in deposits:
             self.env.remove_building(factory)
             backup_env = deepcopy(self.env)
-            for mine in self.env.get_possible_mines(deposit, max=30):
+            for mine in self.env.get_possible_mines(deposit, max=10):
                 self.env.add_building(factory)
                 self.env.add_building(mine)
                 self.env.set_task(mine, factory)
