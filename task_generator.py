@@ -21,39 +21,63 @@ class TaskGenerator:
         self.env.empty()
 
         deposit = self.place_at_random_position(Deposit, 0)
-        constraint = self.distance_constraint(distance_range, deposit)  # None
+        constraint = self.distance_constraint(distance_range, deposit)
         factory = self.place_at_random_position(Factory, 0, constraint)
 
         connections = self.connect_deposit_factory(deposit, factory)
 
+        if random.random() < 0.25:
+            other_deposit = self.place_at_random_position(Deposit, 0)
+            other_factory = self.place_at_random_position(Factory, 0)
+            false_targets = self.connect_deposit_factory(
+                other_deposit, other_factory, can_fail=True
+            )
+            self.env.make_untargetable(false_targets + [other_factory])
+
+        other_connections = []
+        if random.random() < 0.35:
+            another_deposit = self.place_at_random_position(Deposit, 0)
+            other_connections = self.connect_deposit_factory(
+                another_deposit, factory, can_fail=True
+            )
+
         if not NO_OBSTACLES:
             self.add_obstacles(p=obstacle_probability)
 
-        if SIMPLE_GAME:
-            start_building = deposit
-        else:
-            assert len(connections) >= 1
-            start_building = mine = connections[0]
-        self.remove_connecting_buildings(start_building, factory)
+        assert len(connections) >= 1
+        start_building = mine = connections[0]
+
+        for building in connections[1:]:
+            self.env.remove_building(building)
+            if other_connections:
+                if not self.env.is_connected(other_connections[-1], factory):
+                    self.env.add_building(building)
+
+        while self.env.is_connected(start_building, factory):
+            return self.generate_task(difficulty)
 
         return start_building, factory
 
     def get_difficulty_params(self, difficulty):
-        obstacle_probability = MAX_OBSTACLE_PROBABILITY * (difficulty ** 2)
-        max_distance = max(4, int((self.env.width + self.env.height)))  # *difficulty
+        obstacle_probability = MAX_OBSTACLE_PROBABILITY * difficulty
+        max_distance = 7 + int((self.env.width + self.env.height) * difficulty)
         if SIMPLE_GAME:
             distance_range = range(3, max_distance, 2)
         else:
-            distance_range = range(2, max_distance)
+            distance_range = range(6, max_distance)
 
         return obstacle_probability, distance_range
 
-    def connect_deposit_factory(self, deposit: Building, factory: Building):
+    def connect_deposit_factory(self, deposit, factory, can_fail=False):
         connections = []
         new_building = deposit
         while not self.env.is_connected(new_building, factory):
             best_buildings = self.get_best_buildings(new_building, factory)
             if not best_buildings:
+                if can_fail:
+                    for building in connections:
+                        self.env.remove_building(building)
+                    return []
                 print(self.env)
             assert best_buildings
             new_building = random.choice(best_buildings)

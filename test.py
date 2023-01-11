@@ -7,15 +7,22 @@ import statistics
 import os
 
 
-def test_model_sanity(env, model, difficulty, no_obstacles):
-    state, _ = env.reset(difficulty=difficulty, no_obstacles=no_obstacles)
+def test_model_sanity(env, model, difficulty):
+    state, _ = env.reset(difficulty=difficulty)
 
     for _ in range(MAX_STEPS_EACH_EPISODE):
+        # print(f"\nField of Vision:")
+        # print(state[0][:, :, 1])
+
+        # print(f"\nlegal_actions:")
+        # print(state[1])
+
         greedy_action = model.verbose_greedy_prediction(state)
         state, reward, done, legal, info = env.step(greedy_action)
 
         direction_id, subbuilding_id = env.split_action(greedy_action)
         action_description = action_to_description(direction_id, subbuilding_id)
+
         print(
             f"\nGreedy Action: {action_description}"
             + (" (illegal)" if not legal else "")
@@ -27,11 +34,13 @@ def test_model_sanity(env, model, difficulty, no_obstacles):
     env.render()
 
 
-def test(env, model, difficulty, num_episodes):
+def test(env, model, difficulty, num_episodes, force_legal=False):
     rewards = []
     for episode in range(num_episodes):
         state, _ = env.reset(difficulty=difficulty)
-        _, episode_reward = model.run_episode(state, exploration_rate=0)
+        _, episode_reward = model.run_episode(
+            state, exploration_rate=0, greedy=True, force_legal=force_legal
+        )
 
         rewards.append(episode_reward)
     return statistics.mean(rewards)
@@ -39,7 +48,9 @@ def test(env, model, difficulty, num_episodes):
 
 def test_model(env, model, num_episodes=100):
     print(f"Testing model for {num_episodes} episodes...")
-    test_score = test(env, model, difficulty=1.0, num_episodes=num_episodes)
+    test_score = test(
+        env, model, difficulty=1.0, num_episodes=num_episodes, force_legal=True
+    )
     print(f"Model achieved a Test score of {test_score}\n")
 
     return test_score
@@ -86,5 +97,5 @@ if __name__ == "__main__":
 
     register_gym()
 
-    for size in [5, 10, 20, 50]:
+    for size in [20, 30, 50]:
         compare_all_saved_model(size, size)

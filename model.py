@@ -23,28 +23,29 @@ class BaseModel(tf.keras.Model):
 
         self.eps = np.finfo(np.float32).eps.item()
 
-    def create(self, num_conv_layers):
-        x = field_of_vision = Input(shape=self.env.vision_shape, name="field_of_vision")
-        target_position = Input(shape=self.env.target_pos_shape, name="target_position")
+    def create(self):
+        # x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
+        # for i in range(2):
+        #     x = Conv2D(NUM_CONV_FILTERS, KERNEL_SIZE, strides=2, activation="relu")(x)
+        # fov_features = Flatten(name="fov_features")(x)
 
-        for i in range(num_conv_layers):
-            x = Conv2D(
-                NUM_CONV_FILTERS,
-                KERNEL_SIZE,
-                strides=(1, 1),
-                name=f"Conv_{i+1}",
-                activation="relu",
-            )(x)
+        x = field_of_vision = Input(self.env.vision_shape, name="field_of_vision")
+        x = Flatten(name="fov_inputs")(x)
+        fov_features = Dense(NUM_FOV_FEATURES, activation="relu", name="fov_features")(
+            x
+        )
 
-        obstacle_features = Flatten(name="Flatten")(x)
+        legal_actions = Input(self.env.legal_action_shape, name="legal_actions")
+        target_direction = Input(self.env.target_dir_shape, name="target_direction")
 
-        x = tf.concat([obstacle_features, target_position], axis=1)
-        x = Dense(units=NUM_FEATURES, activation="relu", name="Features")(x)
+        x = tf.concat([fov_features, legal_actions, target_direction], axis=1)
+        x = Dense(NUM_COMBINED_FEATURES, activation="relu", name="Features")(x)
 
+        x = tf.concat([x, legal_actions], axis=1)
         outputs = self.create_heads(x)
 
         self.model = Model(
-            inputs=[field_of_vision, target_position],
+            inputs=[field_of_vision, legal_actions, target_direction],
             outputs=outputs,
             name=self.architecture_name,
         )
@@ -86,8 +87,8 @@ class BaseModel(tf.keras.Model):
         env_str = "SIMPLE" if SIMPLE_GAME else "NORMAL"
         grid_str = f"{self.env.field_of_vision}x{self.env.field_of_vision}"
         architecture_str = self.architecture_name
-        architecture_str += f"_{NUM_CONV_FILTERS}-{KERNEL_SIZE}x{KERNEL_SIZE}"
-        architecture_str += f"_{NUM_FEATURES}"
+        architecture_str += f"_{NUM_FOV_FEATURES}"
+        architecture_str += f"_{NUM_COMBINED_FEATURES}"
 
         return env_str + "__" + grid_str + "__" + architecture_str
 
@@ -163,11 +164,15 @@ class ActorCritic(BaseModel):
 
     def create_heads(self, x):
         # unique policy network
-        p = Dense(units=NUM_FEATURES, activation="relu", name="Policy-Features")(x)
+        p = Dense(
+            units=NUM_COMBINED_FEATURES, activation="relu", name="Policy-Features"
+        )(x)
         p = Dense(self.action_size, activation="softmax", name="Policy-Head")(p)
 
         # unique value network
-        v = Dense(units=NUM_FEATURES, activation="relu", name="Value-Features")(x)
+        v = Dense(
+            units=NUM_COMBINED_FEATURES, activation="relu", name="Value-Features"
+        )(x)
         v = Dense(1, activation="tanh", name="Value-Head")(v)
 
         return [p, v]
@@ -196,7 +201,7 @@ class ActorCritic(BaseModel):
 
         return actor_loss + critic_loss - entropies
 
-    def run_episode(self, state, exploration_rate):
+    def run_episode(self, state, exploration_rate, greedy=False, force_legal=False):
         exploration_rate = 0.0
 
         episode_action_probs = []
@@ -208,15 +213,29 @@ class ActorCritic(BaseModel):
 
             action_probs, value = self.model(state)
 
-            if np.random.rand() <= exploration_rate:
+            if greedy:
+                action = np.argmax(action_probs)
+            elif np.random.rand() <= exploration_rate:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.random.choice(NUM_ACTIONS, p=np.squeeze(action_probs))
 
             state, reward, done, legal, info = self.env.step(action)
 
+            illegal_actions = 0
+            while (
+                not legal
+                and force_legal
+                and illegal_actions != action_probs.shape[1] - 1
+            ):
+                illegal_actions += 1
+                action = np.argsort(action_probs[0])[illegal_actions]
+                state, reward, done, legal, info = self.env.step(action)
+
             action_log_probs = tf.math.log(action_probs)
-            entropy = -tf.math.reduce_sum(action_probs * action_log_probs)
+            entropy = (
+                -tf.math.reduce_sum(action_probs * action_log_probs) * ENTROPY_WEIGHT
+            )
 
             episode_action_probs.append(action_probs[0, action] + self.eps)
             episode_values.append(value[0, 0])
@@ -265,19 +284,25 @@ class DeepQNetwork(BaseModel):
 
         return loss
 
-    def run_episode(self, state, exploration_rate):
+    def run_episode(self, state, exploration_rate, greedy=False, force_legal=False):
         episode_q_values = []
         episode_rewards = []
         for step in range(MAX_STEPS_EACH_EPISODE):
             state = self.state_to_tensors(state)
             q_values = self.model(state)
 
-            if np.random.rand() <= exploration_rate:
+            if np.random.rand() <= exploration_rate and not greedy:
                 action = np.random.choice(NUM_ACTIONS)
             else:
                 action = np.argmax(q_values)
 
             state, reward, done, legal, info = self.env.step(action)
+
+            illegal_actions = 0
+            while not legal and force_legal and illegal_actions + 1 < NUM_ACTIONS:
+                illegal_actions += 1
+                action = np.argsort(q_values[0])[illegal_actions]
+                state, reward, done, legal, info = self.env.step(action)
 
             episode_q_values.append(q_values[0, action])
             episode_rewards.append(reward)

@@ -31,6 +31,9 @@ class Factory(Building):
         }
         return building_dict
 
+    def get_center_position(self):
+        return (self.x + 2, self.y + 2)
+
     def start_of_round_action(self, round):
         """Executes the start of round action, adding all resources from the cache to the resources array.
 
@@ -93,11 +96,14 @@ class SimpleFactory(Factory):
     def to_json(self):
         building_dict = {
             "type": "simple_factory",
-            "x": self.x,
-            "y": self.y,
+            "x": int(self.x),
+            "y": int(self.y),
             "subtype": self.subtype,
         }
         return building_dict
+
+    def get_center_position(self):
+        return self.x, self.y
 
     def get_input_positions(self):
         return self.get_element_positions("F")

@@ -19,8 +19,8 @@ class Obstacle(UnplacableBuilding):
     def to_json(self):
         building_dict = {
             "type": "obstacle",
-            "x": self.x,
-            "y": self.y,
+            "x": int(self.x),
+            "y": int(self.y),
             "width": self.width,
             "height": self.height,
         }

@@ -139,6 +139,9 @@ docs/*.bbl
 /saved_models
 /saved_models_backup
 
+# tasks
+/tasks/solutions
+
 #profiling
 *.prof
 

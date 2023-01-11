@@ -211,6 +211,39 @@ class Environment_Tests(unittest.TestCase):
             "combiners are allowed to be connected with a combiner exit",
         )
 
+    def test_conveyor_tunneling(self):
+        env3 = fh.environment_from_json(filename3)
+        conv1 = buildings.Conveyor((15, 1), 1)
+        env3.add_building(conv1)
+        conv2 = buildings.Conveyor((15, 1), 0)
+        self.assertEqual(
+            env3.add_building(conv2),
+            conv2,
+            "conveyors should be allowed be tunneled under other conveyors center piece(s)",
+        )
+
+    def test_pickup(self):
+        env1 = Environment(20, 20, 100, {})
+
+        deposit = buildings.Deposit((0, 0), 0, 3, 5)
+        env1.add_building(deposit)
+        factory = buildings.Factory((10, 0), 0)
+        env1.add_building(factory)
+        mine = buildings.Mine((4, 0), 0)
+        env1.add_building(mine)
+        mine2 = buildings.Mine((4, 3), 0)
+        env1.add_building(mine2)
+        conv1 = buildings.Conveyor((8, 1), 0)
+        env1.add_building(conv1)
+        conv2 = buildings.Conveyor((7, 3), 3)
+        env1.add_building(conv2)
+
+        self.assertEqual(
+            env1.is_connected(mine2, factory),
+            True,
+            "connecting to an already existing path does not work",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
