@@ -1,1 +1,0 @@
-{"width":10,"height":20,"objects":[{"type":"deposit","x":0,"y":0,"subtype":0,"width":2,"height":20},{"type":"obstacle","x":2,"y":2,"width":3,"height":15},{"type":"obstacle","x":5,"y":7,"width":5,"height":6}],"products":[{"type":"product","subtype":0,"resources":[10,0,0,0,0,0,0,0],"points":10}],"turns":30,"time":300}
