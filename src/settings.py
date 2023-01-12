@@ -1,6 +1,6 @@
 GYM_ID = "Profit"
 PRINT_ROUND_LOG = False
-DEBUG = True
+DEBUG = False
 
 # Replace Deposit/Factory with single cell variant + only 4 placable buildings: conveyors are 2x1
 SIMPLE_GAME = False
@@ -9,7 +9,7 @@ NO_OBSTACLES = False
 
 # Model
 # which trained model shall be used for the game_solver agent?
-GAME_SOLVER_MODEL_NAME = "NORMAL__15x15__DQN_256_128"
+GAME_SOLVER_MODEL_NAME = "NORMAL__12x12__DQN_256_128"
 
 # For Training
 MODEL_ID = "DQN"  # "DQN" or "A-C"
@@ -18,7 +18,7 @@ NUM_FOV_FEATURES = 256
 NUM_COMBINED_FEATURES = 128
 
 # Hyperparameters
-MAX_EPISODES = 10000
+MAX_EPISODES = 100000
 FINE_TUNE_EPISODES = MAX_EPISODES // 10
 MAX_STEPS_EACH_EPISODE = 300
 MAX_OBSTACLE_PROBABILITY = 0.3

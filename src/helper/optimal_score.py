@@ -146,14 +146,3 @@ def set_procduct_resouces(a):
     for i in index:
         r[i] = 1
     return r
-
-
-if __name__ == "__main__":
-    filename = os.path.join(".", "tasks", "004.task.json")
-    env = fh.environment_from_json(filename)
-    score_list = optimal_score(env)
-    for s in score_list:
-        print(s[0])
-        for p in s[1]:
-            print(p.subtype)
-        print("\n")

@@ -12,8 +12,8 @@ import random
 class ProfitGym(Environment, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    def __init__(self, width, height, field_of_vision, turns, products):
-        super().__init__(width, height, turns, products)
+    def __init__(self, width, height, field_of_vision, turns, products, time=120):
+        super().__init__(width, height, turns, products, time=time)
 
         self.field_of_vision = field_of_vision
 
@@ -66,6 +66,7 @@ class ProfitGym(Environment, gym.Env):
             self.current_path.append(new_building)
             num_outlets = len(self.current_building.get_output_positions())
             self.outlet = random.randrange(num_outlets)
+            self.make_untargetable([new_building])
 
         done = self.is_connected(self.current_building, self.target_building)
 
@@ -163,16 +164,16 @@ class ProfitGym(Environment, gym.Env):
         y_distance = agent_y - target_y
 
         target_position = np.zeros(self.target_dir_shape, dtype=np.int8)
-        if x_distance > 0:
+        if x_distance > 2:
             target_position[0] = 1
-        elif x_distance == 0:
+        elif x_distance < 2:
             target_position[1] = 1
         else:
             target_position[2] = 1
 
-        if y_distance > 0:
+        if y_distance > 2:
             target_position[3] = 1
-        elif y_distance == 0:
+        elif y_distance < 2:
             target_position[4] = 1
         else:
             target_position[5] = 1

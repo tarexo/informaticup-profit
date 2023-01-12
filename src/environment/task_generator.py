@@ -46,6 +46,7 @@ class TaskGenerator:
 
         assert len(connections) >= 1
         start_building = mine = connections[0]
+        self.env.make_untargetable([mine])
 
         for building in connections[1:]:
             self.env.remove_building(building)

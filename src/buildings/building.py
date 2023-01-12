@@ -29,6 +29,10 @@ class Building:
         self.resource_cache = np.array([0] * 8)
         self.clear_connections()
 
+    def reset_resources(self):
+        self.resources = np.array([0] * 8)
+        self.resource_cache = np.array([0] * 8)
+
     def is_placeable(self):
         return True
 

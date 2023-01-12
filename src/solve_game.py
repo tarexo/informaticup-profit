@@ -5,13 +5,15 @@ from helper.file_handler import *
 from helper.optimal_score import calculate_optimal_score
 from environment.setup import set_default_options, make_gym
 
-from copy import deepcopy
+from copy import copy, deepcopy
+import sys
+import time
 
 
 class GameSolver:
     def __init__(self, model_name):
         model_path = os.path.join(".", "saved_models", model_name)
-        game_type, field_of_vision, network = model_name.split("__")
+        _game_type, field_of_vision, network = model_name.split("__")
         field_of_vision = int(field_of_vision.split("x")[0])
 
         self.env = make_gym(20, 20, field_of_vision)
@@ -23,53 +25,80 @@ class GameSolver:
             self.model = ActorCritic(self.env)
         self.model.load(model_path)
 
-    def solve_task(self, filename):
+    def solve_task(self, filename, reset_clock=False):
+        if reset_clock:
+            global START_TIME
+            START_TIME = time.time()
+
         self.env.from_json(filename)
+        self.model.env = self.env
+        self.original_task = deepcopy(self.env)
 
         print(self.env)
         print(f"solving task: '{filename}'...")
 
         optimal_score_options = calculate_optimal_score(self.env)
-        optimal_score = optimal_score_options[0][0]
+        optimal_score, sorted_products = optimal_score_options[0]
+        self.optimal_score = int(optimal_score)
 
-        for _optimal_score, sorted_products in optimal_score_options:
-            for product in sorted_products:
-                success = self.solve_single_product(product)
-                false_targets = self.env.buildings
+        score, turns = self.create_initial_solution(sorted_products)
+        self.evaluate_solution("initial solution", score, turns)
 
-                self.env.make_untargetable(false_targets)
+        score, turns = self.create_enhanced_solution(score, turns)
 
-            score, turns = Simulator(self.env).run()
-            if score != 0:
-                print("initial solution:")
-                print(self.env)
-                print(f"theoretical optimal score: {int(optimal_score)}")
-                print(f"our solution scored {score} points in {turns} turns")
+        environment_to_placeable_buildings_list(self.env, os.path.split(filename)[1])
+        environment_to_json(self.env, os.path.split(filename)[1])
 
-                simple_solution = deepcopy(self.env)
-                self.enhance_solution()
+        return score > 0
 
-                new_score, new_turns = Simulator(self.env).run()
-                if new_score < score or (new_score == score and new_turns > turns):
-                    self.env = simple_solution
-                else:
-                    score = new_score
-                    turns = new_turns
+    def create_initial_solution(self, sorted_products):
+        at_least_one_product = False
+        for product in sorted_products:
+            success = self.solve_single_product(product)
+            if success:
+                at_least_one_product = True
+
+        self.env.make_targetable(self.env.buildings)
+
+        score, turns = Simulator(self.env).run()
+        if not at_least_one_product:
+            assert score == 0
+
+        return score, turns
+
+    def create_enhanced_solution(self, initial_score, initial_turns):
+        best_solution = simple_solution = deepcopy(self.env)
+        best_score = initial_score
+        best_turns = initial_turns
+
+        for iteration in range(10):
+            if (time.time() - START_TIME) / self.env.time > 0.5:
+                print("no further enhancements due to time constraint!")
                 break
 
-        print("enhanced solution:")
-        print(self.env)
-        print("SUCCESS" if success and score != 0 else "FAILURE")
-        print(f"theoretical optimal score: {int(optimal_score)}")
-        print(f"our solution scored {score} points in {turns} turns")
-        print("\n")
+            success = self.enhance_solution()
+            self.env.make_targetable(self.env.buildings)
 
-        environment_to_placeable_buildings_list(self.env, filename.split("\\")[-1])
+            if not success:
+                print("no enhancements could be made\n")
+                return best_score, best_turns
 
-        return success
+            score, turns = Simulator(self.env).run()
+            self.evaluate_solution(f"enhanced solution #{iteration+1}", score, turns)
+
+            if score < best_score or (score == best_score and turns >= best_turns):
+                print("reverting back to previous solution due to no improvments\n")
+                self.env = best_solution
+                return best_score, best_turns
+            else:
+                best_solution = deepcopy(self.env)
+                best_score = score
+                best_turns = turns
+
+        return best_score, best_turns
 
     def solve_single_product(self, product):
-        original_task = deepcopy(self.env)
+        backup_buildings = copy(self.env.buildings) + copy(self.env.obstacles)
         for factory in self.env.get_possible_factories(product.subtype, max=10):
             self.env.add_building(factory)
             for deposit_subtype, amount in enumerate(product.resources):
@@ -84,81 +113,127 @@ class GameSolver:
             if success:
                 return True
 
-            self.env = deepcopy(original_task)
-            self.model.env = self.env
+            self.restore_backup(backup_buildings)
         return False
 
     def connect_resource_to_factory(self, deposits, factory):
         at_least_one_connection = False
         for deposit in deposits:
-            self.env.remove_building(factory)
-            backup_env = deepcopy(self.env)
-            for mine in self.env.get_possible_mines(deposit, max=10):
-                self.env.add_building(factory)
+            backup_buildings = copy(self.env.buildings) + copy(self.env.obstacles)
+            for mine in self.env.get_possible_mines(deposit, factory, max=20):
                 self.env.add_building(mine)
+                if self.env.is_connected(mine, factory):
+                    success = True
+                    at_least_one_connection = True
+                    break
+
+                self.determine_targets(factory)
                 self.env.set_task(mine, factory)
-                success = self.connect_mine_to_factory(mine, factory, backup_env)
+                success = self.connect_mine_to_factory()
 
                 if success:
                     at_least_one_connection = True
                     break
+
+                self.restore_backup(backup_buildings)
+
         return at_least_one_connection
 
-    def connect_mine_to_factory(self, mine, factory, backup_env):
+    def connect_mine_to_factory(self):
         state = self.env.grid_to_observation()
 
         _, episode_reward = self.model.run_episode(
             state, exploration_rate=0, greedy=True, force_legal=True
         )
 
-        if DEBUG:
-            print(self.env)
         if episode_reward == 1:
             return True
 
-        self.env = deepcopy(backup_env)
-        self.model.env = self.env
+        return False
 
     def enhance_solution(self):
         deposits = self.env.get_deposits()
         factories = self.env.get_factories()
 
+        any_enhancement = False
+
         for factory in factories:
             for deposit in deposits:
                 if self.env.is_connected(deposit, factory):
-                    backup_env = deepcopy(self.env)
-                    true_targets = [
-                        b
-                        for b in self.env.buildings
-                        if self.env.is_connected(b, factory)
-                    ]
-                    for mine in self.env.get_possible_mines(deposit, max=10):
-                        self.env.make_targetable(true_targets)
+                    backup_buildings = copy(self.env.buildings) + copy(
+                        self.env.obstacles
+                    )
+                    for mine in self.env.get_possible_mines(deposit, factory, max=10):
                         self.env.add_building(mine)
                         self.env.set_task(mine, factory)
-                        success = self.connect_mine_to_factory(
-                            mine, factory, backup_env
-                        )
+                        if self.env.is_connected(mine, factory):
+                            success = True
+                            any_enhancement = True
+                            break
+
+                        self.determine_targets(factory)
+                        success = self.connect_mine_to_factory()
 
                         if success:
+                            any_enhancement = True
                             break
-                    self.env.make_untargetable(true_targets)
+
+                        self.restore_backup(backup_buildings)
+
+        return any_enhancement
+
+    def evaluate_solution(self, name, score, turns):
+        print(f"{name}:")
+        print(self.env)
+        print(f"theoretical optimal score: {self.optimal_score}")
+        print(f"our solution scored {score} points in {turns} turns\n")
+
+    def determine_targets(self, factory):
+        for building in self.env.buildings:
+            if building == factory or self.env.is_connected(building, factory):
+                self.env.make_targetable([building])
+            else:
+                self.env.make_untargetable([building])
+
+    def restore_backup(self, backup_buildings):
+        self.env = deepcopy(self.original_task)
+        self.env.empty()
+        self.model.env = self.env
+
+        for building in backup_buildings:
+            building.clear_connections()
+        self.env.add_buildings(backup_buildings)
 
 
-if __name__ == "__main__":
-    set_default_options()
-    solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
-
-    task_dir = os.path.join(".", "tasks", "cup")
+def solve_test_tasks(directory):
+    task_dir = os.path.join(".", "tasks", directory)
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
 
-    score = 0
+    solved_tasks = 0
     for task_name in tasks:
         filename = os.path.join(task_dir, task_name)
-        success = solver.solve_task(filename)
+        success = solver.solve_task(filename, reset_clock=True)
         if success:
-            score += 1
+            solved_tasks += 1
 
-    print(f"Score: {score}/{len(tasks)}")
+    print(f"successfully solved tasks: {solved_tasks}/{len(tasks)}")
+
+
+if __name__ == "__main__":
+    START_TIME = time.time()
+
+    set_default_options()
+    solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
+
+    if len(sys.argv) == 2:
+        filename = sys.argv[0]
+        if not os.path.is_file(filename):
+            print(f"'{filename}' is no correct filename")
+            print("Usage: python solve_game.py [filename]")
+            print("if no filename is provided, all test tasks will be solved instead")
+        solver.solve_task(sys.argv[0])
+    else:
+        for directory in ["cup", "easy", "hard"]:
+            solve_test_tasks(directory)
