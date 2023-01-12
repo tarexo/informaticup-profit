@@ -20,7 +20,7 @@ class Environment:
     Profit Game Environment
     """
 
-    def __init__(self, width, height, turns, products: dict):
+    def __init__(self, width, height, turns, products, time=120):
         """initialize environment
 
         Args:
@@ -33,6 +33,7 @@ class Environment:
         self.height = height
         self.turns = turns
         self.products = products
+        self.time = time
 
         self.task_generator = task_generator.TaskGenerator(self, seed=42)
 
@@ -42,6 +43,10 @@ class Environment:
         self.buildings = []
         self.obstacles = []
         self.grid = np.full((self.height, self.width), " ")
+
+    def reset_resources(self):
+        for building in self.buildings:
+            building.reset_resources()
 
     def add_building(self, building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
@@ -234,12 +239,16 @@ class Environment:
         inp1 = building1.get_input_positions()[0]
         inp2 = building2.get_input_positions()[0]
 
-        x_diff, y_diff = inp1 - inp2
+        x_diff, y_diff = diff = inp1 - inp2
 
         if abs(x_diff) == 2 and abs(y_diff) == 0:
-            return True
+            x, y = inp1 - (diff // 2)
+            if self.grid[(y, x)] == "-":
+                return True
         elif abs(x_diff) == 0 and abs(y_diff) == 2:
-            return True
+            x, y = inp1 - (diff // 2)
+            if self.grid[(y, x)] == "-":
+                return True
         return False
 
     def creates_connection_loop(self, building):
@@ -337,7 +346,7 @@ class Environment:
         random.shuffle(factories)
         return factories[:max]
 
-    def get_possible_mines(self, deposit, max=10):
+    def get_possible_mines(self, deposit, factory=None, max=10):
         mines = []
 
         out_positions = deposit.get_output_positions()
@@ -349,7 +358,10 @@ class Environment:
                         mines.append(building)
 
         random.shuffle(mines)
-        return mines[:max]
+        mines = mines[:max]
+        if factory:
+            mines = sorted(mines, key=lambda m: self.get_min_distance(m, factory))
+        return mines
 
     def make_untargetable(self, false_targets):
         for false_target in false_targets:
@@ -369,6 +381,8 @@ class Environment:
         self.height = task["height"]
         self.turns = task["turns"]
         self.products = task["products"]
+        if "time" in task:
+            self.time = task["time"]
 
         self.empty()
 

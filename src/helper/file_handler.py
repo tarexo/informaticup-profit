@@ -58,6 +58,7 @@ def environment_to_json(env, filename):
         env_dict["objects"].append(obstacle.to_json())
     env_dict["products"] = env.products
     env_dict["turns"] = env.turns
+    env_dict["time"] = env.time
 
     path = os.path.join(".", "tasks", "solutions")
     if not os.path.isdir(path):

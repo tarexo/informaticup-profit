@@ -129,7 +129,7 @@ if __name__ == "__main__":
     model_sanity_check_frequency = 100
     model_save_frequency = 2500
 
-    width = height = 40
+    width = height = 30
     field_of_vision = 15
     transfer_model_path = None
     train_model(width, height, field_of_vision, transfer_model_path)

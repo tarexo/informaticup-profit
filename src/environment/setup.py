@@ -32,4 +32,5 @@ def make_gym(width, height, field_of_vision):
         field_of_vision=field_of_vision,
         turns=50,
         products={},
+        time=120,
     )

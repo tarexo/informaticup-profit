@@ -66,6 +66,7 @@ class Simulator:
                     total_points += num_products * product["points"]
                     total_rounds = round
 
+        self.env.reset_resources()
         return (total_points, total_rounds)
 
     def generate_product_dict(self):
