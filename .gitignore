@@ -135,4 +135,14 @@ docs/*.syntex.gz
 docs/*.blg
 docs/*.bbl
 
+#models
+# src/saved_models
+src/saved_models_backup
+
+# tasks
+src/tasks/solutions
+
+#profiling
+*.prof
+
 
