@@ -1,6 +1,6 @@
 GYM_ID = "Profit"
 PRINT_ROUND_LOG = False
-DEBUG = True
+DEBUG = False
 
 # Replace Deposit/Factory with single cell variant + only 4 placable buildings: conveyors are 2x1
 SIMPLE_GAME = False

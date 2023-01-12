@@ -66,6 +66,7 @@ class ProfitGym(Environment, gym.Env):
             self.current_path.append(new_building)
             num_outlets = len(self.current_building.get_output_positions())
             self.outlet = random.randrange(num_outlets)
+            self.make_untargetable([new_building])
 
         done = self.is_connected(self.current_building, self.target_building)
 

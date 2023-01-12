@@ -109,6 +109,10 @@ class Environment:
 
         return building
 
+    def add_buildings(self, buildings, force=False):
+        for building in buildings:
+            self.add_building(building, force=force)
+
     def is_legal_position(self, building):
         """Check whether a building that is not yet part of the enviornment has a valid position
 
@@ -212,6 +216,8 @@ class Environment:
                 for connection in other_building.connections:
                     if self.is_diagonal_input(connection, building):
                         return True
+                    elif self.is_opposite_input(connection, building):
+                        return True
 
         if outgoing_connections > 1:
             return True
@@ -223,6 +229,18 @@ class Environment:
 
         x_diff, y_diff = inp1 - inp2
         return True if abs(x_diff) == 1 and abs(y_diff) == 1 else False
+
+    def is_opposite_input(self, building1, building2):
+        inp1 = building1.get_input_positions()[0]
+        inp2 = building2.get_input_positions()[0]
+
+        x_diff, y_diff = inp1 - inp2
+
+        if abs(x_diff) == 2 and abs(y_diff) == 0:
+            return True
+        elif abs(x_diff) == 0 and abs(y_diff) == 2:
+            return True
+        return False
 
     def creates_connection_loop(self, building):
         for other_building in self.buildings:

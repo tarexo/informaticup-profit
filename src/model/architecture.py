@@ -11,6 +11,7 @@ from keras.layers import (
 )
 import os
 import numpy as np
+import time
 
 
 class BaseModel(tf.keras.Model):
@@ -296,6 +297,10 @@ class DeepQNetwork(BaseModel):
                 illegal_actions += 1
                 action = np.argsort(q_values[0])[illegal_actions]
                 state, reward, done, legal, info = self.env.step(action)
+
+            if DEBUG:
+                print(self.env)
+                time.sleep(0.1)
 
             episode_q_values.append(q_values[0, action])
             episode_rewards.append(reward)
