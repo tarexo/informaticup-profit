@@ -144,7 +144,7 @@ class GameSolver:
 
     def evaluate_solution(self, name, score, turns):
         print(f"{name}:")
-        # print(self.env)
+        print(self.env)
         print(f"theoretical optimal score: {self.optimal_score}")
         print(f"our solution scored {score} points in {turns} turns")
         print("\n")
