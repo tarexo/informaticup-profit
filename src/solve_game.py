@@ -25,7 +25,11 @@ class GameSolver:
             self.model = ActorCritic(self.env)
         self.model.load(model_path)
 
-    def solve_task(self, filename):
+    def solve_task(self, filename, reset_clock=False):
+        if reset_clock:
+            global START_TIME
+            START_TIME = time.time()
+
         self.env.from_json(filename)
         self.model.env = self.env
         self.original_task = deepcopy(self.env)
@@ -116,7 +120,7 @@ class GameSolver:
         at_least_one_connection = False
         for deposit in deposits:
             backup_buildings = copy(self.env.buildings) + copy(self.env.obstacles)
-            for mine in self.env.get_possible_mines(deposit, factory, max=15):
+            for mine in self.env.get_possible_mines(deposit, factory, max=20):
                 self.env.add_building(mine)
                 if self.env.is_connected(mine, factory):
                     success = True
@@ -159,7 +163,7 @@ class GameSolver:
                     backup_buildings = copy(self.env.buildings) + copy(
                         self.env.obstacles
                     )
-                    for mine in self.env.get_possible_mines(deposit, factory, max=5):
+                    for mine in self.env.get_possible_mines(deposit, factory, max=10):
                         self.env.add_building(mine)
                         self.env.set_task(mine, factory)
                         if self.env.is_connected(mine, factory):
@@ -210,7 +214,7 @@ def solve_test_tasks(directory):
     solved_tasks = 0
     for task_name in tasks:
         filename = os.path.join(task_dir, task_name)
-        success = solver.solve_task(filename)
+        success = solver.solve_task(filename, reset_clock=True)
         if success:
             solved_tasks += 1
 
