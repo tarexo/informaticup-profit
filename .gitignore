@@ -141,6 +141,7 @@ src/saved_models_backup
 
 # tasks
 src/tasks/solutions
+src/tasks/solution_building_list
 
 #profiling
 *.prof

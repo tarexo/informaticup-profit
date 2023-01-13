@@ -57,5 +57,6 @@ class Mine(Building):
         """
         indices = np.where(self.resources > 0)[0]
         for i in indices:
-            self.connections[0].resource_cache[i] += self.resources[i]
+            if self.connections:
+                self.connections[0].resource_cache[i] += self.resources[i]
         self.resources = np.array([0] * 8)

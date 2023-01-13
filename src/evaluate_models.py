@@ -1,6 +1,6 @@
 from settings import *
 from model.architecture import ActorCritic, DeepQNetwork
-from environment.profit_gym import register_gym, make_gym
+from environment.setup import register_gym, make_gym
 from helper.convert_actions import action_to_description
 
 import statistics
@@ -36,7 +36,7 @@ def evaluate_models(width, height, model_paths):
 
     print(f"\nComparing all models on a {width}x{height} grid...\n")
     for model_path in model_paths:
-        model_name = model_path.split("\\")[-1]
+        model_name = os.path.split(model_path)[1]
         game_type, field_of_vision, network = model_name.split("__")
         field_of_vision = int(field_of_vision.split("x")[0])
 

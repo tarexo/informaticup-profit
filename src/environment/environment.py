@@ -20,7 +20,7 @@ class Environment:
     Profit Game Environment
     """
 
-    def __init__(self, width, height, turns, products: dict):
+    def __init__(self, width, height, turns, products, time=120):
         """initialize environment
 
         Args:
@@ -33,6 +33,7 @@ class Environment:
         self.height = height
         self.turns = turns
         self.products = products
+        self.time = time
 
         self.task_generator = task_generator.TaskGenerator(self, seed=42)
 
@@ -42,6 +43,10 @@ class Environment:
         self.buildings = []
         self.obstacles = []
         self.grid = np.full((self.height, self.width), " ")
+
+    def reset_resources(self):
+        for building in self.buildings:
+            building.reset_resources()
 
     def add_building(self, building, force=False):
         """Adds the individual tiles of a new building to the grid, provided that it has a valid position (see `Environment.is_legal_position`);
@@ -108,6 +113,10 @@ class Environment:
         self.buildings.remove(building)
 
         return building
+
+    def add_buildings(self, buildings, force=False):
+        for building in buildings:
+            self.add_building(building, force=force)
 
     def is_legal_position(self, building):
         """Check whether a building that is not yet part of the enviornment has a valid position
@@ -212,6 +221,8 @@ class Environment:
                 for connection in other_building.connections:
                     if self.is_diagonal_input(connection, building):
                         return True
+                    elif self.is_opposite_input(connection, building):
+                        return True
 
         if outgoing_connections > 1:
             return True
@@ -223,6 +234,24 @@ class Environment:
 
         x_diff, y_diff = inp1 - inp2
         return True if abs(x_diff) == 1 and abs(y_diff) == 1 else False
+
+    def is_opposite_input(self, building1, building2):
+        input1 = building1.get_input_positions()
+        input2 = building2.get_input_positions()
+
+        for inp1 in input1:
+            for inp2 in input2:
+                x_diff, y_diff = diff = inp1 - inp2
+
+                if abs(x_diff) == 2 and abs(y_diff) == 0:
+                    x, y = inp1 - (diff // 2)
+                    if self.grid[(y, x)] == "-":
+                        return True
+                elif abs(x_diff) == 0 and abs(y_diff) == 2:
+                    x, y = inp1 - (diff // 2)
+                    if self.grid[(y, x)] == "-":
+                        return True
+        return False
 
     def creates_connection_loop(self, building):
         for other_building in self.buildings:
@@ -293,9 +322,19 @@ class Environment:
                 return True
         return False
 
-    def get_deposits(self, subtype):
+    def get_deposits(self, subtype=None):
+        return self.get_all_building_types(Deposit, subtype)
+
+    def get_factories(self, subtype=None):
+        return self.get_all_building_types(Factory, subtype)
+
+    def get_all_building_types(self, building_cls, subtype=None):
+        if subtype is None:
+            return [b for b in self.buildings if type(b) == building_cls]
         return [
-            b for b in self.buildings if type(b) == Deposit and b.subtype == subtype
+            b
+            for b in self.buildings
+            if type(b) == building_cls and b.subtype == subtype
         ]
 
     def get_possible_factories(self, subtype, max=10):
@@ -309,7 +348,7 @@ class Environment:
         random.shuffle(factories)
         return factories[:max]
 
-    def get_possible_mines(self, deposit, max=10):
+    def get_possible_mines(self, deposit, factory=None, max=10):
         mines = []
 
         out_positions = deposit.get_output_positions()
@@ -321,12 +360,20 @@ class Environment:
                         mines.append(building)
 
         random.shuffle(mines)
-        return mines[:max]
+        mines = mines[:max]
+        if factory:
+            mines = sorted(mines, key=lambda m: self.get_min_distance(m, factory))
+        return mines
 
     def make_untargetable(self, false_targets):
         for false_target in false_targets:
             for x, y in false_target.get_input_positions():
                 self.grid[(y, x)] = "#"
+
+    def make_targetable(self, true_targets):
+        for true_target in true_targets:
+            for x, y in true_target.get_input_positions():
+                self.grid[(y, x)] = "+"
 
     def from_json(self, filename):
         with open(filename) as f:
@@ -336,6 +383,8 @@ class Environment:
         self.height = task["height"]
         self.turns = task["turns"]
         self.products = task["products"]
+        if "time" in task:
+            self.time = task["time"]
 
         self.empty()
 
