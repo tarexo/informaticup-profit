@@ -1,13 +1,13 @@
 \section{Aufgabenbeschreibung}\label{cap:aufgabenbeschriebung}
 Die Aufgabe des InformatiCups 2023 ist das Lösen und Optimieren des rundenbasierten Spiels “Profit!”. 
-\\
+\\\\
 Das Spiel simuliert rundenbasierte Prozesse, in denen durch das Platzieren von verschiedenen Gebäude Ressourcen abgebaut und Produkte erstellt werden können. Das Herstellen von Produkten wird mit Punkten belohnt, wobei das Ziel das Maximieren dieser Punkte ist.
-\\
+\\\\
 In den folgenden Abschnitten werden die Regeln und der Ablauf des Spiels sowie die Codierung des Spiels im JSON-Format kurz erläutert.
 
 \subsection{Spielregeln}
 Das Spielfeld besteht aus einem maximal 100x100 großen Rastergitter. Ein Raster ist entweder leer oder durch ein Objekt besetzt.
-\\
+\\\\
 Die Abbildung ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel ist das Feld 30x20 groß und enthält drei Lagerstätten mit den Ressourcen Subtyp 0, 1 und 2, sowie zwei Hindernisse.
 %#1 Größe
 %#2 Dateiname
@@ -16,28 +16,45 @@ Die Abbildung ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel 
 \bild{1}{task1.jpg}{Beispielumgebung eines Profit-Spiels}{fig:task1}
 
 Das linke obere Raster befindet sich an der Stelle (0,0), die rechte untere (Breite-1, Höhe-1). Die Größe des Spielfeldes ist pro Spiel vorgegeben.
-\\
+\\\\
 Zu Beginn des Spiels sind bereits Hindernisse und Lagerstätten mit Ressourcen vorhanden.
 Ebenso werden die maximale Rundenanzahl und die Produkte, die produziert werden können, festgelegt.
-\\
+\\\\
 Die Menge an Ressourcen einer Lagerstätte wird durch die Größe der Lagerstätte festgelegt. Diese wird durch die Menge an Rastern~x~5 festgelegt. Ist also eine Lagerstätte $3 \cdot 3$  dann enthält es $3 \cdot 3\cdot 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7).
-\\
+\\\\
 Hindernisse im Spielfeld stellen Felder dar, in denen kein anderes Gebäude gebaut werden kann. Diese sind beliebig groß, haben aber immer eine rechteckige Form. 
-\\
+\\\\
 \textbf{Produkt}\\
 Für jedes Spiel ist mindestens ein Produkt definiert, maximal acht. Ein Produkt benötigt eine beliebige Kombination der acht Ressourcen. Die benötigte Menge der jeweiligen Ressource ist ebenfalls definiert. Beispielsweise kann zur Herstellung von Produkt 0 dreimal die Ressource 0 und einmal die Ressource 1 benötigt werden. Jedes Produkt gibt eine bestimmte Anzahl an Punkte.
-\\
+\\\\
 \textbf{Mine}\\
 Um die Ressourcen in den Lagerstätten abzubauen, gibt es Minen. Sie ist 4x2 oder 2x4 Felder groß und hat vier Subtypen, die die Rotation der Mine bestimmen. Die Abbildung \ref{fig:mine} zeigt die vier verschiedenen Subtypen der Mine.
 \bild{0.5}{mines.jpg}{Darstellung der vier Minen-Subtypen}{fig:mine}
 Jede Mine hat einen Eingang (+) und einen Ausgang (-). Der Eingang muss an einem Ausgang einer Lagerstätte anliegen, um die Ressourcen abzubauen. An dem Ausgang können Eingänge von Förderbändern, Verbindern oder Fabriken anliegen. 
-\\
+\\\\
 \textbf{Förderband}\\
 Um Ressourcen von einer Lagerstätte zu einer Fabrik zu befördern, können Förderbänder genutzt werden. Förderbänder sind nicht zwangsläufig notwendig. Sie stellen zusätzliche Verbindungsstücke zwischen Mine und Verbinder, Mine und Fabrik oder Verbinder und Fabrik dar.
+\\\\
+Diese haben wie andere Objekte auch einen Eingang (+) und einen Ausgang (-). Ein Förderband ist entweder 3 oder 4 Raster lang und kann, wie in der Abbildung \ref{fig:conveyor} gezeigt, je in vier Subtypen mit unterschiedlicher Ausrichtung verwendet werden. Somit hat das Förderband insgesamt acht Subtypen.
+\bild{0.5}{conveyor.jpg}{Darstellung der acht Förderband-Subtypen}{fig:conveyor}
+Im Gegensatz zu allen anderen Objekten dürfen sich Förderbänder auch kreuzen.
+\\\\
+\textbf{Verbinder}\\
+Wenn ein Produkt mehrere Ressourcen benötigt, können diese mit einem Verbinder zusammengeführt und gemeinsam zur Fabrik befördert werden. 
 \\
-Diese haben wie andere Objekte auch einen Eingang (+) und einen Ausgang (-). Ein Förderband ist entweder 3 oder 4 Raster lang und kann, wie in der Abbildung () gezeigt, je in vier Subtypen mit unterschiedlicher Ausrichtung verwendet werden. Somit hat das Förderband insgesamt acht Subtypen.
-
+Ein Verbinder hat drei Eingänge (+) und einen Ausgang (-). Auch hier gibt es vier Subtypen, die jeweils die Rotation des Verbinders bestimmen (Abbildung \ref{fig:combiner}).
+\bild{0.5}{combiner.jpg}{Darstellung der acht Förderband-Subtypen}{fig:combiner}
+\\\\
+\textbf{Fabrik}\\
+Für jede Fabrik ist definiert, wie viele und welche Ressourcen gebraucht werden, um ein Produkt herzustellen. Da es maximal acht Produkte geben kann, gibt es von der Fabrik insgesamt acht verschiedene Subtypen, für jedes Produkt einen. Jede Fabrik ist 5x5 groß. Die äußeren Raster sind Eingänge für Ressourcen, insgesamt 16.
+\\
+Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen von den Lagerstätten zur Fabrik befördert. Die Abbildung \ref{fig:factory} zeigt, wie so ein Aufbau aussehen kann. Im Beispiel benötigt das Produkt 0 die Ressourcen 0 und 1.
+\bild{0.5}{solved_task.jpg}{Darstellung der acht Förderband-Subtypen}{fig:factory}
 
 \subsection{Spielablauf}
+Das Spiel läuft rundenbasiert ab. Jede Runde beginnt mit einer “Beginn der Runde”-Aktion und endet mit einer “Ende der Runde”-Aktion.
+Die folgende Tabelle definiert die Aktionen der einzelnen Objekte. 
+
+
 
 \subsection{Darstellung in JSON}
