@@ -234,7 +234,20 @@ if __name__ == "__main__":
     startup_time = 3  # time for importing all necessary libraries
     START_TIME = time.time() - startup_time
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 2 and sys.argv[1] == "solve":
+        task_path = "temp_task.json"
+        task = input("Enter task as JSON string: ")
+        with open(task_path, "w") as f:
+            f.write(task)
+
+        with suppress_stdout():
+            set_default_options()
+            solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
+
+            building_list = solver.solve_task(task_path)
+        print(f"\n{building_list}")
+        os.remove(task_path)
+    elif len(sys.argv) == 2:
         filename = sys.argv[1]
         if not os.path.exists(filename):
             print(f"'{filename}' is no correct filename")
