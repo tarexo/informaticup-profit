@@ -64,7 +64,9 @@ def environment_to_json(env, filename):
     if not os.path.isdir(path):
         os.mkdir(path)
     with open(os.path.join(path, filename), "w") as jsonfile:
-        json.dump(env_dict, jsonfile, separators=(",", ":"))
+        json.dump(env_dict, jsonfile, separators=(",", ":"), indent=4)
+
+    print(f"final solution has been saved to: {os.path.join(path, filename)}")
 
 
 def environment_to_placeable_buildings_list(env, filename):
@@ -83,4 +85,8 @@ def environment_to_placeable_buildings_list(env, filename):
     if not os.path.isdir(path):
         os.mkdir(path)
     with open(os.path.join(path, filename), "w") as f:
-        f.write(json.dumps(building_list))
+        f.write(json.dumps(building_list, indent=4))
+
+    print(
+        f"list of placeable buildings has been saved to: {os.path.join(path, filename)}"
+    )

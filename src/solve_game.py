@@ -49,6 +49,13 @@ class GameSolver:
         environment_to_placeable_buildings_list(self.env, os.path.split(filename)[1])
         environment_to_json(self.env, os.path.split(filename)[1])
 
+        solve_time = time.time() - START_TIME
+        if solve_time > self.env.time:
+            print("WARNING: time limit has been exceeded!")
+        print(
+            f"It took {round(solve_time, 2)}s of the allowed {self.env.time}s to calculate this solution.\n\n"
+        )
+
         return score > 0
 
     def create_initial_solution(self, sorted_products):
@@ -80,14 +87,16 @@ class GameSolver:
             self.env.make_targetable(self.env.buildings)
 
             if not success:
-                print("no enhancements could be made\n")
+                print("no further enhancements could be made\n")
                 return best_score, best_turns
 
             score, turns = Simulator(self.env).run()
             self.evaluate_solution(f"enhanced solution #{iteration+1}", score, turns)
 
             if score < best_score or (score == best_score and turns >= best_turns):
-                print("reverting back to previous solution due to no improvments\n")
+                print(
+                    "reverting back to previous solution due to a lack of improvement\n"
+                )
                 self.env = best_solution
                 return best_score, best_turns
             else:
@@ -99,7 +108,7 @@ class GameSolver:
 
     def solve_single_product(self, product):
         backup_buildings = copy(self.env.buildings) + copy(self.env.obstacles)
-        for factory in self.env.get_possible_factories(product.subtype, max=10):
+        for factory in self.env.get_possible_factories(product.subtype, max=15):
             self.env.add_building(factory)
             for deposit_subtype, amount in enumerate(product.resources):
                 if amount == 0:
@@ -205,7 +214,7 @@ class GameSolver:
         self.env.add_buildings(backup_buildings)
 
 
-def solve_test_tasks(directory):
+def solve_test_tasks(directory, sleep_in_between_tasks=8):
     task_dir = os.path.join(".", "tasks", directory)
     tasks = [
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
@@ -217,12 +226,14 @@ def solve_test_tasks(directory):
         success = solver.solve_task(filename, reset_clock=True)
         if success:
             solved_tasks += 1
+        time.sleep(sleep_in_between_tasks)
 
     print(f"successfully solved tasks: {solved_tasks}/{len(tasks)}")
 
 
 if __name__ == "__main__":
-    START_TIME = time.time()
+    startup_time = 3  # time for importing all necessary libraries
+    START_TIME = time.time() - startup_time
 
     set_default_options()
     solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
