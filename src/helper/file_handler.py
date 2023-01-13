@@ -83,7 +83,7 @@ def environment_to_placeable_buildings_list(env):
     building_list = [
         building.to_json() for building in env.buildings if building.is_placeable()
     ]
-    return json.dumps(building_list, indent=4)
+    return json.dumps(building_list, separators=(",", ":"))
 
 
 @contextmanager
