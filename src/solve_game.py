@@ -30,7 +30,7 @@ class GameSolver:
             global START_TIME
             START_TIME = time.time()
 
-        self.env.from_json(filename)
+        self.env.from_json_file(filename)
         self.model.env = self.env
         self.original_task = deepcopy(self.env)
 
@@ -46,7 +46,6 @@ class GameSolver:
 
         score, turns = self.create_enhanced_solution(score, turns)
 
-        environment_to_placeable_buildings_list(self.env, os.path.split(filename)[1])
         environment_to_json(self.env, os.path.split(filename)[1])
 
         solve_time = time.time() - START_TIME
@@ -56,7 +55,7 @@ class GameSolver:
             f"It took {round(solve_time, 2)}s of the allowed {self.env.time}s to calculate this solution.\n\n"
         )
 
-        return score > 0
+        return environment_to_placeable_buildings_list(self.env)
 
     def create_initial_solution(self, sorted_products):
         at_least_one_product = False
@@ -235,16 +234,22 @@ if __name__ == "__main__":
     startup_time = 3  # time for importing all necessary libraries
     START_TIME = time.time() - startup_time
 
-    set_default_options()
-    solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
-
     if len(sys.argv) == 2:
-        filename = sys.argv[0]
-        if not os.path.is_file(filename):
+        filename = sys.argv[1]
+        if not os.path.exists(filename):
             print(f"'{filename}' is no correct filename")
-            print("Usage: python solve_game.py [filename]")
+            print("\nUsage: python solve_game.py [filename]")
             print("if no filename is provided, all test tasks will be solved instead")
-        solver.solve_task(sys.argv[0])
+            exit(-1)
+
+        with suppress_stdout():
+            set_default_options()
+            solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
+
+            building_list = solver.solve_task(filename)
+        print(building_list)
     else:
         for directory in ["cup", "easy", "hard"]:
+            set_default_options()
+            solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
             solve_test_tasks(directory)

@@ -1,8 +1,10 @@
 from buildings import *
 import environment.environment as environment
 
-import json
+from contextlib import contextmanager
+import sys
 import os
+import json
 
 
 def environment_from_json(filename):
@@ -69,7 +71,7 @@ def environment_to_json(env, filename):
     print(f"final solution has been saved to: {os.path.join(path, filename)}")
 
 
-def environment_to_placeable_buildings_list(env, filename):
+def environment_to_placeable_buildings_list(env):
     """parses only placable buildings of an environment to a json file.
     This is our final output for the Informaticup Profit Challenge.
 
@@ -81,12 +83,15 @@ def environment_to_placeable_buildings_list(env, filename):
     building_list = [
         building.to_json() for building in env.buildings if building.is_placeable()
     ]
-    path = os.path.join(".", "tasks", "solution_building_list")
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    with open(os.path.join(path, filename), "w") as f:
-        f.write(json.dumps(building_list, indent=4))
+    return json.dumps(building_list, indent=4)
 
-    print(
-        f"list of placeable buildings has been saved to: {os.path.join(path, filename)}"
-    )
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout

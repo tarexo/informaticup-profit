@@ -375,10 +375,13 @@ class Environment:
             for x, y in true_target.get_input_positions():
                 self.grid[(y, x)] = "+"
 
-    def from_json(self, filename):
+    def from_json_file(self, filename):
         with open(filename) as f:
             task = json.load(f)
 
+        return self.from_json(task)
+
+    def from_json(self, task):
         self.width = task["width"]
         self.height = task["height"]
         self.turns = task["turns"]
