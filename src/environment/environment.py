@@ -236,19 +236,21 @@ class Environment:
         return True if abs(x_diff) == 1 and abs(y_diff) == 1 else False
 
     def is_opposite_input(self, building1, building2):
-        inp1 = building1.get_input_positions()[0]
-        inp2 = building2.get_input_positions()[0]
+        input1 = building1.get_input_positions()
+        input2 = building2.get_input_positions()
 
-        x_diff, y_diff = diff = inp1 - inp2
+        for inp1 in input1:
+            for inp2 in input2:
+                x_diff, y_diff = diff = inp1 - inp2
 
-        if abs(x_diff) == 2 and abs(y_diff) == 0:
-            x, y = inp1 - (diff // 2)
-            if self.grid[(y, x)] == "-":
-                return True
-        elif abs(x_diff) == 0 and abs(y_diff) == 2:
-            x, y = inp1 - (diff // 2)
-            if self.grid[(y, x)] == "-":
-                return True
+                if abs(x_diff) == 2 and abs(y_diff) == 0:
+                    x, y = inp1 - (diff // 2)
+                    if self.grid[(y, x)] == "-":
+                        return True
+                elif abs(x_diff) == 0 and abs(y_diff) == 2:
+                    x, y = inp1 - (diff // 2)
+                    if self.grid[(y, x)] == "-":
+                        return True
         return False
 
     def creates_connection_loop(self, building):
