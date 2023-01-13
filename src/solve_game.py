@@ -219,15 +219,10 @@ def solve_test_tasks(directory, sleep_in_between_tasks=8):
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
 
-    solved_tasks = 0
     for task_name in tasks:
         filename = os.path.join(task_dir, task_name)
-        success = solver.solve_task(filename, reset_clock=True)
-        if success:
-            solved_tasks += 1
+        _building_list = solver.solve_task(filename, reset_clock=True)
         time.sleep(sleep_in_between_tasks)
-
-    print(f"successfully solved tasks: {solved_tasks}/{len(tasks)}")
 
 
 def solve_single_task(filename):
