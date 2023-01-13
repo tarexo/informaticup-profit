@@ -300,7 +300,7 @@ class DeepQNetwork(BaseModel):
 
             if DEBUG:
                 print(self.env)
-                time.sleep(0.1)
+                time.sleep(0.3)
 
             episode_q_values.append(q_values[0, action])
             episode_rewards.append(reward)

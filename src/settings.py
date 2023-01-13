@@ -9,7 +9,7 @@ NO_OBSTACLES = False
 
 # Model
 # which trained model shall be used for the game_solver agent?
-GAME_SOLVER_MODEL_NAME = "NORMAL__12x12__DQN_256_128"
+GAME_SOLVER_MODEL_NAME = "NORMAL__15x15__DQN_256_128"
 
 # For Training
 MODEL_ID = "DQN"  # "DQN" or "A-C"
