@@ -1,13 +1,125 @@
 \section{Lösungsumsetzung}\label{cap:umsetzung}
 
 \subsection{Programmiersprache und Bibliotheken}
+Das Projekt wurde in der Programmiersprache Python umgesetzt. Diese hat einen einfache und übersichtliche Syntax, sowie große Unterstützung von vielen Bibliotheken im Bereich des Maschinellen Lernens.
+\\
+Neben Numpy und Pandas zur Datenverarbeitung, wird TensorFlow bzw. Keras genutzt, um verschiedene neuronale Netzwerke aufzubauen und zu trainieren. Die OpenAI Gym vereinfacht die Interaktion zwischen dem Reinforcement Learning Agent mit unserer Implementation der "Profit!"-Umgebung.
+\\
+Für einen einheitlichen Code wurden folgende Code Konventionen eingehalten.
+\begin{table}
+	\begin{center}
+		\begin{tabular}{ | l | l | } 
+		 \hline
+			Klassennamen & \dq{}UpperCamelCase\dq{}-Variante \\ \hline
+			Konstanten &  \dq{}SNAKE\textunderscore{}CASE\textunderscore{}ALL\textunderscore{}CAPS \dq{}-Variante \\ \hline
+			Variablen &  \dq{}lower\textunderscore{}snake\textunderscore{}case \dq{}-Variante\\ \hline
+			Funktionen & \dq{}lower\textunderscore{}snake\textunderscore{}case \dq{}-Variante \\ \hline
+		\end{tabular}
+		\caption{Beschreibung der Code Konventionen }
+	\end{center}
+\end{table}
+
+
 \subsection{Grundidee}
+Bei “Profit!” handelt es sich um ein Einzelspieler-Spiel mit einer deterministischen Umgebung, in der es keine versteckten Informationen gibt. Eine Implementierung des Spiels wurde über die Webseite “https://profit.phinau.de/” bereitgestellt, in der ein Mensch mittels “drag \& drop” Gebäude platzieren und den Ressourcenabbau simulieren kann. Wir haben diese Umgebung in Python nach implementiert, um die volle Kontrolle über die Spieldynamik zu erhalten. Somit können Reinforcement Learning Agenten uneingeschränkt ihre Umgebung abfragen.
+\\\\
+Das Spiel hat in seiner Grundform aufgrund des bis zu 100x100 großen Spielfeldes einen sehr großen Zustands- und Aktionsraum, weshalb wir uns dafür entschieden haben, das Problem nach dem Teile-und-Herrsche-Prinzip in mehrere Teilprobleme zu zerlegen.
+\\\\
+Um eine geeignete Abstraktion zu finden, haben wir uns daran orientiert wie ein Mensch das “Profit”-Spiel spielen würde: Anstatt im ganzen Spielfeld unzusammenhängende Gebäude zu platzieren, geht ein menschlicher Spieler (in der Regel) systematischer vor, indem er als erstes eine Fabrik an einer geeigneten Position platziert und von einer Lagerstätte ausgehend aneinander schließende Gebäude setzt, bis eine Verbindung zur Fabrik hergestellt wurde. Dabei behält ein menschlicher Spieler einen groben Überblick über das ganze Spielfeld, um die ungefähre Richtung, in die er bauen möchte, zu bestimmen. Um mögliche Hindernisse und Sackgassen zu vermeiden oder Förderbänder mit anderen Förderbändern zu überkreuzen, wird die lokale Umgebung des zuletzt gesetzten Gebäudes betrachtet, um das optimale Bauteil auszuwählen. 
+\\
+Anhand dieser Vorgehensweise ist ersichtlich, dass ein Agent für das Verbinden eines beliebigen Startgebäudes mit einer Fabrik zuständig sein soll. Dieser Agent soll ähnlich wie ein menschlicher Spieler aneinander angrenzende Gebäude platzieren, bis das Zielgebäude  erreicht ist. 
+Minen, Förderbänder und Verbinder besitzen alle nur einen Ausgang. Lagerstätten können viele verschiedene Ausgänge haben. Zur vereinfachten Implementierung haben wir uns dafür entschieden, eine Mine als Startgebäude des Agentens anstatt einer Lagerstätte zu verwenden. Somit können wir die Position des Agenten auf den einzigen Ausgang des zuletzt platzierten Gebäudes legen. Des Weiteren müssen nur vier benachbarte Positionen in Betracht gezogen werden, an denen der Eingang eines neuen Gebäudes platziert werden kann. 
+\\\\
+Um “Profit!” zu lösen, braucht es noch einen weiteren Agenten, der bestimmt, welche Lagerstätte bzw. Mine mit welcher Fabrik verbunden werden soll und was zu tun ist, falls eine Verbindung nicht hergestellt werden kann. Außerdem muss dieser Agent bestimmen, wo Fabriken und Minen platziert werden sollen, damit der erste Agent diese verbinden kann.
+\\\\
+Im Weiteren wird der erste Agent als untergeordnet und der zweite als übergeordnet bezeichnet. Beide können sowohl durch Reinforcement Learning Methoden trainiert, als auch mit Hilfe eines regelbasierten Ansatzes gelöst werden. 
+
 \subsection{“Profit!” Umgebung}
-\subsubsection{Buildings}
+Der erste Schritt der Lösungsumsetzung war das Nachimplementieren von Profit selber.  Hierfür wurde eine Umgebungsklasse (Environment) erstellt, die wie die Umgebung der Website agieren soll. Die Umgebung kann aus einer JSON-Datei erstellt werden und hat auch die gleichen Eigenschaften. Anfangs beinhaltet sie nur Lagerstätte und Hindernisse. Über Methoden lassen sich dann die in Kapitel \ref{cap:aufgabenbeschreibung} beschriebene Hindernisse hinzufügen.
+Eine fehlerhafte Umgebung könnte dafür sorgen, dass die Lösung des Spiels fehlerhaft ist.
+Daher war wichtig, dass diese Umgebung mit allen dazugehörigen Klassen korrekt umgesetzt wurde, weshalb Unittests diese getestet haben. 
+\\\\
+Die folgenden Abschnitte beschreiben, wie sich diese Profit Umgebung zusammensetzt und wie sie getestet wurden.
+
+\subsubsection{Environment-Klasse und Gebäude}
+Die Environment-Klasse prüft für jedes neu platzierte Gebäude, ob alle in \ref{cap:spielregeln} definierten Regeln eingehalten werden. Jedes Gebäude speichert alle Referenzen zu an eigenen Ausgängen angrenzenden Gebäuden. Somit ist es einfach rekursiv zu ermitteln, ob eine Lagerstätte mit einer Fabrik verbunden ist.
+\\\\
+Eine Aufgabe kann entweder aus einer JSON-Datei oder einem übergebenen JSON-String generiert werden. Gelöste Aufgaben werden als JSON-Datei unter /tasks/solutions gespeichert und die Liste an platzierbaren Gebäuden wird ausgegeben. Alternativ kann eine für Menschen lesbare Repräsentation des Spielfeldes auf der Standardausgabe ausgegeben werden.
+
+
+
 \subsubsection{Spiel-Simulation}
+Die Simulation des Spiels dient zur Überprüfung der erreichten Punktzahl eines gegebenen Spielfelds. Zusätzlich wird die Anzahl der benötigten Runden ermittelt, um die angegebene Punktzahl zu erreichen. Der Simulator befindet sich in der Datei simulator.py und ist als Klasse implementiert.
+\\\\
+Bei der Initialisierung einer Klasseninstanz wird dem Konstruktor eine Instanz der Environment-Klasse übergeben. Diese enthält alle Informationen über die auf dem Spielfeld befindlichen Objekte, deren Position und die jeweiligen Verbindungen zwischen ihnen. Außerdem können der Environment-Klasse die für dieses Spiel möglichen Produkte und das dazugehörige Rezept entnommen werden.
+\\\\
+Jedes platzierbare Objekt verfügt über einen eigenen Cache und einen internen Ressourcenspeicher, welcher die Anzahl der aktuell gehaltenen Ressourcen des jeweiligen Objekts angibt. Zusätzlich hat jedes Objekt typabhängig eine Funktion, welche zum Beginn (start\textunderscore{}of\textunderscore{}round\textunderscore{}action) und zum Ende (end\textunderscore{}of\textunderscore{}round\textunderscore{}action) einer Runde aufgerufen wird.
+\\\\
+Die start\textunderscore{}of\textunderscore{}round\textunderscore{}action-Funktion des Förderbandes beispielsweise entnimmt alle im Cache befindlichen Ressourcen und fügt diese dem internen Speicher hinzu. Am Ende der Runde überträgt die  end\textunderscore{}of\textunderscore{}round\textunderscore{}action-Funktion die im Speicher befindlichen Ressourcen in den Cache des am Egress befindlichen Objekts.
+\\\\
+Während der Simulation wird zum Start einer Runde in zufälliger Reihenfolge die start\textunderscore{}of\textunderscore{}round\textunderscore{}action-Funktion jedes Objekts aufgerufen. Anschließend werden die end\textunderscore{}of\textunderscore{}round\textunderscore{}action-Funktionen aufgerufen. Eventuell entstehende Produkte und damit Punkte werden mit der bisherigen Gesamtpunktzahl summiert.
+\\\\
+Der Simulator gibt nach Abschluss der Simulation die erreichte Gesamtpunktzahl sowie die dafür benötigten Runden zurück.
+
 \subsubsection{Optimale Score}
+Mit dem Optimal Score kann für eine gegebene Umgebung ermittelt werden, welche Punktezahl in der Theorie maximal erreicht werden kann. Außerdem wird ermittelt, welche Kombination von Produkten zu dieser optimalen Punktzahl führen. Wenn mehrere Produkte sich Ressourcen teilen müssen, kann es sein, dass es besser ist, ein Produkt wegzulassen, damit dieses einem anderen Produkt nicht die Ressourcen wegnimmt. 
+Für die Berechnung wird angenommen, dass ideale Bedingungen herrschen. Die Positionen, an welchen sich die Lagerstätte und Hindernisse befinden, werden nicht in Betracht gezogen. 
+Im ersten Schritt wird eine Liste erstellt, die alle möglichen Kombinationen von Produkten enthält. Anschließend wird für jede Produktkombination der Optimal Score berechnet. Der Score und die Produktkombination werden in eine Liste geschrieben, welche sortiert ausgegeben wird.  Die Rückgabe des Optimal Scores ist also eine sortierte Liste an Scores und Produktkombinationen, wobei die beste Kombination an erster Stelle steht.
+\\\\
+Um den Score für ein einzelnes Produkt zu berechnen, werden die Punktezahl sowie die benötigten Ressourcen des Produkts gebraucht, ebenso wie die Lagerstätte und die Gesamtressourcen der Umgebung. Die Anzahl der Runden wird um zwei reduziert, da mindestens zwei Runden gebraucht werden, bis eine Ressource eine Lagerstätte erreicht.
+\\\\
+Die Berechnung des Optimal Scores erstellt einen Vektor mit den Ressourcen aller Lagerstätten, die vom Produkt gebraucht werden. Ebenso wird ein Vektor erstellt, welcher die maximale Anzahl aller Minen beinhaltet. Eine Lagerstätte von der Breite b und der Höhe h kann platzbedingt maximal b*h Minen versorgen. Dieser Vektor wird anschließend mit drei multipliziert, da jede Mine pro Runde drei Ressourcen aufnehmen kann.
+\\\\
+Der Ressourcenvektor wird anschließend durch den Minenvektor geteilt. Dadurch wird ermittelt, wie viele Runden mindestens gebraucht werden, um alle Ressourcen abzubauen. Ist diese Zahl kleiner als die gegebene Rundenzahl-2, dann wird der Ressourcenvektor durch den Produktressourcenvektor geteilt, wodurch sich die Anzahl an maximal zu produzierenden Produkten ergibt. Diese Zahl wird mit der Produktpunktzahl multipliziert, wodurch sich der optimale Score für dieses Produkt ergibt.
+Ist die errechnete Mindestrundenzahl größer als die gegebene, so wird ermittelt, wie viele Produkte in den gegebenen Runden maximal produziert werden können. Hier wird der Minenvektor mit der Anzahl der Runden multipliziert und durch den Produktressourcenvektor geteilt. Das Ergebnis sind die maximal reproduzierbaren Produkte, welche mit der Produktpunktzahl multipliziert den optimalen Score ergibt.
+\\\\
+Wenn mehrere Produkte existieren, so gibt es zwei Möglichkeiten. Entweder die Ressourcen für die Produkte sind unabhängig voneinander, dann wird der Optimal Score aller Produkte addiert, oder Produkte teilen sich Ressourcen. Ist das der Fall, dann wird der Eintrag im Ressourcenvektor durch die Anzahl an Produkten, die sich diese Ressource teilen, geteilt.
+Anschließend wird der Optimal Score für jedes Produkt berechnet und addiert.
+\\\\
+Der Optimal Score entspricht nicht dem tatsächlich möglich erreichbaren besten Wert. Da die Position der Lagerstätten und Hindernisse nicht beachtet wird, kann nicht überprüft werden, wie viele Minen tatsächlich verwendet werden können und wie viele Runden eine Ressource tatsächlich benötigt, um eine Fabrik zu erreichen.
+Der Optimal Score soll nur eine Aussage darüber geben, welche Punktzahl für ein Produkt gut ist und wann eine Lösung nicht weiter verbessert werden kann. 
+
 \subsubsection{Testing}
+Der Code wurde mit dem Unit Test Framework unittest von Python getestet. Dieses bietet eine einfache Anwendung Testfälle zu definieren und auszuführen. 
+Jede Testklasse erbt von unittest.TestCase, die Testfälle werden als Methoden die mit test beginnen angegeben. Über die assert-Funktion können verschiedene Bedingen abgeprüft werden.\zitat{}{unittest}
+Die Tests und die Implementierung des Codes wurden parallel ausgeführt von unterschiedlichen Entwicklern. Damit soll sichergestellt werden, dass beispielsweise Denkfehler oder Bugs in der Implementierung weniger wahrscheinlich auch in den Tests vorkommen, wodurch Fehler besser entdeckt werden können. 
+Als Hilfe für die Testimplementierung wurde die Webseite \url{https://profit.phinau.de/}  verwendet. Die Webseite wurde für den Informaticup zur Verfügung gestellt und beinhaltet eine interaktive Implementierung des Spiels Profit. Die Implementierung des Spiels sollte identisch zu dem der Webseite sein.
+\\\\
+\textbf{Environment \& Gebäudeplazierung}\\
+In den Environment-Tests werden die verschiedenen Bedingungen der Profit!-Umgebung und ihre Gebäude überprüft.
+\\
+Es werden mehrere Test-Umgebungen aus einem JSON-String geladen. Die daraus resultierenden Environment-Objekte werden anschließend auf mögliche Fehler in ihrer Darstellung überprüft.
+\\
+Es gibt viele verschiedene Regeln, welche Gebäude neben welchen gebaut werden dürfen. Die Gebäude-Tests bauen Gebäude auf legale und illegale Weise in eine Umgebung und prüfen, ob diese das neue Gebäude korrekt akzeptiert bzw. verwirft. 
+Beispielsweise darf ein Raster nicht von zwei verschiedenen Gebäuden belegt werden oder Förderband-Eingänge dürfen nicht neben Lagerstätten-Ausgängen liegen. Auch die Ausrichtung der Gebäude-Objekte wird überprüft.
+In den Tests wird versucht, alle legalen und illegalen Handlungen abzudecken, um sicherzustellen, dass später keine illegalen Aktionen gelernt werden. 
+Außerdem wurden Funktionieren zum Platzieren von Gebäuden
+\\\\
+\textbf{Spielsimulation}\\
+Für die Spielsimulation-Tests wird getestet, ob das endgültige Ergebnis des Spiels demselben entspricht wie dem der zur Verfügung gestellten Webseite. Beide Spielsimulationen müssen sowohl die gleiche Punktzahl haben als auch die gleiche Anzahl an Runden. 
+\\\\
+\textbf{Optimal Score}\\
+Der Optimal Score wurde anhand der gegebenen Aufgaben überprüft. Dabei wurde für jede dieser vier Ausgaben von Hand ausgerechnet, was bestenfalls rauskommen kann, was anschließend mit dem Ergebnis des Algorithmus abgeglichen wurde.
+
+
 
 \subsection{Untergeordneter Agent}
+Für das Verbinden einer Mine mit einer Fabrik haben wir uns für einen Deep Reinforcement Learning Ansatz entschieden. Dabei haben wir viel mit der Netzwerkarchitektur und möglichen Inputs experimentiert, um zwischen Modellkomplexität und benötigter Rechenzeit abzuwägen. 
+\\\\
+Das Actor-Critic Modell hat im direkten Vergleich zu einem Deep-Q-Netzwerk schlechtere Ergebnisse geliefert und unsere Monte-Carlo-Tree-Search Implementierung hat aufgrund höherer Rechenzeit für das Trainieren keinen Mehrwert geliefert. Nach mehreren erfolglosen Versuchen, die zugrundeliegenden Probleme zu lösen, mussten diese Lösungsansätze aufgegeben werden.
+\\\\
+Das beste Ergebnis haben wir mit einem Deep-Q-Netzwerk mit zwei versteckten Schichten und insgesamt 215.968 Parametern erzielt. Es bekommt nicht den Zustand des ganzen Spielfeldes, sondern nur einen Ausschnitt davon, sowie vorgefertigte Features als Input.
+\subsubsection{Inputs}
+Damit unser Agent mit unterschiedlichen Spielfeldgrößen umgehen kann und um die Modellkomplexität in Grenzen zu halten, beschränken wir das Sichtfeld auf einen lokalen 15x15 Bereich, der die Position des Agenten umgibt. 
+Für den Agenten ist es wichtig zu wissen, wo sich im Spielfeld nicht-freie Felder, inerten Förderband-Felder, sowie Fabrikeingänge (und Eingänge, die bereits mit der Ziel-Fabrik verbunden sind) befinden. Diese Informationen werden jeweils in den Kanälen eines  15x15x3 binären Tensors codiert. 
+Für den Fall, dass das Sichtfeld über den Spielfeldrand hinausragt, wird das Spielfeld durch Hindernisse erweitert.
+\\\\
+Falls sich kein Fabrikeingang im Sichtfeld des Agenten befindet, sollte dieser zumindest die ungefähre Richtung, in der sich die Ziel-Fabrik befindet, wissen. Deshalb gibt es sechs zusätzliche binäre Inputs, die die relative x- und y-Position (für jeweils niedriger, höher, gleich) angeben.
+\\\\
+Aus einem uns nicht ersichtlichen Grund versucht der Agent selbst nach längerem Training gelegentlich illegale Aktionen zu tätigen. Dem können wir nur entgegenwirken, indem wir die legalen Aktionen in den Zustand als binärer Input aufnehmen. 
+\subsubsection{Outputs}
+Wir haben festgestellt, dass Verbinder nur in seltenen Fällen einen Mehrwert gegenüber Förderbändern bieten, da letztere auch zum Kombinieren von mehreren Ressourceflüssen genutzt werden können und gleichzeitig weniger Platz verbrauchen. 
+Um den Aktionsraum noch weiter zu reduzieren und um das Training zu beschleunigen, wurden aus diesen Gründen alle Verbinder aus dem Spiel entfernt. Auch Minen sollten nur zum Abbauen von Ressourcen an Lagerstätten benutzt werden und sind somit für den untergeordneten Agenten nicht von Relevanz. Der Agent muss nur noch lernen, Förderbänder an geeigneten umliegenden Positionen zu platzieren. Der Aktionsraum ist somit auf $8 * 4 = 32$ reduziert.
+
 \subsection{Übergeordnete Agent}
 \subsection{Wartbarkeit}

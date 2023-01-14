@@ -5,7 +5,7 @@ Das Spiel simuliert rundenbasierte Prozesse, in denen durch das Platzieren von v
 \\\\
 In den folgenden Abschnitten werden die Regeln und der Ablauf des Spiels sowie die Codierung des Spiels im JSON-Format kurz erläutert.
 
-\subsection{Spielregeln}
+\subsection{Spielregeln}\label{cap:spielregeln}
 Das Spielfeld besteht aus einem maximal 100x100 großen Rastergitter. Ein Raster ist entweder leer oder durch ein Objekt besetzt.
 \\\\
 Die Abbildung ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel ist das Feld 30x20 groß und enthält drei Lagerstätten mit den Ressourcen Subtyp 0, 1 und 2, sowie zwei Hindernisse.
@@ -65,7 +65,7 @@ Die folgende Tabelle definiert die Aktionen der einzelnen Objekte.
 	Fabrik & Nimmt Ressourcen auf & Produziert so viele Produkte wie Ressourcen da sind \\ \hline
 	Lagerstätte & - & Gibt bis zu 3 Ressourcen an jeden Eingang einer Mine \\ \hline
 \end{tabular}
-\caption{Beschreibung der Aktionen \dq Beginn der Runde\dq  und \dq Ende der Runde\dq }
+\caption{Beschreibung der Aktionen \dq{}Beginn der Runde\dq  und \dq{}Ende der Runde\dq }
 \end{center}
 \end{table}
 Das Spielfeld hat neben der Feldgröße und den vorhandenen Objekten auch das Attribut “turns”. Dieses Attribut gibt die maximal erlaubte Anzahl an Spielrunden an.
@@ -94,7 +94,7 @@ Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaf
 			Lagerstätte & \{"type":"deposit", "subtype":0, "x":0, "y":0, "width":1, "height":1\}  \\ \hline
 			Hindernisse & \{"type":"obstacle", "x":0, "y":0, "width":1, "height":1\}\\\hline
 		\end{tabular}
-		\caption{Beschreibung der Aktionen \dq Beginn der Runde\dq  und \dq Ende der Runde\dq }
+		\caption{Beschreibung der JSON Struktur einzelner Objekte }
 	\end{center}
 \end{table}
 

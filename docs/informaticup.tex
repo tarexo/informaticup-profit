@@ -5,14 +5,23 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{anysize}
+\usepackage[
+colorlinks=true,
+urlcolor=blue,
+linkcolor=black
+]{hyperref}
 \usepackage[a4paper,margin=3cm, headsep=24pt, headheight=2cm]{geometry}
+\usepackage[square,sort,comma,numbers]{natbib}
+
 \usepackage{fancyhdr}
 \pagestyle{fancy} %vordefinierter Style
 \fancyhf{}
 \fancyhead[R]{\includegraphics[scale=.1]{images/rwu_logo.png}}
 \renewcommand{\headrulewidth}{0pt}
 
-\usepackage[square,sort,comma,numbers]{natbib}
+
+%\DeclareMathOperator*{\E}{\mathbb{E}}
+
 
 %Neues Kommando Bild
 %#1 Größe
@@ -44,9 +53,9 @@
 	\pagenumbering{arabic}
 	
 	\tableofcontents
-	\newpage
-	\listoffigures
-	\listoftables
+	%\newpage
+	%\listoffigures
+	%\listoftables
 	%Einleitung
 	\include{einleitung}
 	\include{aufgabenbeschreibung}
