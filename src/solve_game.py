@@ -219,35 +219,44 @@ def solve_test_tasks(directory, sleep_in_between_tasks=8):
         f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))
     ]
 
-    solved_tasks = 0
     for task_name in tasks:
         filename = os.path.join(task_dir, task_name)
-        success = solver.solve_task(filename, reset_clock=True)
-        if success:
-            solved_tasks += 1
+        _building_list = solver.solve_task(filename, reset_clock=True)
         time.sleep(sleep_in_between_tasks)
 
-    print(f"successfully solved tasks: {solved_tasks}/{len(tasks)}")
+
+def solve_single_task(filename):
+    if not os.path.exists(filename):
+        print(f"'{filename}' is no correct filename")
+        print("\nUsage: python solve_game.py [filename]")
+        print("if no filename is provided, all test tasks will be solved instead")
+        exit(-1)
+
+    with suppress_stdout():
+        set_default_options()
+        solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
+
+        building_list = solver.solve_task(filename)
+    print(f"{building_list}")
 
 
 if __name__ == "__main__":
-    startup_time = 3  # time for importing all necessary libraries
-    START_TIME = time.time() - startup_time
+    warmup_time = 5  # time for importing all necessary libraries
+    START_TIME = time.time() - warmup_time
 
     if len(sys.argv) == 2:
-        filename = sys.argv[1]
-        if not os.path.exists(filename):
-            print(f"'{filename}' is no correct filename")
-            print("\nUsage: python solve_game.py [filename]")
-            print("if no filename is provided, all test tasks will be solved instead")
-            exit(-1)
+        if sys.argv[1] == "solve":
+            temp_task_filename = "temp_task.json"
+            task = input()
+            with open(temp_task_filename, "w") as f:
+                f.write(task)
 
-        with suppress_stdout():
-            set_default_options()
-            solver = GameSolver(model_name=GAME_SOLVER_MODEL_NAME)
+            solve_single_task(temp_task_filename)
+            os.remove(temp_task_filename)
 
-            building_list = solver.solve_task(filename)
-        print(building_list)
+        else:
+            filename = sys.argv[1]
+            solve_single_task(filename)
     else:
         for directory in ["cup", "easy", "hard"]:
             set_default_options()
