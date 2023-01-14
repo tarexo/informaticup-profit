@@ -119,7 +119,51 @@ Falls sich kein Fabrikeingang im Sichtfeld des Agenten befindet, sollte dieser z
 Aus einem uns nicht ersichtlichen Grund versucht der Agent selbst nach längerem Training gelegentlich illegale Aktionen zu tätigen. Dem können wir nur entgegenwirken, indem wir die legalen Aktionen in den Zustand als binärer Input aufnehmen. 
 \subsubsection{Outputs}
 Wir haben festgestellt, dass Verbinder nur in seltenen Fällen einen Mehrwert gegenüber Förderbändern bieten, da letztere auch zum Kombinieren von mehreren Ressourceflüssen genutzt werden können und gleichzeitig weniger Platz verbrauchen. 
-Um den Aktionsraum noch weiter zu reduzieren und um das Training zu beschleunigen, wurden aus diesen Gründen alle Verbinder aus dem Spiel entfernt. Auch Minen sollten nur zum Abbauen von Ressourcen an Lagerstätten benutzt werden und sind somit für den untergeordneten Agenten nicht von Relevanz. Der Agent muss nur noch lernen, Förderbänder an geeigneten umliegenden Positionen zu platzieren. Der Aktionsraum ist somit auf $8 * 4 = 32$ reduziert.
+Um den Aktionsraum noch weiter zu reduzieren und um das Training zu beschleunigen, wurden aus diesen Gründen alle Verbinder aus dem Spiel entfernt. Auch Minen sollten nur zum Abbauen von Ressourcen an Lagerstätten benutzt werden und sind somit für den untergeordneten Agenten nicht von Relevanz. Der Agent muss nur noch lernen, Förderbänder an geeigneten umliegenden Positionen zu platzieren. Der Aktionsraum ist somit auf $8 * 4 = 32$ reduziert. Die Abblidung \ref{fig_network_architecture} zeigt die verwendete Netzwerkarchitektur des untergeordneten Agenten
+\bild{1}{network_architecture.png}{Darstellung der Netzwerkarchitektur}{fig_network_architecture}
+
+\subsubsection{Task Generator}
+Für das Training des Deep-Q-Netzwerks  benötigen wir viele verschiedene Aufgabenstellungen. Diese von Hand zu erstellen wäre sehr zeitintensiv gewesen, weshalb wir stattdessen einen Task Generator implementiert haben.
+\\\\
+Die einfachste Variante einer Aufgabe kann in vier Schritten erstellt werden:
+\begin{enumerate}
+	\item Jeweils eine Lagerstätte und eine Fabrik werden an zufälligen Positionen in einem leeren Spielfeld platziert
+	\item Diese werden mit Hilfe einer einfachen Distanz-Heuristik mit zufälligen (legalen) Gebäuden verbunden. 
+	\item Anschließend wird auf jedem leeren Feld mit einer geringen Wahrscheinlichkeit ein 1x1-Hindernis platziert. 
+	\item Die verbindenden Gebäude zwischen Lagerstätten und Fabrik werden bis auf die erste Mine wieder entfernt. 
+\end{enumerate}
+
+Der Task Generator erstellt somit eine nicht-triviale Aufgabe, eine Mine mit einer Fabrik in einem Hindernis-Labyrinth zu verbinden, die mindestens eine Lösung hat (vgl. Abb. \ref{fig:taskgenerator}).
+\bild{1}{taskgenerator.png}{Abblidung der vier Schritte des Task Generators }{fig:taskgenerator}
+Damit der RL-Agent auch lernen kann, Förderbänder mit anderen Förderbändern zu überkreuzen oder bereits existierende Verbindungen zur Ziel-Fabrik zu nutzen, werden zusätzliche Lagerstätten-Fabrik-Verbindungen erstellt. Dafür werden die Schritte eins und zwei wiederholt, ohne die verbindenden Gebäude in Schritt vier zu löschen.
+
+\subsubsection{Training}
+Wir trainieren das DQN über 100.000 Epochen auf einer Spielfeldgröße von 30x30 mit dem Adam-Optimierer und einer konstanten Lernrate von 0,001. Um dem Problem von “sparse rewards” vorzubeugen, erstellt der Task Generator in frühen Epochen einfachere Aufgaben, in denen die Lagerstätte und Fabrik nur einen geringen Abstand haben. Außerdem wird für jedes neu gesetzte Gebäude eine geringe negative Belohnung von -0,05 gegeben, diese wird auf bis zu -0,01 verringert oder auf bis zu -0,09 erhöht, je nachdem ob sich der Abstand zur Ziel-Fabrik verringert oder erhöht. Diese Art von “reward shaping" soll bewirken, das Modell zu motivieren, in die “richtige Richtung” zu laufen und dabei so wenig Gebäude wie möglich zu verwenden. Für das erfolgreiche Erreichen der Fabrik wird eine große Belohnung von 1,0 gegeben; ein illegaler Zug wird mit -1,0 bestraft. Als Abschlagsfaktor für nachfolgende Belohnungen wird $\gamma=0,9$ verwendet.
+
+Nach dem Training ist das Modell in der Lage 83\% der Aufgaben des Task Generators zu lösen. Der Agent lernt Hindernisse zu umgehen und sich auf die Fabrik mit möglichst wenigen Gebäuden zuzubewegen. Es ist zu bemerken, dass nicht immer erkannt wird, welcher Pfad in eine Sackgasse mündet, was zum Scheitern einer Aufgabe führen kann.
 
 \subsection{Übergeordnete Agent}
+Der übergeordnete Agent hat die Aufgabe, günstige Positionen für Fabriken und Minen zu finden, sowie zu koordinieren, welche Lagerstätte (bzw. welche zugehörige Mine) mit welcher Fabrik verbunden werden soll. 
+\\\\
+Ursprünglich hatten wir angedacht ein Multi-Agenten-System zu entwickeln, in dem die einzelnen untergeordneten Agenten eine kleine Belohnung erhalten wenn sie die ihnen zugewiesene Fabrik erreichen, eine mittlere Belohnung für alle Agenten die es schaffen gemeinsam ein Produkt erfolgreich zu produzieren und eine große Belohnung, wenn sogar die theoretisch maximale Punktzahl erreicht wird. Wir hätten uns von diesem Ansatz erhofft, dass die Agenten lernen zusammenzuarbeiten, um ähnliche Probleme wie die bereitgestellte “task.004” zu lösen, in der es nur wenig Platz für Gebäude gibt und somit Verbindungen doppelt genutzt werden sollten. Dies konnte aufgrund der nahenden Abgabefrist nicht mehr umgesetzt werden.
+\\\\
+Der untergeordnete Agent braucht für das Erstellen einer Verbindung zwischen Mine und Fabrik nur wenig Zeit (meistens unter einer Sekunde). Deshalb haben wir uns bei dem übergeordneten Agenten für einen Brute-Force Ansatz entschieden. Die Produkte werden nacheinander in Reihenfolge abgearbeitet, die theoretisch die zuvor berechnete optimale Punktzahl erreichen kann. Dafür wird für jedes mögliche Produkt genau eine Fabrik an eine zufällige legale Position gesetzt. Anschließend werden für jede Lagerstätte alle möglichen Minen probiert, bis eine Verbindung mithilfe des untergeordneten Agenten hergestellt werden kann. Dabei werden Minen, deren Ausgang näher an der Zielfabrik liegt, als erstes verwendet. Falls mit keiner Mine eine Verbindung möglich ist, wird die Fabrik noch bis zu 10 Mal an eine andere zufällige Position verschoben. 
+\\\\
+Der übergeordnete Agent verwendet ein einfaches Zeitmanagement. In der Regel braucht das Programm wenige Sekunden zum finden einer Lösung. Falls im Anschluss noch mehr als 50\% der Rechenzeit verbleiben, wird versucht, die Lösung zu verbessern. Dies kann in Ausnahmefällen trotzdem dazu führen, dass die gegebene Rechenzeit überschritten wird. 
+\\\\
+Ausgehend von der initialen Lösung wird für jeder erfolgreiche Lagerstätten-Fabrik-Verbindung versucht, noch weitere Verbindungen hinzuzufügen. Dies ist teilweise mit wenigen Gebäuden möglich, wenn Förderbänder an andere Förderbänder oder Minen anschließen, die bereits zur Ziel-Fabrik führen. Die zusätzlichen Verbindungen können die Anzahl der benötigten Runden reduzieren oder sogar bei einer geringen maximalen Rundenanzahl die Punktzahl erhöhen. 
+Nach jeder Verbesserungsrunde, berechnet der Simulator die neue Punktzahl und die dafür benötigte Rundenanzahl. Wenn keine weitere Verbesserung erreicht wird, oder die Lösung sich verschlechtert, wird die vorherige Umgebung verwendet und platzierbare Gebäude werden als Liste im json-Format zurückgegeben.
+
 \subsection{Wartbarkeit}
+Die Spiel-Umgebung wurde so implementiert, dass es einfach ist, neue Gebäudetypen hinzuzufügen oder zu entfernen. Eine neue Gebäude-Klasse sollte von der Building- bzw. Unplaceable-Building-Klasse erben (siehe Abb. \ref{fig:legal_connections}). Es muss für alle unterschiedlichen Subtypen die Form als zweidimensionale Liste angegeben werden, bestehend aus “+”, “-”, für Ein- und Ausgänge, sowie “ “ für freie Felder und einen beliebigen Buchstaben für inerte Felder. 
+Über ein Python-Dictionary werden die Regeln definiert, welche Gebäude an andere Gebäude angrenzen dürfen. 
+
+\bild{1}{legal_connections.jpg}{Code der Legalen Verbindungen}{fig:legal_connections}
+Die Environment-Klasse muss beim Hinzufügen oder Entfernen eines neuen Gebäudes nicht weiter angepasst werden, weil alle nötigen Regeln anhand der Gebäude-Subtyp-Form und dem Dictionary für legale Verbindungen abgeleitet werden können.
+\\\\
+Zum Lösen der Informaticup Aufgabenstellung ist die Anpassungsfähigkeit von Gebäuden nicht erforderlich, da alle Gebäude und ihre Regeln von Anfang an festgelegt wurden. Unser Aufbau erhöht jedoch die Wartbarkeit und Debugfähigkeit des Systems. 
+In der Anfangsphase hatte der Reinforcement-Learning Agent aufgrund fehlerhafter Implementierung Schwierigkeiten zu lernen. Zum Debuggen wurde das Spiel zwischenzeitlich stark vereinfacht. Minen, Förderbänder, Verbinder wurden durch ein vereinfachtes 2x1 bzw. 1x2 Förderband mit nur vier Subtypen ersetzt. Auch Lagerstätten und Fabriken wurden auf eine Größe von 1x1 reduziert. Eine ähnliche Spieldynamik bleibt erhalten, während die Komplexität sinkt, weil jedes Gebäude nur maximal einen Ein- und Ausgang besitzt. 
+
+
+
+

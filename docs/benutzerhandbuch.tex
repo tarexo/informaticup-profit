@@ -1,1 +1,20 @@
 \section{Benutzerhandbuch}\label{cap:benutzerhandbuch}
+\subsection{Einstellungen}
+Alle Hyperparameter der Agenten, Einstellungen für den Task Manager, sowie weitere Debug Informationen lassen sich gesammelt in der settings.py Datei einstellen. 
+Es kann beispielsweise eine andere Modell-Architektur für den untergeordneten Agenten gewählt oder die Hinderniswahrscheinlichkeit des Task Generators angepasst werden. Auch das zuvor erwähnte vereinfachte Spiel kann durch Setzen von SIMPLE\textunderscore{}GAME = True
+aktiviert werden. 
+
+\subsection{Trainieren eines untergeordneten Agenten}
+Im Anschluss an eine Änderung in settings.py muss ein neuer untergeordneter Agent mittels train\textunderscore{}model.py trainiert werden. Dies kann je nach Einstellungen und verwendeter Hardware mehrere Stunden in Anspruch nehmen. Um die Trainingszeit zu verringern, sollte in Betracht gezogen werden, die maximale Episodenzahl in settings.py zu reduzieren.
+
+\subsection{Evaluation von untergeordneten Agenten}
+Nachdem mehrere Agenten trainiert wurden, kann mithilfe von evaluate\textunderscore{}model.py überprüft werden, welches Modell die meisten Aufgaben des Task Generators lösen kann und sich somit am besten in einem Hindernis-Labyrinth bewegt. Standardmäßig wird auf verschiedenen Spielfeldgrößen von 20x20, 30x30 und 50x50 evaluiert.
+Das Ergebnis dient nur als relativer Anhaltspunkt. Es sagt nichts darüber aus, wie gut der Agent mit “echten” Aufgaben zurechtkommt, da die Aufgaben des Task Generators sich von Menschen erstellten Aufgaben unterscheiden. 
+
+\subsection{Lösen von Aufgaben}
+Wird solve\textunderscore{}game.py mit einem Pfad zu einer json-Datei aufgerufen, wird nur diese Aufgabe gelöst. Alternativ kann mit “solve” als Parameter auch eine Aufgabe über die Standardeingabe eingelesen werden. Es werden alle Ausgaben auf die Standardausgabe unterdrückt, bis zum Schluss eine Lösung als Liste von platzierbaren Gebäuden zurückgegeben wird. 
+\\\\
+Das Ausführen von solve\textunderscore{}game.py ohne weitere Parameter bewirkt, dass automatisch alle von uns definierten Aufgaben nacheinander gelöst werden. Hierbei werden auch die initiale Lösung sowie jede Verbesserung davon auf der Standardausgabe ausgegeben. Um sich einen ausführlichen Lösungsweg anzeigen zu lassen, sollte in settings.py DEBUG=True gesetzt werden. Damit werden auch fehlgeschlagene Verbindungswege schrittweise angezeigt.
+
+\subsection{Unittests}
+Durch Aufruf von all\textunderscore{}unit\textunderscore{}test.py werden alle in 4.3.4 angegebenen Unittests durchlaufen und auf mögliche Fehler hingewiesen.
