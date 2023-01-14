@@ -18,3 +18,38 @@ Das Ausführen von solve\textunderscore{}game.py ohne weitere Parameter bewirkt,
 
 \subsection{Unittests}
 Durch Aufruf von all\textunderscore{}unit\textunderscore{}test.py werden alle in 4.3.4 angegebenen Unittests durchlaufen und auf mögliche Fehler hingewiesen.
+
+\subsection{Docker}
+Das Dockerfile nutzt als Baseimage tensorflow/tensorflow, welches über www.docker.io bezogen werden kann. Dieses Image bietet bereits die meisten Pakete, die für das Projekt benötigt werden.
+\\
+Die noch nicht vorinstallierten Pakete werden während des Builds nachinstalliert. Die Pakete werden in der Datei requirements.txt aufgelistet, welche sich im selben Ordner wie das Dockerfile befinden muss.
+\\\\
+Als Entrypoint nutzt das Image den Befehl python solve\textunderscore{}game.py solve. Dieses Skript erwartet über die Standardeingabe ein JSON-String, versucht das Problem zu lösen und gibt, ebenfalls über die Standardausgabe, die Lösung als JSON aus.
+\\
+Um das Image erfolgreich zu bauen, muss folgende Ordnerstruktur vorliegen:
+\begin{itemize}
+	\item Dockerfile
+	\item requirements.txt
+	\item informaticup-profit
+	\begin{itemize}
+		\item solve\textunderscore{}game.py
+		\item ...
+	\end{itemize}
+\end{itemize}
+
+Mit 
+\begin{verbatim}docker build . --tag <tag_name>\end{verbatim}
+lässt sich ein Build triggern. 
+\\
+Ein Container zu starten nutzt man folgenden Befehl:
+\begin{verbatim}docker run -i --rm --network none --cpus 2.000 --memory 2G --memory-swap 2g <tag_name>\end{verbatim}
+
+Das Skript wird direkt gestartet und eine Eingabeaufforderung erscheint. 
+
+Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem man Pipes nutzt:
+\begin{verbatim}echo “{ ‘Aufgabe’: 123}” | docker run -i --rm --network none --cpus 
+	2.000 --memory 2G --memory-swap 2g <tag_name>\end{verbatim}
+
+
+
+
