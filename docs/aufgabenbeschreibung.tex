@@ -54,7 +54,49 @@ Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen 
 \subsection{Spielablauf}
 Das Spiel läuft rundenbasiert ab. Jede Runde beginnt mit einer “Beginn der Runde”-Aktion und endet mit einer “Ende der Runde”-Aktion.
 Die folgende Tabelle definiert die Aktionen der einzelnen Objekte. 
-
+\begin{table}
+\begin{center}
+\begin{tabular}{ | l | l | l | } 
+	\hline
+	\textbf{Objekt}& \textbf{Beginn der Runde} & \textbf{Ende der Runde} \\ \hline
+	Mine & Nimmt Ressourcen auf & Gibt angenommene Ressourcen weiter \\ \hline
+	Förderband & Nimmt Ressourcen auf & Gibt angenommene Ressourcen weiter \\ \hline
+	Verbinder & Nimmt Ressourcen auf & Gibt angenommene Ressourcen weiter \\ \hline
+	Fabrik & Nimmt Ressourcen auf & Produziert so viele Produkte wie Ressourcen da sind \\ \hline
+	Lagerstätte & - & Gibt bis zu 3 Ressourcen an jeden Eingang einer Mine \\ \hline
+\end{tabular}
+\caption{Beschreibung der Aktionen \dq Beginn der Runde\dq  und \dq Ende der Runde\dq }
+\end{center}
+\end{table}
+Das Spielfeld hat neben der Feldgröße und den vorhandenen Objekten auch das Attribut “turns”. Dieses Attribut gibt die maximal erlaubte Anzahl an Spielrunden an.
+\\\\\
+Pro Runde werden Ressourcen von Lagerstätten abgebaut und Stück für Stück über die gebauten Förderbänder und gegebenenfalls Verbinder zu einer Fabrik befördert. Wenn eine oder alle Ressourcen eines Produktes abgebaut wurden und damit kein weiteres Produkt mehr produziert werden kann, stoppt die Produktion dieser Fabrik. Ist das bei allen gebauten Fabriken der Fall, so endet das Spiel und der Spieler erhält eine Gesamtpunktzahl und die Anzahl der dafür benötigten Runden.
+\\\\
+Das Ziel des Spiels ist es, die Punktezahl zu maximieren und die Rundenanzahl zu minimieren.
 
 
 \subsection{Darstellung in JSON}
+Der Input des Spiels erfolgt im JSON-Format, in dem Lagerstätten, Hindernisse und Produkte definiert sind. Das JSON für das Beispiel in Abbildung \ref{fig:task1_json} sieht wie folgt aus:
+\bild{1}{task1_json.jpg}{JSON Darstellung einer Aufgabe}{fig:task1_json}
+Das Spielfeld wird durch die angegebene Breite (width) und Höhe(height) definiert. Es enthält fünf verschiedene Objekte (objects), drei Lagerstätten und zwei Hindernisse. Jedes dieser Objekte besitzt eine x- und y-Koordinate, die die Position im Feld bestimmt, sowie eine Höhe und eine Breite. Lagerstätten haben einen Subtyp, welcher die hier verfügbare Ressource festlegt. Nach den Objekten werden die Produkte definiert. Im JSON sind hierfür der Subtyp, die benötigten Ressourcen (ressources) pro Produkt und die Anzahl an Punkten (points) pro Produkt angegeben. Die Position der Ressource im Array bestimmt den jeweiligen Subtyp.
+\\\\
+Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaften des Objekts definiert. In folgender Tabelle wird für jeden Typ ein beispielhafter JSON-String aufgeführt:
+
+\begin{table}
+	\begin{center}
+		\begin{tabular}{ | l | l | } 
+			\hline
+			\textbf{Objekt}& \textbf{JSON}\\  \hline
+			Mine & \{"type":"mine", "subtype":0, "x":0, "y":0\}\\ \hline
+			Förderband & \{"type":"conveyor", "subtype":0, "x":0, "y":0\} \\ \hline
+			Verbinder & \{"type":"combiner", "subtype":0, "x":0, "y":0\} \\ \hline
+			Fabrik & \{"type":"factory", "subtype":0, "x":0, "y":0\}\\ \hline
+			Lagerstätte & \{"type":"deposit", "subtype":0, "x":0, "y":0, "width":1, "height":1\}  \\ \hline
+			Hindernisse & \{"type":"obstacle", "x":0, "y":0, "width":1, "height":1\}\\\hline
+		\end{tabular}
+		\caption{Beschreibung der Aktionen \dq Beginn der Runde\dq  und \dq Ende der Runde\dq }
+	\end{center}
+\end{table}
+
+
+
