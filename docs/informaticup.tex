@@ -17,10 +17,10 @@ linkcolor=black
 \usepackage{fancyhdr}
 \pagestyle{fancy} %vordefinierter Style
 \fancyhf{}
-\fancyhead[R]{\includegraphics[scale=.1]{images/rwu_logo.png}}
+
 \renewcommand{\headrulewidth}{0pt}
 
-
+% \raggedright
 %\DeclareMathOperator*{\E}{\mathbb{E}}
 
 
@@ -44,9 +44,10 @@ linkcolor=black
 \newcommand{\zitat}[2]{\citep[#1]{#2} }
 \pagenumbering{gobble}
 \begin{document}
+	\setlength{\parindent}{0pt}
 	\fancyhf{}
+	\fancyhead[L]{\includegraphics[scale=.4]{images/informaticup-logo-with-text.png}}
 	\fancyhead[R]{\includegraphics[scale=.1]{images/rwu_logo.png}}
-	\fancyhead[L]{Informaticup 2023}
 	\include{title}
 	\renewcommand{\headrulewidth}{0.5pt}
 	\setcounter{page}{0}
@@ -55,8 +56,8 @@ linkcolor=black
 	
 	\tableofcontents
 	%\newpage
-	%\listoffigures
-	%\listoftables
+	\listoffigures
+	\listoftables
 	%Einleitung
 	\include{einleitung}
 	\include{aufgabenbeschreibung}

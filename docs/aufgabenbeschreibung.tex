@@ -1,26 +1,24 @@
 \section{Aufgabenbeschreibung}\label{cap:aufgabenbeschriebung}
 Die Aufgabe des InformatiCups 2023 ist das Lösen und Optimieren des rundenbasierten Spiels “Profit!”. 
 \\\\
-Das Spiel simuliert rundenbasierte Prozesse, in denen durch das Platzieren von verschiedenen Gebäude Ressourcen abgebaut und Produkte erstellt werden können. Das Herstellen von Produkten wird mit Punkten belohnt, wobei das Ziel das Maximieren dieser Punkte ist.
+Das Spiel simuliert rundenbasierte Prozesse, in denen durch das Platzieren von verschiedenen Gebäude Ressourcen abgebaut und Produkte erstellt werden können. Das Herstellen von Produkten wird mit Punkten belohnt, wobei das Ziel das Maximieren dieser Punkte ist. Die Anzahl der benötigten Runden soll minimiert werden, allerdings hat das maximieren der Punkte eine höhere Priorität.
 \\\\
 In den folgenden Abschnitten werden die Regeln und der Ablauf des Spiels sowie die Codierung des Spiels im JSON-Format kurz erläutert.
 
 \subsection{Spielregeln}\label{cap:spielregeln}
-Das Spielfeld besteht aus einem maximal 100x100 großen Rastergitter. Ein Raster ist entweder leer oder durch ein Objekt besetzt.
+Das Spielfeld besteht aus einem maximal 100x100 großen Rasterfeld. Ein Feld ist entweder leer oder durch ein Objekt besetzt. Das linke obere Feld befindet sich an der Stelle (0,0), die rechte untere an (Breite-1, Höhe-1). Die Größe des Spielfeldes ist für jede Aufgabe vorgegeben. Gebäude können Ein- und Ausgänge besitzen, über die Ressourcen an angrenzende Gebäude weitergegeben werden. An einen Ausgang darf maximal ein Eingang horizontal oder vertikal angrenzen. An einen Eingang dürfen jedoch mehrere Ausgänge anliegen, was bewirkt, dass Ressourceflüsse zusammengeführt werden. 
 \\\\
-Die Abbildung ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel ist das Feld 30x20 groß und enthält drei Lagerstätten mit den Ressourcen Subtyp 0, 1 und 2, sowie zwei Hindernisse.
+Zu Beginn des Spiels sind bereits Hindernisse und Lagerstätten mit Ressourcen vorhanden.
+Ebenso werden die maximale Rundenanzahl und die Produkte, die produziert werden können, festgelegt
+\\\\
+Die Abbildung \ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel ist das Feld 30x20 groß und enthält drei Lagerstätten mit den Ressourcen Subtyp 0, 1 und 2, sowie zwei Hindernisse.
 %#1 Größe
 %#2 Dateiname
 %#3 Bildunterschrift
 %#4 Label
 \bild{1}{task1.jpg}{Beispielumgebung eines Profit-Spiels}{fig:task1}
 
-Das linke obere Raster befindet sich an der Stelle (0,0), die rechte untere (Breite-1, Höhe-1). Die Größe des Spielfeldes ist pro Spiel vorgegeben.
-\\\\
-Zu Beginn des Spiels sind bereits Hindernisse und Lagerstätten mit Ressourcen vorhanden.
-Ebenso werden die maximale Rundenanzahl und die Produkte, die produziert werden können, festgelegt.
-\\\\
-Die Menge an Ressourcen einer Lagerstätte wird durch die Größe der Lagerstätte festgelegt. Diese wird durch die Menge an Rastern~x~5 festgelegt. Ist also eine Lagerstätte $3 \cdot 3$  dann enthält es $3 \cdot 3\cdot 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7).
+Die Menge an Ressourcen einer Lagerstätte wird durch die Größe der Lagerstätte festgelegt.  Diese wird  auf das Fünffache der Anzahl an Lagerstättenfelder gesetzt. Ist also eine Lagerstätte $3 x 3$ groß dann enthält es $3x 3 x 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7).
 \\\\
 Hindernisse im Spielfeld stellen Felder dar, in denen kein anderes Gebäude gebaut werden kann. Diese sind beliebig groß, haben aber immer eine rechteckige Form. 
 \\\\
@@ -33,9 +31,9 @@ Um die Ressourcen in den Lagerstätten abzubauen, gibt es Minen. Sie ist 4x2 ode
 Jede Mine hat einen Eingang (+) und einen Ausgang (-). Der Eingang muss an einem Ausgang einer Lagerstätte anliegen, um die Ressourcen abzubauen. An dem Ausgang können Eingänge von Förderbändern, Verbindern oder Fabriken anliegen. 
 \\\\
 \textbf{Förderband}\\
-Um Ressourcen von einer Lagerstätte zu einer Fabrik zu befördern, können Förderbänder genutzt werden. Förderbänder sind nicht zwangsläufig notwendig. Sie stellen zusätzliche Verbindungsstücke zwischen Mine und Verbinder, Mine und Fabrik oder Verbinder und Fabrik dar.
+Um Ressourcen von einer Lagerstätte zu einer Fabrik zu befördern, können Förderbänder genutzt werden. Sie stellen zusätzliche Verbindungsstücke zwischen Mine und Verbinder, Mine und Fabrik oder Verbinder und Fabrik dar.
 \\\\
-Diese haben wie andere Objekte auch einen Eingang (+) und einen Ausgang (-). Ein Förderband ist entweder 3 oder 4 Raster lang und kann, wie in der Abbildung \ref{fig:conveyor} gezeigt, je in vier Subtypen mit unterschiedlicher Ausrichtung verwendet werden. Somit hat das Förderband insgesamt acht Subtypen.
+Förderbänder haben einen Eingang (+) und einen Ausgang (-) und ist entweder 3 oder 4 Felder lang. Die Abbildung \ref{fig:conveyor} zeigt die je in vier Subtypen mit unterschiedlicher Ausrichtung. Somit hat das Förderband insgesamt acht Subtypen.
 \bild{0.5}{conveyor.jpg}{Darstellung der acht Förderband-Subtypen}{fig:conveyor}
 Im Gegensatz zu allen anderen Objekten dürfen sich Förderbänder auch kreuzen.
 \\\\
@@ -43,10 +41,10 @@ Im Gegensatz zu allen anderen Objekten dürfen sich Förderbänder auch kreuzen.
 Wenn ein Produkt mehrere Ressourcen benötigt, können diese mit einem Verbinder zusammengeführt und gemeinsam zur Fabrik befördert werden. 
 \\
 Ein Verbinder hat drei Eingänge (+) und einen Ausgang (-). Auch hier gibt es vier Subtypen, die jeweils die Rotation des Verbinders bestimmen (Abbildung \ref{fig:combiner}).
-\bild{0.5}{combiner.jpg}{Darstellung der acht Förderband-Subtypen}{fig:combiner}
+\bild{0.5}{combiner.jpg}{Darstellung der vier Verbinder-Subtypen}{fig:combiner}
 \\\\
 \textbf{Fabrik}\\
-Für jede Fabrik ist definiert, wie viele und welche Ressourcen gebraucht werden, um ein Produkt herzustellen. Da es maximal acht Produkte geben kann, gibt es von der Fabrik insgesamt acht verschiedene Subtypen, für jedes Produkt einen. Jede Fabrik ist 5x5 groß. Die äußeren Raster sind Eingänge für Ressourcen, insgesamt 16.
+Für jede Fabrik ist definiert, wie viele und welche Ressourcen gebraucht werden, um ein Produkt herzustellen. Da es maximal acht Produkte geben kann, gibt es von der Fabrik insgesamt acht verschiedene Subtypen, für jedes Produkt einen. Jede Fabrik ist $5x5$ groß. Die äußeren Felder sind Eingänge für Ressourcen, insgesamt 16.
 \\
 Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen von den Lagerstätten zur Fabrik befördert. Die Abbildung \ref{fig:factory} zeigt, wie so ein Aufbau aussehen kann. Im Beispiel benötigt das Produkt 0 die Ressourcen 0 und 1.
 \bild{0.5}{solved_task.jpg}{Darstellung der acht Förderband-Subtypen}{fig:factory}
@@ -54,7 +52,7 @@ Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen 
 \subsection{Spielablauf}
 Das Spiel läuft rundenbasiert ab. Jede Runde beginnt mit einer “Beginn der Runde”-Aktion und endet mit einer “Ende der Runde”-Aktion.
 Die folgende Tabelle definiert die Aktionen der einzelnen Objekte. 
-\begin{table}
+\begin{table}[htp]
 \begin{center}
 \begin{tabular}{ | l | l | l | } 
 	\hline
@@ -65,22 +63,22 @@ Die folgende Tabelle definiert die Aktionen der einzelnen Objekte.
 	Fabrik & Nimmt Ressourcen auf & Produziert so viele Produkte wie Ressourcen da sind \\ \hline
 	Lagerstätte & - & Gibt bis zu 3 Ressourcen an jeden Eingang einer Mine \\ \hline
 \end{tabular}
-\caption{Beschreibung der Aktionen \dq{}Beginn der Runde\dq  und \dq{}Ende der Runde\dq }
+\caption{Beschreibung der Aktionen der einzelnen Objekte}
 \end{center}
 \end{table}
 Das Spielfeld hat neben der Feldgröße und den vorhandenen Objekten auch das Attribut “turns”. Dieses Attribut gibt die maximal erlaubte Anzahl an Spielrunden an.
 \\\\\
-Pro Runde werden Ressourcen von Lagerstätten abgebaut und Stück für Stück über die gebauten Förderbänder und gegebenenfalls Verbinder zu einer Fabrik befördert. Wenn eine oder alle Ressourcen eines Produktes abgebaut wurden und damit kein weiteres Produkt mehr produziert werden kann, stoppt die Produktion dieser Fabrik. Ist das bei allen gebauten Fabriken der Fall, so endet das Spiel und der Spieler erhält eine Gesamtpunktzahl und die Anzahl der dafür benötigten Runden.
+Pro Runde werden Ressourcen von Lagerstätten mit Hilfe von Minen abgebaut und Stück für Stück über die gebauten Förderbänder und gegebenenfalls Verbinder zu einer Fabrik befördert. Wenn eine oder alle Ressourcen eines Produktes abgebaut wurden und damit kein weiteres Produkt mehr produziert werden kann, stoppt die Produktion dieser Fabrik. Ist das bei allen gebauten Fabriken der Fall, so endet das Spiel und der Spieler erhält eine Gesamtpunktzahl und die Anzahl der dafür benötigten Runden. Das Spiel kann auch vorzeitig beendet werden, wenn die vordefinierte maximale Rundenanzahl erreicht wird.
 \\\\
-Das Ziel des Spiels ist es, die Punktezahl zu maximieren und die Rundenanzahl zu minimieren.
+Das Ziel des Spiels ist es, die Punktezahl zu maximieren und dabei als Nebenziel die Rundenanzahl zu minimieren.
 
 
 \subsection{Darstellung in JSON}
-Der Input des Spiels erfolgt im JSON-Format, in dem Lagerstätten, Hindernisse und Produkte definiert sind. Das JSON für das Beispiel in Abbildung \ref{fig:task1_json} sieht wie folgt aus:
+Der Input des Spiels erfolgt im JSON-Format (JavaScript Object Notation), in dem Lagerstätten, Hindernisse und Produkte definiert sind. Das JSON für das Beispiel in Abbildung \ref{fig:task1} wird in der Abbildung \ref{fig:task1_json} dargestellt.
 \bild{1}{task1_json.jpg}{JSON Darstellung einer Aufgabe}{fig:task1_json}
-Das Spielfeld wird durch die angegebene Breite (width) und Höhe(height) definiert. Es enthält fünf verschiedene Objekte (objects), drei Lagerstätten und zwei Hindernisse. Jedes dieser Objekte besitzt eine x- und y-Koordinate, die die Position im Feld bestimmt, sowie eine Höhe und eine Breite. Lagerstätten haben einen Subtyp, welcher die hier verfügbare Ressource festlegt. Nach den Objekten werden die Produkte definiert. Im JSON sind hierfür der Subtyp, die benötigten Ressourcen (ressources) pro Produkt und die Anzahl an Punkten (points) pro Produkt angegeben. Die Position der Ressource im Array bestimmt den jeweiligen Subtyp.
+Das Spielfeld wird durch die angegebene Breite und Höhe definiert. Es enthält fünf verschiedene Objekte, drei Lagerstätten und zwei Hindernisse. Jedes dieser Objekte besitzt eine x- und y-Koordinate, die die Position im Feld bestimmt, sowie eine Höhe und eine Breite. Lagerstätten haben einen Subtyp, welcher die hier verfügbare Ressource festlegt. Nach den Objekten werden die Produkte definiert. Im JSON sind hierfür der Subtyp, die benötigten Ressourcen pro Produkt und die Anzahl an Punkten pro Produkt angegeben. Die Position der Ressource im Array bestimmt den jeweiligen Subtyp.
 \\\\
-Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaften des Objekts definiert. In folgender Tabelle wird für jeden Typ ein beispielhafter JSON-String aufgeführt:
+Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaften des Objekts definiert. In folgender Tabelle \ref{tab:json} wird für jeden Typ ein beispielhafter JSON-String aufgeführt:
 
 \begin{table}
 	\begin{center}
@@ -94,7 +92,8 @@ Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaf
 			Lagerstätte & \{"type":"deposit", "subtype":0, "x":0, "y":0, "width":1, "height":1\}  \\ \hline
 			Hindernisse & \{"type":"obstacle", "x":0, "y":0, "width":1, "height":1\}\\\hline
 		\end{tabular}
-		\caption{Beschreibung der JSON Struktur einzelner Objekte }
+		
+		\caption{Beschreibung der JSON Struktur einzelner Objekte }\label{tab:json}
 	\end{center}
 \end{table}
 
