@@ -247,13 +247,12 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         if sys.argv[1] == "solve":
             temp_task_filename = "temp_task.json"
-            task = input()
+            task = input().replace("'", "")
             with open(temp_task_filename, "w") as f:
                 f.write(task)
 
             solve_single_task(temp_task_filename)
             os.remove(temp_task_filename)
-
         else:
             filename = sys.argv[1]
             solve_single_task(filename)
