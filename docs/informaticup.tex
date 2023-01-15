@@ -1,24 +1,29 @@
 \documentclass[12pt,a4paper]{article}
-
+\usepackage{array}
 \usepackage{color}
 \usepackage[ngerman]{babel}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{anysize}
-\usepackage{geometry}
-\geometry{
-	left=2.5cm,
-	right=2.5cm,
-	top=2.5cm,
-	bottom=2.5cm
-} 
+\usepackage[
+colorlinks=true,
+urlcolor=blue,
+linkcolor=black,
+citecolor = black
+]{hyperref}
+
+\usepackage[a4paper,margin=3cm, headsep=24pt, headheight=2cm]{geometry}
+\usepackage[square,sort,comma,numbers]{natbib}
+
 \usepackage{fancyhdr}
 \pagestyle{fancy} %vordefinierter Style
 \fancyhf{}
-\fancyhead[R]{\includegraphics[scale=.1]{images/rwu_logo.png}}
+
 \renewcommand{\headrulewidth}{0pt}
 
-\usepackage[square,sort,comma,numbers]{natbib}
+% \raggedright
+%\DeclareMathOperator*{\E}{\mathbb{E}}
+
 
 %Neues Kommando Bild
 %#1 Größe
@@ -40,17 +45,26 @@
 \newcommand{\zitat}[2]{\citep[#1]{#2} }
 \pagenumbering{gobble}
 \begin{document}
+	\setlength{\parindent}{0pt}
 	\fancyhf{}
+	\fancyhead[L]{\includegraphics[scale=.4]{images/informaticup-logo-with-text.png}}
 	\fancyhead[R]{\includegraphics[scale=.1]{images/rwu_logo.png}}
-	\fancyhead[L]{Informaticup 2023}
 	\include{title}
 	\renewcommand{\headrulewidth}{0.5pt}
 	\setcounter{page}{0}
 	\fancyhead[C]{\bfseries\sffamily\thepage}
-	\pagenumbering{arabic}
+	\pagenumbering{Roman}
 	
 	\tableofcontents
+	\newpage
+	\cleardoublepage
+	\addcontentsline{toc}{section}{Abbildungsverzeichnis}
+	\listoffigures
+	\newpage
+	\addcontentsline{toc}{section}{Tabellenverzeichnis}
+	\listoftables
 	%Einleitung
+	
 	\include{einleitung}
 	\include{aufgabenbeschreibung}
 	
@@ -69,5 +83,6 @@
 	\bibliographystyle{alphadin}
 	\bibliography{Quellen}
 	
+	\include{anhang}
 	
 \end{document}

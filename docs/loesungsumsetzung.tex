@@ -1,13 +1,183 @@
-\section{Lösungsumsetzung}
-
+\section{Lösungsumsetzung}\label{cap:umsetzung}
+In diesem Kapitel wird die Umsetzung des Projekts beschrieben. Hierfür wurde eine Mischung aus einem DQN und einem regelbasierten Ansatz gewählt. 
 \subsection{Programmiersprache und Bibliotheken}
+Das Projekt wurde in der Programmiersprache Python umgesetzt. Diese bietet eine einfache und übersichtliche Syntax, sowie große Unterstützung von vielen Bibliotheken im ML-Bereich.
+\\
+Neben Numpy und Pandas zur Datenverarbeitung, wird TensorFlow bzw. Keras genutzt, um verschiedene neuronale Netzwerke aufzubauen und zu trainieren. Die \mbox{OpenAI~Gym} vereinfacht die Interaktion zwischen dem RL-Agent mit der erstellten Implementierung der \dq{}Profit!\dq{}-Umgebung.
+\\
+Für einen einheitlichen Code wurden folgende Code Konventionen eingehalten.
+\begin{table}[htp]
+	\begin{center}
+		\begin{tabular}{ | l | l | } 
+		 \hline
+			Klassennamen & \dq{}UpperCamelCase\dq{}-Variante \\ \hline
+			Konstanten &  \dq{}SNAKE\textunderscore{}CASE\textunderscore{}ALL\textunderscore{}CAPS \dq{}-Variante \\ \hline
+			Variablen &  \dq{}lower\textunderscore{}snake\textunderscore{}case \dq{}-Variante\\ \hline
+			Funktionen & \dq{}lower\textunderscore{}snake\textunderscore{}case \dq{}-Variante \\ \hline
+		\end{tabular}
+		\caption{Beschreibung der Code Konventionen}
+	\end{center}
+\end{table}
+
+
 \subsection{Grundidee}
+Bei “Profit!” handelt es sich um ein Einzelspieler-Spiel mit einer deterministischen Umgebung, in der es keine versteckten Informationen gibt. Eine Implementierung des Spiels wurde über die Webseite \url{https://profit.phinau.de/} bereitgestellt, in der ein Mensch mittels “drag \& drop” Gebäude platzieren und den Ressourcenabbau simulieren kann. Diese Umgebung wurde in Python nach implementiert, um die volle Kontrolle über die Spieldynamik zu erhalten. Somit können RL-Agenten uneingeschränkt ihre Umgebung abfragen.
+\\\\
+Das Spiel hat in seiner Grundform aufgrund des bis zu $100\times100$ großen Spielfeldes einen sehr großen Zustands- und Aktionsraum, weshalb die Entscheidung gefallen ist, das Problem nach dem Teile-und-Herrsche-Prinzip in mehrere Teilprobleme zu zerlegen.
+\\\\
+Um eine geeignete Abstraktion zu finden, wurde sich daran orientiert wie ein Mensch beim “Profit”-Spiel spielen üblicherweise vorgehen würde: Anstatt im ganzen Spielfeld unzusammenhängende Gebäude zu platzieren, geht ein menschlicher Spieler (in der Regel) systematischer vor, indem er als erstes eine Fabrik an einer geeigneten Position platziert und von einer Lagerstätte ausgehend aneinander schließende Gebäude setzt, bis eine Verbindung zur Fabrik hergestellt wurde. Dabei behält ein menschlicher Spieler einen groben Überblick über das ganze Spielfeld, um die ungefähre Richtung, in die er bauen möchte, zu bestimmen. Um mögliche Hindernisse und Sackgassen zu vermeiden oder Förderbänder mit anderen Förderbändern zu überkreuzen, wird die lokale Umgebung des zuletzt gesetzten Gebäudes betrachtet, um das optimale Bauteil auszuwählen. 
+\\\\
+Anhand dieser Vorgehensweise ist ersichtlich, dass ein Agent für das Verbinden eines beliebigen Startgebäudes mit einer Fabrik zuständig sein soll. Dieser Agent soll ähnlich wie ein menschlicher Spieler aneinander angrenzende Gebäude platzieren, bis das Zielgebäude  erreicht ist. 
+Minen, Förderbänder und Verbinder besitzen alle nur einen Ausgang. Lagerstätten können viele verschiedene Ausgänge haben. 
+Zur vereinfachten Implementierung wurde sich dafür entschieden, eine Mine als Startgebäude des Agentens anstatt einer Lagerstätte zu verwenden. 
+Somit wird die Position des Agenten auf den einzigen Ausgang des zuletzt platzierten Gebäudes gelegt. Des Weiteren müssen nur vier benachbarte Positionen in Betracht gezogen werden, an denen der Eingang eines neuen Gebäudes platziert werden kann. 
+\\\\
+Um “Profit!” zu lösen, braucht es noch einen weiteren Agenten, der bestimmt, welche Lagerstätte bzw. Mine mit welcher Fabrik verbunden werden soll und was zu tun ist, falls eine Verbindung nicht hergestellt werden kann. Außerdem muss dieser Agent bestimmen, wo Fabriken und Minen platziert werden sollen, damit der erste Agent diese verbinden kann.
+\\\\
+Im Weiteren wird der erste Agent als untergeordnet und der zweite als übergeordnet bezeichnet. Beide können sowohl durch RL-Methoden trainiert, als auch mit Hilfe eines regelbasierten Ansatzes gelöst werden. 
+
 \subsection{“Profit!” Umgebung}
-\subsubsection{Buildings}
-\subsubsection{Spiel-Simulation}
-\subsubsection{Optimale Score}
-\subsubsection{Testing}
+Der erste Schritt der Lösungsumsetzung war das Nachimplementieren von \dq{}Profit!\dq.  Hierfür wurde eine Umgebungsklasse (Environment) erstellt, die wie die Umgebung der Website agieren soll. Die Umgebung kann aus einer JSON-Datei erstellt werden und hat auch die gleichen Eigenschaften. Anfangs beinhaltet sie nur Lagerstätte und Hindernisse. Über Methoden lassen sich dann die in Kapitel \ref{cap:aufgabenbeschriebung} beschriebene Gebäude hinzufügen.
+Eine fehlerhafte Umgebung könnte dafür sorgen, dass die Lösung unzulässige Gebäude verwendet.
+Daher war es wichtig, dass diese Umgebung mit allen dazugehörigen Klassen korrekt umgesetzt wurde. Um dies sicherzustellen wurden Unittests für die einzelnen Funkionen implementiert
+\\\\
+Die folgenden Abschnitte beschreiben, wie sich diese Profit Umgebung zusammensetzt und wie sie getestet wurden.
+
+\subsubsection*{Environment-Klasse und Gebäude}
+Die \textit{Environment}-Klasse prüft für jedes neu platzierte Gebäude, ob alle in \ref{cap:spielregeln} definierten Regeln eingehalten werden. Jedes Gebäude speichert alle Referenzen zu an eigenen Ausgängen angrenzenden Gebäuden. Somit ist es einfach rekursiv zu ermitteln, ob eine Lagerstätte mit einer Fabrik verbunden ist.
+Die Gebäude selber erben alle von ihrer Basisklasse \textit{Building}. Die \textit{Building}-Klasse enthält die Attribute die alle Gebäude gemeinsam haben: Eine $x$- und $y$-Koordinate, einen Subtypen und eine Form. Sie beinhaltet auch verschiedene Funktionen die für das verwenden von Gebäuden wichtig sind. Lagerstätte und Hindernisse erben von der sogenannten \textit{UnplaceableBuildings}-Klasse, welche wiederum von \textit{Building} erbt. Damit soll sichergestellt werden, dass keine weiteren Lagerstätte oder Hindernisse vom Agenten gebaut werden können. Die Abbildung \ref{fig:buildings} zeigt ein Klassendiagramm der Gebäudetyen.
+\bild{1}{Classdiagramm_builldings.png}{Klassendiagramm der Gebäudetypen}{fig:buildings}
+
+Die \textit{Environment}-Klasse kennt die Gebäude und kann sie als Objekte in die Umgebung aufnehmen. 
+Gelöste Aufgaben werden als JSON-Datei unter dem Pfad \\\textit{/tasks/solutions} gespeichert und die Liste an platzierbaren Gebäuden wird ausgegeben. Alternativ kann eine für Menschen lesbare Repräsentation des Spielfeldes auf der Standardausgabe ausgegeben werden.
+Um das Spiel zu simulieren gibt es die Spiel Simulation, welche im nächsten Abschnitt vorgestellt wird.
+
+
+\subsubsection*{Spiel-Simulation}
+Die Simulation des Spiels dient zur Überprüfung der erreichten Punktzahl eines gegebenen Spielfelds. Zusätzlich wird die Anzahl der benötigten Runden ermittelt, um die angegebene Punktzahl zu erreichen. Der Simulator befindet sich in der Datei \textit{simulator.py} und ist als Klasse implementiert.
+\\\\
+Bei der Initialisierung einer Klasseninstanz wird dem Konstruktor eine Instanz der \textit{Environment}-Klasse übergeben. Diese enthält alle Informationen über die auf dem Spielfeld befindlichen Objekte, deren Position und die jeweiligen Verbindungen zwischen ihnen. Außerdem können der \textit{Environment}-Klasse die für dieses Spiel möglichen Produkte und das dazugehörige Rezept entnommen werden.
+\\\\
+Jedes platzierbare Objekt verfügt über einen eigenen Cache und einen internen Ressourcenspeicher, welcher die Anzahl der aktuell gehaltenen Ressourcen des jeweiligen Objekts angibt. Zusätzlich hat jedes Objekt typabhängig eine Funktion, welche zum Beginn (\textit{start\textunderscore{}of\textunderscore{}round\textunderscore{}action}) und zum Ende (\textit{end\textunderscore{}of\textunderscore{}round\textunderscore{}action}) einer Runde aufgerufen wird.
+\\\\
+Die \textit{start\textunderscore{}of\textunderscore{}round\textunderscore{}action}-Funktion des Förderbandes beispielsweise entnimmt alle im Cache befindlichen Ressourcen und fügt diese dem internen Speicher hinzu. Am Ende der Runde überträgt die  \textit{end\textunderscore{}of\textunderscore{}round\textunderscore{}action}-Funktion die im Speicher befindlichen Ressourcen in den Cache des Ausgangs des befindlichen Objekts.
+\\\\
+Während der Simulation wird zum Start einer Runde in zufälliger Reihenfolge die \textit{start\textunderscore{}of\textunderscore{}round\textunderscore{}action}-Funktion jedes Objekts aufgerufen. Anschließend werden die \textit{end\textunderscore{}of\textunderscore{}round\textunderscore{}action}-Funktionen aufgerufen. Eventuell entstehende Produkte und damit Punkte werden mit der bisherigen Gesamtpunktzahl summiert.
+\\\\
+Der Simulator gibt nach Abschluss der Simulation die erreichte Gesamtpunktzahl sowie die dafür benötigten Runden zurück.
+
+\subsubsection*{Optimal Score}
+Mit dem Optimal Score kann für eine gegebene Umgebung ermittelt werden, welche Punktezahl in der Theorie maximal erreicht werden kann. Außerdem wird ermittelt, welche Kombination von Produkten zu dieser optimalen Punktzahl führen. Wenn mehrere Produkte sich Ressourcen teilen müssen, kann es sein, dass es besser ist, ein Produkt wegzulassen, damit dieses einem anderen Produkt nicht die Ressourcen wegnimmt. 
+Für die Berechnung wird angenommen, dass ideale Bedingungen herrschen. Die Positionen, an welchen sich die Lagerstätte und Hindernisse befinden, werden nicht in Betracht gezogen. 
+Im ersten Schritt wird eine Liste erstellt, die alle möglichen Kombinationen von Produkten enthält. Anschließend wird für jede Produktkombination der Optimal Score berechnet. Der Score und die Produktkombination werden in eine Liste geschrieben, welche sortiert ausgegeben wird.  Die Rückgabe des Optimal Scores ist also eine sortierte Liste an Scores und Produktkombinationen, wobei die beste Kombination an erster Stelle steht.
+\\\\
+Um den Score für ein einzelnes Produkt zu berechnen, werden die Punktezahl sowie die benötigten Ressourcen des Produkts gebraucht, ebenso wie die Lagerstätte und die Gesamtressourcen der Umgebung. Die Anzahl der Runden wird um zwei reduziert, da mindestens zwei Runden gebraucht werden, bis eine Ressource eine Fabrik erreicht.
+\\\\
+Die Berechnung des Optimal Scores erstellt einen Vektor mit den Ressourcen aller Lagerstätten, die vom Produkt gebraucht werden. Ebenso wird ein Vektor erstellt, welcher die maximale Anzahl aller Minen beinhaltet. Eine Lagerstätte von der Breite $b$ und der Höhe $h$ kann platzbedingt maximal $b\cdot h$ Minen versorgen. Dieser Vektor wird anschließend mit drei multipliziert, da jede Mine pro Runde drei Ressourcen aufnehmen kann.
+\\\\
+Der Ressourcenvektor wird anschließend durch den Minenvektor geteilt. Dadurch wird ermittelt, wie viele Runden mindestens gebraucht werden, um alle Ressourcen abzubauen. Ist diese Zahl kleiner als die gegebene Rundenzahl-2, dann wird der Ressourcenvektor durch den Produktressourcenvektor geteilt, wodurch sich die Anzahl an maximal zu produzierenden Produkten ergibt. Diese Zahl wird mit der Produktpunktzahl multipliziert, wodurch sich der optimale Score für dieses Produkt ergibt.
+Ist die errechnete Mindestrundenzahl größer als die gegebene, so wird ermittelt, wie viele Produkte in den gegebenen Runden maximal produziert werden können. Hier wird der Minenvektor mit der Anzahl der Runden multipliziert und durch den Produktressourcenvektor geteilt. Das Ergebnis sind die maximal reproduzierbaren Produkte, welche mit der Produktpunktzahl multipliziert den optimalen Score ergibt.
+\\\\
+Wenn mehrere Produkte existieren, so gibt es zwei Möglichkeiten. Entweder die Ressourcen für die Produkte sind unabhängig voneinander, dann wird der Optimal Score aller Produkte addiert, oder Produkte teilen sich Ressourcen. Ist das der Fall, dann wird der Eintrag im Ressourcenvektor durch die Anzahl an Produkten, die sich diese Ressource teilen, geteilt.
+Anschließend wird der Optimal Score für jedes Produkt berechnet und addiert.
+\\\\
+Der Optimal Score entspricht nicht dem tatsächlich möglich erreichbaren besten Wert. Da die Position der Lagerstätten und Hindernisse nicht beachtet wird, kann nicht überprüft werden, wie viele Minen tatsächlich verwendet werden können und wie viele Runden eine Ressource tatsächlich benötigt, um eine Fabrik zu erreichen.
+Der Optimal Score soll nur eine Aussage darüber geben, welche Punktzahl für ein Produkt gut ist und wann eine Lösung nicht weiter verbessert werden kann. 
+
+\subsubsection*{Testing}
+Der Code wurde mit dem Unit Test Framework \textit{unittest} von Python getestet. Dieses bietet eine einfache Weise Testfälle zu definieren und auszuführen. 
+Jede Testklasse erbt von \textit{unittest.TestCase}, die Testfälle werden als Methoden die mit test beginnen angegeben. Über die assert-Funktion können verschiedene Bedingen abgeprüft werden.\zitat{}{unittest}
+Die Tests und die Implementierung des Codes wurden von unterschiedlichen Entwicklern parallel ausgeführt . Damit sollte sichergestellt werden, dass beispielsweise Denkfehler oder Bugs in der Implementierung weniger wahrscheinlich auch in den Tests vorkommen, wodurch Fehler besser entdeckt werden können. 
+Als Hilfe für die Testimplementierung wurde die Webseite \url{https://profit.phinau.de/}  verwendet. Die Webseite wurde für den Informaticup zur Verfügung gestellt und beinhaltet eine interaktive Implementierung des Spiels Profit. Die Implementierung des Spiels sollte identisch zu dem der Webseite sein.
+\\\\
+%\textbf{Environment \& Gebäudeplazierung}\\
+In den Environment-Tests werden die verschiedenen Bedingungen der \dq{}Profit!\dq{}-Umgebung und ihre Gebäude überprüft.
+Es werden mehrere Test-Umgebungen aus einem JSON-String geladen. Die daraus resultierenden Environment-Objekte werden anschließend auf mögliche Fehler in ihrer Darstellung überprüft.
+\\
+Es gibt viele verschiedene Regeln, welche Gebäude neben welchen gebaut werden dürfen. Die Gebäude-Tests platzieren Gebäude auf legale und illegale Weise in eine Umgebung und prüfen, ob diese das neue Gebäude korrekt akzeptiert bzw. verwirft. 
+Beispielsweise darf ein Feld nicht von zwei verschiedenen Gebäuden belegt werden oder Förderband-Eingänge dürfen nicht neben Lagerstätten-Ausgängen liegen. Auch die Ausrichtung der Gebäude-Objekte wird überprüft.
+In den Tests wird versucht, alle legalen und illegalen Handlungen abzudecken, um sicherzustellen, dass später keine illegalen Aktionen gelernt werden. 
+\\\\
+%\textbf{Spielsimulation}\\
+Für die Spielsimulation-Tests wird getestet, ob das endgültige Ergebnis des Spiels demselben entspricht wie dem der zur Verfügung gestellten Webseite. Beide Spielsimulationen müssen sowohl die gleiche Punktzahl haben als auch die gleiche Anzahl an Runden ausgeben. 
+\\\\
+%\textbf{Optimal Score}\\
+Der Optimal Score wurde anhand der gegebenen Aufgaben überprüft. Dabei wurde für jede dieser vier Ausgaben das beste Ergebnis händisch berechnet und anschließend mit dem Ergebnis des Algorithmus verglichen.
+
+
 
 \subsection{Untergeordneter Agent}
-\subsection{Übergeordnete Agent}
+Für das Verbinden einer Mine mit einer Fabrik wurde sich für einen RL-Ansatz entschieden. Dabei wurde mit vielen Netzwerkarchitekturen und möglichen Inputs experimentiert, um zwischen Modellkomplexität und benötigter Rechenzeit abzuwägen. 
+\\\\
+Das AC Modell hat im direkten Vergleich zu einem DQN schlechtere Ergebnisse geliefert und die MCST-Implementierung hat aufgrund höherer Rechenzeit für das Trainieren keinen Mehrwert geliefert. Nach mehreren erfolglosen Versuchen, die zugrundeliegenden Probleme zu lösen, mussten diese Lösungsansätze aufgegeben werden.
+\\\\
+Das beste Ergebnis wurde mit einem DQN mit zwei versteckten Schichten und insgesamt 215.968 Parametern erzielt. Es bekommt nicht den Zustand des ganzen Spielfeldes, sondern nur einen Ausschnitt davon, sowie vorgefertigte Features als Input.
+\subsubsection*{Inputs}
+Damit der Agent mit unterschiedlichen Spielfeldgrößen umgehen kann und um die Modellkomplexität in Grenzen zu halten, beschränken sich das Sichtfeld auf einen lokalen $15\times15$ Bereich, der die Position des Agenten umgibt. 
+Für den Agenten ist es wichtig zu wissen, wo sich im Spielfeld nicht-freie Felder, innere Förderband-Felder, sowie Fabrikeingänge (und Eingänge, die bereits mit der Ziel-Fabrik verbunden sind) befinden. Diese Informationen werden jeweils in den Kanälen eines  $15\times15\times3$ binären Tensors codiert. 
+Für den Fall, dass das Sichtfeld über den Spielfeldrand hinausragt, wird das Spielfeld durch Hindernisse erweitert.
+\\\\
+Falls sich kein Fabrikeingang im Sichtfeld des Agenten befindet, sollte dieser zumindest die ungefähre Richtung, in der sich die Ziel-Fabrik befindet, wissen. Deshalb gibt es sechs zusätzliche binäre Inputs, die die relative $x$- und $y$-Position (für jeweils niedriger, höher, gleich) angeben.
+\\\\
+Aus einem bisher nicht ersichtlichen Grund versuchte der Agent selbst nach längerem Training gelegentlich illegale Aktionen zu tätigen. Dem konnte nur durch das Hinzufügen der legalen Aktionen als binärer Input entgegengewirkt werden.
+
+
+\subsubsection*{Outputs}
+Es wurde festgestellt, dass Verbinder nur in seltenen Fällen einen Mehrwert gegenüber Förderbändern bieten, da letztere auch zum Kombinieren von mehreren Ressourceflüssen genutzt werden können und gleichzeitig weniger Platz verbrauchen. 
+Um den Aktionsraum noch weiter zu reduzieren und um das Training zu beschleunigen, wurden aus diesen Gründen alle Verbinder aus dem Spiel entfernt. Auch Minen sollten nur zum Abbauen von Ressourcen an Lagerstätten benutzt werden und sind somit für den untergeordneten Agenten nicht von Relevanz. Der Agent muss nur noch lernen, Förderbänder an geeigneten umliegenden Positionen zu platzieren. Der Aktionsraum ist somit auf $8 \cdot 4 = 32$ reduziert, acht Gebäude-Subtypen an jeweils vier mögliche Positionen. Die Abblidung \ref{fig_network_architecture} zeigt die verwendete Netzwerkarchitektur des untergeordneten Agenten
+\begin{verbatim}
+	
+	
+\end{verbatim}
+
+\bild{1}{network_architecture.png}{Darstellung der Netzwerkarchitektur}{fig_network_architecture}
+
+\subsubsection*{Task Generator}
+Für das Training des DQN werden viele verschiedene Aufgabenstellungen benötigt. Diese von Hand zu erstellen wäre sehr zeitintensiv gewesen, weshalb stattdessen einen Task Generator implementiert wurde.
+\newpage
+Die einfachste Variante einer Aufgabe kann in vier Schritten erstellt werden:
+\begin{enumerate}
+	\item Jeweils eine Lagerstätte und eine Fabrik werden an zufälligen Positionen in einem leeren Spielfeld platziert
+	\item Diese werden mit Hilfe einer einfachen Distanz-Heuristik mit zufälligen (legalen) Gebäuden verbunden. 
+	\item Anschließend wird auf jedem leeren Feld mit einer geringen Wahrscheinlichkeit ein 1x1-Hindernis platziert. 
+	\item Die verbindenden Gebäude zwischen Lagerstätten und Fabrik werden bis auf die erste Mine wieder entfernt. 
+\end{enumerate}
+
+Diese vier Schritte werden in der Abbildung \ref{fig:taskgenerator} nochmals verdeutlicht.
+\bild{1}{taskgenerator.png}{Abblidung der vier Schritte des Task Generators }{fig:taskgenerator}
+
+Der Task Generator erstellt somit eine nicht-triviale Aufgabe, eine Mine mit einer Fabrik in einem Hindernis-Labyrinth zu verbinden, die mindestens eine Lösung hat.
+Damit der RL-Agent auch lernen kann, Förderbänder mit anderen Förderbändern zu überkreuzen oder bereits existierende Verbindungen zur Ziel-Fabrik zu nutzen, werden zusätzliche Lagerstätten-Fabrik-Verbindungen erstellt. Dafür werden die Schritte eins und zwei wiederholt, ohne die verbindenden Gebäude in Schritt vier zu löschen.
+
+\subsubsection*{Training}
+Trainiert wurde das DQN  mit über 100.000 Epochen auf einer Spielfeldgröße von $30\times30$ mit dem Adam-Optimierer und einer konstanten Lernrate von 0,001. Um dem Problem von \textit{sparse rewards} vorzubeugen, erstellt der Task Generator in frühen Epochen einfachere Aufgaben, in denen die Lagerstätte und Fabrik nur einen geringen Abstand haben. Außerdem wird für jedes neu gesetzte Gebäude eine geringe negative Belohnung von -0,05 gegeben, diese wird auf bis zu -0,01 verringert oder auf bis zu -0,09 erhöht, je nachdem ob sich der Abstand zur Ziel-Fabrik verringert oder erhöht. Diese Art von \textit{reward shaping} soll bewirken, das Modell zu motivieren, in die “richtige Richtung” zu laufen und dabei so wenig Gebäude wie möglich zu verwenden. Für das erfolgreiche Erreichen der Fabrik wird eine große Belohnung von 1,0 gegeben; ein illegaler Zug wird mit -1,0 bestraft. Als Abschlagsfaktor für nachfolgende Belohnungen wird $\gamma=0,9$ verwendet.
+\\\\
+Nach dem Training ist das Modell in der Lage 83\% der Aufgaben des Task Generators zu lösen. Der Agent lernt Hindernisse zu umgehen und sich auf die Fabrik mit möglichst wenigen Gebäuden zuzubewegen. Es ist zu bemerken, dass nicht immer erkannt wird, welcher Pfad in einer Sackgasse mündet, was zum Scheitern einer Aufgabe führen kann.
+
+\subsection{Übergeordneter Agent}
+Der übergeordnete Agent hat die Aufgabe, günstige Positionen für Fabriken und Minen zu finden, sowie zu koordinieren, welche Lagerstätte (bzw. welche zugehörige Mine) mit welcher Fabrik verbunden werden soll. 
+\\\\
+Ursprünglich wurde  ein Multi-Agenten-System zu entwickeln angedacht, in dem die einzelnen untergeordneten Agenten eine kleine Belohnung erhalten wenn sie die ihnen zugewiesene Fabrik erreichen, eine mittlere Belohnung für alle Agenten die es schaffen gemeinsam ein Produkt erfolgreich zu produzieren und eine große Belohnung, wenn sogar die theoretisch maximale Punktzahl erreicht wird. Von diesem Ansatz wurde sich erhofft, dass die Agenten lernen zusammenzuarbeiten, um ähnliche Probleme wie die bereitgestellte “task.004” zu lösen, in der es nur wenig Platz für Gebäude gibt und somit Verbindungen doppelt genutzt werden sollten. Dies konnte aufgrund der nahenden Abgabefrist nicht mehr umgesetzt werden.
+\\\\
+Der untergeordnete Agent braucht für das Erstellen einer Verbindung zwischen Mine und Fabrik nur wenig Zeit (meistens unter einer Sekunde). Deshalb wurde  bei dem übergeordneten Agenten ein Brute-Force Ansatz gewählt. Die Produkte werden nacheinander in der Reihenfolge abgearbeitet, die theoretisch die zuvor berechnete optimale Punktzahl erreichen kann. Dafür wird für jedes mögliche Produkt genau eine Fabrik an eine zufällige legale Position gesetzt. Anschließend werden für jede Lagerstätte alle möglichen Minen probiert, bis eine Verbindung mithilfe des untergeordneten Agenten hergestellt werden kann. Dabei werden Minen, deren Ausgang näher an der Zielfabrik liegt, als erstes verwendet. Falls mit keiner Mine eine Verbindung möglich ist, wird die Fabrik noch bis zu zehn Mal an eine andere zufällige Position verschoben. 
+\\\\
+Der übergeordnete Agent verwendet ein einfaches Zeitmanagement. In der Regel braucht das Programm wenige Sekunden zum finden einer Lösung. Falls im Anschluss noch mehr als 50\% der Rechenzeit verbleiben, wird versucht, die Lösung zu verbessern. Dies kann in Ausnahmefällen trotzdem dazu führen, dass die gegebene Rechenzeit überschritten wird. 
+\\\\
+Ausgehend von der initialen Lösung wird für jeder erfolgreiche Lagerstätten-Fabrik-Verbindung versucht, noch weitere Verbindungen hinzuzufügen. Dies ist teilweise mit wenigen Gebäuden möglich, wenn Förderbänder an andere Förderbänder oder Minen angeschlossen werden, die bereits zur Ziel-Fabrik führen. Die zusätzlichen Verbindungen können die Anzahl der benötigten Runden reduzieren oder sogar bei einer geringen maximalen Rundenanzahl die Punktzahl erhöhen. 
+Nach jeder Verbesserungsrunde, berechnet der Simulator die neue Punktzahl und die dafür benötigte Rundenanzahl. Wenn keine weitere Verbesserung erreicht wird, oder die Lösung sich verschlechtert, wird die beste Umgebung verwendet. Die platzierbaren Gebäude werden als Liste im JSON-Format zurückgegeben.
+
 \subsection{Wartbarkeit}
+Die Spiel-Umgebung wurde so implementiert, dass es einfach ist, neue Gebäudetypen hinzuzufügen oder zu entfernen. Eine neue Gebäude-Klasse sollte von der Building- bzw. Unplaceable-Building-Klasse erben (siehe Abb. \ref{fig:buildings}). Es muss für alle unterschiedlichen Subtypen die Form als zweidimensionale Liste angegeben werden, bestehend aus “+”, “-”, für Ein- und Ausgänge, sowie “ “ für freie Felder und einen beliebigen Buchstaben für inerte Felder. 
+Über ein Python-Dictionary werden die Regeln definiert, welche Gebäude an andere Gebäude angrenzen dürfen. 
+Die Abbildung \ref{fig:legal_connections} zeigt den Code, der die legalen Verbindungen definiert.
+
+\bild{1}{legal_connections.jpg}{Code zum Definieren legaler Verbindungen}{fig:legal_connections}
+Die Environment-Klasse muss beim Hinzufügen oder Entfernen eines neuen Gebäudes nicht weiter angepasst werden, weil alle nötigen Regeln anhand der Gebäude-Subtyp-Form und dem Dictionary für legale Verbindungen abgeleitet werden können.
+\\\\
+Zum Lösen der InformatiCup Aufgabenstellung ist die Anpassungsfähigkeit von Gebäuden nicht erforderlich, da alle Gebäude und ihre Regeln von Anfang an festgelegt wurden. 
+Der gewählte Aufbau erhöht jedoch die Wartbarkeit und Debugfähigkeit des Systems. 
+In der Anfangsphase hatte der RL-Agent aufgrund fehlerhafter Implementierung Schwierigkeiten zu lernen. Zum Debuggen wurde das Spiel zwischenzeitlich stark vereinfacht. Minen, Förderbänder, Verbinder wurden durch ein vereinfachtes $2\times1$ bzw. $1\times2$ Förderband mit nur vier Subtypen ersetzt. Auch Lagerstätten und Fabriken wurden auf eine Größe von $1\times1$ reduziert. Eine ähnliche Spieldynamik bleibt erhalten, während die Komplexität sinkt, weil jedes Gebäude nur maximal einen Ein- und Ausgang besitzt. 
+
+
+
+
