@@ -1,81 +1,82 @@
 \section{Mögliche Lösungsansätze}\label{cap:loesungsansatze}
-Mit AlphaGo und später AlphaZero hat das Unternehmen Deepmind gezeigt, dass ein Computer durch Deep Reinforcement Learning lernen kann, hochkomplexe Spiele wie Go und Schach auf professionellem Niveau zu spielen. \zitat{}{S16} Schach und Go besitzen ein festes 8x8 bzw. 19x19 Spielfeld, wohingegen das zu lösende Spiel “Profit!” ein bis zu 100x100 Feld umfasst. Es ist jedoch von der Spielweise weniger komplex und sollte deshalb ebenfalls mit verschiedenen Reinforcement Learning Methoden lösbar sein. In den folgenden Abschnitten werden mögliche Lösungsansätze vorgestellt. 
+Mit AlphaGo und später AlphaZero hat das Unternehmen Deepmind gezeigt, dass ein Computer durch Deep Reinforcement Learning (RL) lernen kann, hochkomplexe Spiele wie Go und Schach auf professionellem Niveau zu spielen. \zitat{}{S16} \\
+Schach und Go besitzen ein festes $8\times8$ bzw. $19\times19$ Spielfeld, wohingegen das zu lösende Spiel “Profit!” ein bis zu $100\times100$ Feld umfasst. Es ist jedoch von der Spielweise weniger komplex und sollte deshalb ebenfalls mit verschiedenen RL Methoden lösbar sein. In den folgenden Abschnitten werden mögliche Lösungsansätze vorgestellt. 
 \\\\
 Wie bei vielen Problemen der Informatik gibt es auch hier nicht nur eine Lösung. Für diese Arbeit wurden mehrere Lösungsansätze ausprobiert, die in den folgenden Abschnitten kurz erläutert werden.
 
 \subsection{Reinforcement Learning}
-Für dieses Projekt bietet sich Reinforcement Learning (RL), auf deutsch das bestärkende Lernen, an. RL-Methoden gehören zu den Methoden des maschinellen Lernens(ML), welche wiederum ein Teilbereich der künstlichen Intelligenz (KI) sind. Grundsätzlich geht es darum, dass ein Agent durch eine Trial-and-Error-Methode seine Umgebung kennenlernt. Die Umgebung kann sich dabei dynamisch ändern. RL beschreibt eher eine Klasse an Problemen, als Set von verschiedenen Techniken 
+Für dieses Projekt bietet sich RL, auf deutsch das bestärkende Lernen, an. RL-Methoden gehören zu den Methoden des maschinellen Lernens(ML), welche wiederum ein Teilbereich der künstlichen Intelligenz (KI) sind. Grundsätzlich geht es darum, dass ein Agent durch eine Trial-and-Error-Methode seine Umgebung kennenlernt. Die Umgebung kann sich dabei dynamisch ändern. RL beschreibt eher eine Klasse an Problemen, als Set von verschiedenen Techniken 
 \\\\
 Das Standard Modell besteht aus folgenden Mengen:
 \begin{itemize}
-	\item Menge an Umgebungs-Zuständen S (states)
-	\item Menge an Agenten-Aktionen A(actions)
-	\item Menge an Belohnungen R (rewards)
+	\item Menge an Umgebungs-Zuständen $S$ (states)
+	\item Menge an Agenten-Aktionen $A$(actions)
+	\item Menge an Belohnungen $R$ (rewards)
 \end{itemize}
 
-Der Agent befindet sich in der Umgebung in einem bestimmten Zustand. Er wählt eine Aktion aus und bekommt dafür eine positive, eine negative oder gar keine Belohnung. Durch die Aktion kann er in einen neuen Zustand kommen. Mathematisch kann dies folgendermaßen ausgedrückt werden:
+Der Agent befindet sich in der Umgebung in einem bestimmten Zustand. Er wählt eine Aktion aus und bekommt dafür eine positive, eine negative oder gar keine Belohnung. Aktionen können Agenten zusätzlich in einen neuen Zustand führen. Mathematisch kann dies folgendermaßen ausgedrückt werden:
 \begin{equation}
-	f(S_t,A_t)= R_{t+1}
+	f(S_t,A_t)= (S_{t+1},R_{t+1})
 \end{equation}
-Ziel für den Agenten ist es, so viele Belohnungen wie möglich zu bekommen. Die Abbildung \ref{fig:rl} soll den zeigen wie der Agent mit seiner Umgebung interagiert.
+Ziel für den Agenten ist es, die durch Aktionen erhaltene Belohnungen zu maximieren. Die Abbildung \ref{fig:rl} soll zeigen wie der Agent mit seiner Umgebung interagiert.
 \bild{.7}{rl.png}{Diagramm der Interaktion des Agenten mit der Umgebung \zitat{S.48}{SB20}}{fig:rl}
-Durch Ausprobieren lernt der Agent seine Umgebung kennen und lernt eine Strategie oder policy $\pi$ mit der er seine Belohnungen maximieren kann. Im Gegensatz zu Supervised Learning wird dem Agenten nie mitgeteilt was die beste Aktion auf lange Sicht gewesen wäre \zitat{S.237ff}{KLM96} 
+Durch Ausprobieren lernt der Agent seine Umgebung kennen und lernt eine Strategie oder Policy $\pi$ mit der er seine Belohnungen maximieren kann. Im Gegensatz zu Supervised Learning wird dem Agenten nie mitgeteilt was die beste Aktion auf lange Sicht gewesen wäre \zitat{S.237ff}{KLM96} 
 \\
-In dieser Arbeit stellt das Spielfeld die Umgebung dar. Es kann maximal 100x100 Felder groß sein. Der Zustand der Umgebung wird durch die vorhandenen Gebäude  bestimmt. Anfangs sind nur Lagerstätten und Hindernisse vorhanden, mit jedem neuen Bauteil verändert sich der Zustand des Spiels.
+In dieser Arbeit stellt das Spielfeld die Umgebung dar. Es kann maximal $100\times100$ Felder groß sein. Der Zustand der Umgebung wird durch die vorhandenen Gebäude  bestimmt. Anfangs sind nur Lagerstätten und Hindernisse vorhanden, mit jedem neuen Bauteil verändert sich der Zustand des Spiels.
 \\
 Die Aufgabe des Agenten ist es, Fabriken zu bauen, mit Minen die Ressourcen abzubauen und diese mit Förderbändern und Verbindern zur entsprechenden Fabrik zu befördern, damit Produkte gebaut werden können.
-Die Aktionen, die der Agent also ausführen kann, definieren das Aktionen-Set A.
+Die Aktionen, die der Agent also ausführen kann, definieren das Aktionen-Set $A$.
 \\
-Das Set an Belohnungen, also die Rewards, kann frei gewählt werden und ist nicht vom Spiel vorgegeben. Es macht Sinn den Agenten zu belohnen, wenn er Produkte erstellen kann und zu bestrafen, wenn er illegale Aktionen ausführen möchte
+Das Set an Belohnungen, also die Rewards, kann frei gewählt werden und ist nicht vom Spiel vorgegeben. Es ist sinnvoll den Agenten zu belohnen, wenn er Produkte erstellen kann und zu bestrafen, wenn er illegale Aktionen ausführen möchte
 
 
 \subsection{Deep-Q-Learning}
 Deep Q Learning ist eine RL Methode, die die ideale Policy mittels eines Neuronalen Netzes approximiert. Sie basiert auf dem sogenannten Q-learning.
 \\
-Das Ziel des RL-Programms ist es, die Rewards R, die es während des Spiels erhält, zu maximieren. Der Rückgabewert, oder auch Return genannt, gibt die Summe der Rewards zurück. Die Gleichung \ref{eq:return} beschreibt diesen Return.
+Das Ziel des RL-Programms ist es, die Rewards $R$, die es während des Spiels erhält, zu maximieren. Der Rückgabewert, oder auch Return genannt, gibt die Summe der Rewards zurück. Die Gleichung \ref{eq:return} beschreibt diesen Return.
 \begin{equation}\label{eq:return}
 	G_t = R_{t+1}+R_{t+2}+...+R_T
 \end{equation}
-Der erste Reward ist zum Zeitpunkt $t+1$ und geht bis zum Zeitpunkt T, sofern T eine endliche Menge an Zeitschritten ist.
+Der erste Reward ist zum Zeitpunkt $t+1$ und geht bis zum Zeitpunkt $T$, sofern $T$ eine endliche Menge an Zeitschritten ist.
 Wenn das nicht der Fall ist, wird eine discount rate $\gamma{}$ eingeführt, mit $0<=\gamma{}<=1$.
 Der Return wird wie in Gleichung \ref{eq:returny} gezeigt angepasst.
 \begin{equation}\label{eq:returny}
 	G_t = R_{t+1}+\gamma{}R_{t+2}+\gamma{}^2R_{t+3}+... = \sum_{k=0}^{T-1} \gamma{}^kR_{t+k+1}
 \end{equation}
-Spätere Rewards werden dann weniger beachtet als frühere.\zitat{S.54}{SB20}
+Spätere Rewards werden dann weniger stakt gewichtet als frühere.\zitat{S.54}{SB20}
 \\\\
-Die Policy $\pi{}(a|s)$ gibt die Wahrscheinlichkeit an, dass die Aktion a gewählt wird, wenn der State s gegeben ist. Es ist also eine Wahrscheinlichkeitsverteilung von $s \in S$ über alle $a \in A$. Gesucht ist die optimale Policy.
+Die Policy $\pi{}(a|s)$ gibt die Wahrscheinlichkeit an, dass die Aktion $a$ gewählt wird, wenn der State $s$ gegeben ist. Es ist also eine Wahrscheinlichkeitsverteilung von $s \in S$ über alle $a \in A$. Gesucht ist die optimale Policy.
 \\\\
 Neben der Policy gibt es auch Value-Fuctions, also Funktionen, die bestimmen, wie gut ein gewisser State ist oder wie gut eine Aktion in einem bestimmten State ist.
-Die Funktion $v$ (Gleichung \ref{eq:value}), auch state-value-function genannt, gibt an, wie gut ein State s ist, wenn der Agent der policy $\pi$ folgt. 
+Die Funktion $v$ (Gleichung \ref{eq:value}), auch state-value-function genannt, gibt an, wie gut ein State $s$ ist, wenn der Agent der policy $\pi$ folgt. 
 \begin{equation}\label{eq:value}
 	v_\pi(s) = E(G_t|S_t=s)
 \end{equation}
-Die action-state-function q (Gleichung \ref{eq:q}), auch q-function, bestimmt wie gut eine Aktion $q$ ist, wenn sich der Agent in state s befindet und der policy $\pi$ folgt.
+Die action-state-function $q$ (Gleichung \ref{eq:q}), auch q-function, bestimmt wie gut eine Aktion $a$ ist, wenn sich der Agent in state $s$ befindet und der Policy $\pi$ folgt.
 \begin{equation}\label{eq:q}
 	q_\pi(s,a) = E(G_t|S_t=s, A_t=a)
 \end{equation}
 Die q-function gibt sogennnante q-values für jede mögliche Aktion aus, anhand dessen bestimmt werden kann welche Aktion der Agent aussuchen soll. \zitat{S.279f}{QLearning92}\zitat{S.58}{SB20}
 Das Ziel von Q-learning ist die beste policy $\pi^*$ zu finden. Die optimale policy wird über das finden der optimalen Funktionen $q^*$ und $v^*$ bestimmt. \zitat{S.281f}{QLearning92}
 \\\\
-Um zu bestimmen, ob eine Policy besser ist als eine andere, werden die v werde angeschaut. Eine Policy $\pi$ ist besser als eine Policy $\pi’$ andere wenn $v_\pi(s) >= v_\pi’(s)$ ist, für alle $s \in S$. 
-Gesucht ist also $v_\pi^*(s) =max v_\pi(s)$
-Das gleiche gilt auch für die q Funktion.
-$q_\pi^*(s,a) = max q_\pi(s,a)$.\zitat{S.62}{SB20}
+Um zu bestimmen, ob eine Policy besser ist als eine andere, werden jeweiligen Values $v$ verglichen. Eine Policy $\pi$ ist besser als eine Policy $\pi’$ andere wenn $v_\pi(s) >= v_\pi’(s)$ ist, für alle $s \in S$. 
+Gesucht ist also $v_\pi^*(s)=max\ v_\pi(s)$
+Das gleiche gilt auch für die $q$ Funktion.
+$q_\pi^*(s,a) = max\ q_\pi(s,a)$.\zitat{S.62}{SB20}
 \\
-Um die Optimalen Funktionen v und q zu finden müssen beide die Bellman-Gleichung erfüllen \zitat{S.73}{SB20}. Das zeigen die Gleichung \ref{eq:value_opt} und \ref{eq:q_opt}
+Um die optimalen Funktionen $v$ und $q$ zu finden müssen beide die Bellman-Gleichung erfüllen \zitat{S.73}{SB20}. Das zeigen die Gleichung \ref{eq:value_opt} und \ref{eq:q_opt}
 \begin{equation}\label{eq:value_opt}
 v_\pi^*(s) = max E[R_{t+1}+ \gamma{}v_\pi^*(S_{t+1})|S_t= s, A_t=a]
 \end{equation}
 \begin{equation}\label{eq:q_opt}
 q_\pi^*(s,a) = E[R_{t+1} + \gamma{}maxq_\pi^*(S_{t+1},a’)|S_t= s, A_t=a] 
 \end{equation}
-Im Q Learning werden die q Werte für jeden State s und für jede Aktion a gespeichert und Schritt für Schritt angepasst bis die beste Policy gefunden wurde. Anfangs sind alle Werte mit 0 initialisiert.
-Für das Lernen der Policy wird eine Exploitation(Ausnutzung) Exploration(Erkundung) Methode verwendet. Anfangs soll das Programm seine Umgebung erkunden und sie damit kennenlernen, da es Anfangs nicht weiß, welche Aktionen zu einem Reward führen. Dieses Verhalten wird auch Exploration genannt. Bei der Exploitation nutzt das Programm das gelernte Wissen, um die Summe der Rewards zu maximieren. \zitat{S.26}{SB20}
+Im Q Learning werden die $q$ Werte für jeden State $s$ und für jede Aktion $a$ gespeichert und Schritt für Schritt angepasst bis die beste Policy gefunden wurde. Anfangs sind alle Werte mit 0 initialisiert.
+Für das Lernen der Policy wird eine Exploitation(Ausnutzung) und Exploration(Erkundung) Methode verwendet. Anfangs soll das Programm seine Umgebung erkunden und sie damit kennenlernen, da es Anfangs nicht weiß, welche Aktionen zu einem Reward führen. Dieses Verhalten wird auch Exploration genannt. Bei der Exploitation nutzt das Programm das gelernte Wissen, um die Summe der Rewards zu maximieren. \zitat{S.26}{SB20}
 Exploitation und Exploration werden mit einer $\epsilon$-greedy Methode umgesetzt.
-In dieser Methode gibt es eine $\epsilon$ Wert, der die Wahrscheinlichkeit bestimmt, mit welcher eine zufällige Aktion a ausgesucht wird. Anfangs ist dieser Wert hoch und das Programm macht viele zufällige Züge. Je mehr es gelernt hat, desto kleiner wird der $\epsilon$ Wert gesetzt und gelernte gute Aktionen werden gewählt.\zitat{S.100f}{SB20}
+In dieser Methode gibt es eine $\epsilon$ Wert, der die Wahrscheinlichkeit bestimmt, mit welcher eine zufällige Aktion $a$ ausgesucht wird. Anfangs ist dieser Wert hoch und das Programm macht viele zufällige Züge. Je mehr es gelernt hat, desto kleiner wird der $\epsilon$ Wert gesetzt und gelernte gute Aktionen werden gewählt.\zitat{S.100f}{SB20}
 \\\\
-Deep Q Learning (DQN)  basiert auf den gleichen Ideen wie Q-Learning. Hier wird allerdings das approximieren der idealen Q-Funktion von einem neuronalen Netz übernommen, wie beispielsweise einem CNN (Convolutional Neural Network).
+Deep-Q-Learning (DQN)  basiert auf den gleichen Ideen wie Q-Learning. Hier wird allerdings das Approximieren der idealen Q-Funktion von einem neuronalen Netz übernommen, wie beispielsweise einem CNN (Convolutional Neural Network).
 DQN ist eine bewährte Methode in RL und wurde bereits in anderen Projekten erfolgreich umgesetzt. Beispielsweise wurde das Spiel Atari mit einem CNN-basierten Agenten, welcher ein DQN, neben anderen ML-Methoden nutzt, gelöst. \zitat{S.6f}{RL_Atari} 
 
 
@@ -83,31 +84,31 @@ DQN ist eine bewährte Methode in RL und wurde bereits in anderen Projekten erfo
 Genau wie DQN ist Actor-Critic (AC) eine Methode, die in RL häufig eingesetzt wird.
 Ein Actor-Critic-Modell besteht aus zwei Komponenten, dem Actor und dem Critic. Der Actor entscheidet, welche Aktionen ausgeführt werden sollen, der Critic bewertet diese Aktionen. 
 \zitat{}{AC99}\\
-AC ist dabei auf ähnlichen Ideen aufgebaut wie DQN. Statt einem neuronalen Netz, welches die Q-Werte lernt, besteht AC aus zwei neuronalen Netzen, dem Actor-Netz und dem Critic-Netz. Das Actor Netz soll die Policy approximieren, das Critic-Netz die value-function. Häufig wird die state-value-function vom Critic gelernt. \zitat{S.321}{SB20}
+AC ist dabei auf ähnlichen Ideen aufgebaut wie DQN. Statt einem neuronalen Netz, welches die Q-Werte lernt, besteht AC aus zwei neuronalen Netzen, dem Actor-Netz und dem Critic-Netz. Das Actor Netz soll die Policy approximieren, das Critic-Netz die Value-Funktion. Häufig wird die \textit{state-value-function} vom Critic gelernt. \zitat{S.321}{SB20}
 \\
 Durch die Aufteilung in die Actor und in die Critic Komponente soll dieses Modell schneller seine Strategie lernen. 
 Ein AC kann zusammen mit einem Monte-Carlo-Search-Tree trainiert werden, um das Training zu stabilisieren. Dieser Ansatz wird im kommenden Abschnitt erläutert.
 
 \subsection{Monte-Carlo-Search-Tree}
-Der hier vorgestellte Ansatz des Monte-Carlo-Search-Tree MCST entspricht grundlegend der Umsetzung dieses Papers \zitat{}{AlphaGO}, angepasst auf das Problem diese Projektes.
+Der hier vorgestellte Ansatz des Monte-Carlo-Search-Tree MCST entspricht grundlegend der Umsetzung des Papers zu AlphaGO Zero \zitat{}{AlphaGO}, angepasst auf das Problem diese Projektes.
 \\\\
 Als Modell wird wieder ein AC genutzt. Dieses wird mit einem MCST verbunden. Das Ziel hierbei ist, das Training zu stabilisieren und bessere Vorhersagen treffen zu können. Der Ablauf während des Trainings lässt sich grob in zwei Schritte unterteilen, welche wiederholt werden.
 \begin{enumerate}
-	\item Sammeln von Erfahrungswerten mit hilfe des MCTS
+	\item Sammeln von Erfahrungswerten mit Hilfe des MCTS
 	\item Training des AC mit den Erfahrungswerten
 \end{enumerate}
 \subsubsection*{Sammeln von Erfahrungswerten}
 Das Spiel wird mehrmals bis zu einem terminierenden Zustand durch gespielt.
 \\
-Zunächst wird die Environment zurückgesetzt, um ein neues, zufällig generiertes Spielfeld zu erhalten.
+Zunächst wird die Umgebung zurückgesetzt, um ein neues, zufällig generiertes Spielfeld zu erhalten.
 \\
 Um nun die erste Aktion zu ermitteln, wird der MCTS aufgerufen. 
 \\
 In jedem Zustand wird MCTS genutzt, um die nächste bestmögliche Aktion herauszufinden. Der MCTS ist ein Baum bestehend aus Knoten, welche je folgende Informationen beinhalten:
 \begin{itemize}
 	\item Der Zustand des Spielfelds
-	\item Die Aktion, die ausgeführt werden muss, um vom Parent in diesen Zustand zu gelangen
-	\item Die Wahrscheinlichkeit, dass ausgehend vom Parent diese Aktion gewählt wird (“prior”)
+	\item Die Aktion, die ausgeführt werden muss, um vom Eltern-Knoten in diesen Zustand zu gelangen
+	\item Die Wahrscheinlichkeit, dass ausgehend vom Eltern-Knoten diese Aktion gewählt wird (“prior”)
 	\item Die Bewertung $W$ des Knotens (entspricht der Ausgabe des Critic-Netzwerks)
 	Wie häufig dieser Knoten Besucht wurde ($N$)
 	
@@ -116,12 +117,12 @@ In jedem Zustand wird MCTS genutzt, um die nächste bestmögliche Aktion herausz
 Der Aufbau des Baums verläuft in Iterationen. Eine Iteration ist dabei in folgende Phasen aufgeteilt:
 \begin{enumerate}
 	\item \textbf{SELECTION}\\ 
-	Von der Wurzel wird mit Hilfe des UCB Scores jeder Nachfolger bewertet. Dieser bestraft häufiges Besuchen desselben Knoten und stellt Exploration sicher. Es wird der Nachfolger ausgewählt, der diese Formel maximiert. Dies wird wiederholt bis ein Blattknoten erreicht ist
+	Von der Wurzel wird mit Hilfe des sogenannten UCB Scores jeder Nachfolger bewertet. Dieser bestraft häufiges Besuchen desselben Knoten und stellt Exploration sicher. Es wird der Nachfolger ausgewählt, der diese Formel maximiert. Dies wird wiederholt bis ein Blattknoten erreicht ist
 	\item \textbf{EXPANSION}\\
-	Ist ein Blattknoten erreicht, wird dieser expandiert. Die Werte der Nachfolger W, Q und N werden mit 0 initialisiert. Der Prior entspricht der Wahrscheinlichkeit, dass diese Aktion ausgehend vom Parent ausgewählt wird und wird mit Hilfe des Actors ermittelt.\\
-	Der Wert W des gefundenen Blattknoten wird über das Critic-Netzwerk ermittelt. N wird um 1 inkrementiert und Q entsprechend aktualisiert.
+	Ist ein Blattknoten erreicht, wird dieser expandiert. Die Werte der Nachfolger $W$, $Q$ und $N$ werden mit $0$ initialisiert. Der Prior entspricht der Wahrscheinlichkeit, dass diese Aktion ausgehend vom Parent ausgewählt wird und wird mit Hilfe des Actors ermittelt.\\
+	Der Wert $W$ des gefundenen Blattknoten wird über das Critic-Netzwerk ermittelt. $N $wird um 1 inkrementiert und Q entsprechend aktualisiert.
 	\item \textbf{BACKUP}\\
-	In diesem Schritt wird der Baum vom erreichten Blattknoten ausgehend zur Wurzel traversiert. Dabei werden die Werte W, Q und N jedes Knotens wie folgt aktualisiert:
+	In diesem Schritt wird der Baum vom erreichten Blattknoten ausgehend zur Wurzel traversiert. Dabei werden die Werte $W$, $Q$ und $N$ jedes Knotens wie folgt aktualisiert:
 	\begin{equation}W = W + W_{blatt}\end{equation}
 	\begin{equation}N = N + 1\end{equation}
 	\begin{equation}Q = W / N\end{equation}
@@ -129,9 +130,9 @@ Der Aufbau des Baums verläuft in Iterationen. Eine Iteration ist dabei in folge
 	Die Phasen 1-3 werden beliebig oft wiederholt (in AlphaGo 1.600x, in der Implementation dieses Projektes 160x). Anschließend ermittelt der MCTS die bestmögliche Aktion wie folgt.
 \begin{enumerate}\setcounter{enumi}{3}
 	\item \textbf{DECISION}\\
-	Ausschlaggebend dafür, welche Aktion vom Wurzelknoten aus gewählt wird, ist die Häufigkeit der Besuche N der Nachfolger. 
-	Befindet sich das Modell nicht im Training, wird die Aktion gewählt, welche N maximiert.
-	Während des Trainings wird aus den N aller Nachfolger eine Verteilung ermittelt. Anschließend wird aus den Nachfolgern gesamplet, wobei die ermittelte Verteilung als Gewichtung genutzt wird. Damit ist es am wahrscheinlichsten, dass der Nachfolger mit maximalem N gewählt wird, es bleiben aber noch Exploration möglich.
+	Ausschlaggebend dafür, welche Aktion vom Wurzelknoten aus gewählt wird, ist die Häufigkeit der Besuche $N$ der Nachfolger. 
+	Befindet sich das Modell nicht im Training, wird die Aktion gewählt, welche $N$ maximiert.
+	Während des Trainings wird aus den $N$ aller Nachfolger eine Verteilung ermittelt. Anschließend wird aus den Nachfolgern gesampelt, wobei die ermittelte Verteilung als Gewichtung genutzt wird. Damit ist es am wahrscheinlichsten, dass der Nachfolger mit maximalem $N$ gewählt wird, es bleiben aber noch Exploration möglich.
 	Die gewählte Aktion ist die Rückgabe des MCTS.
 \end{enumerate}
 Die so ermittelte Aktion wird nun ausgeführt. Der neue Zustand sowie die Verteilung der Aktionen im Wurzelknoten des MCTS (s.o.) werden je in einer Liste gespeichert (der Spielzug wird also gemerkt).
@@ -149,22 +150,22 @@ Beim Training des AC Models ist es das Ziel, dass sich das Modell möglichst äh
 \\\\
 Das Modell erhält im Training Batches der Erfahrungswerte. Als Input dient der aktuelle Zustand des Spielfelds board\textunderscore{}state. Das AC Modell hat zwei Outputs. Der Actor, welcher eine Wahrscheinlichkeitsverteilung der Aktionen in diesem Zustand ausgibt, und der Critic, der den Zustand bewertet. 
 \\\\
-Der Actor soll nun möglichst der Aktionverteilung des MCTS Nahe kommen. Hierfür wird der Cross Entropy loss genutzt.
+Der Actor soll nun möglichst der Aktionverteilung des MCTS Nahe kommen. Hierfür wird der Cross-Entropy-Loss genutzt.
 \\\\
 Der Critic wiederum soll im gegebenen Zustand möglich genau vorhersagen können, ob das Modell das Spiel gewinnt oder verliert. Hierfür wird der Mean Squared Error (MSE) zwischen der Vorhersage des Modells und des tatsächlichen Outcomes genutzt, welcher in den Erfahrungswerten \textit{game\textunderscore{}outcome} gegeben ist.
 
 \subsubsection*{Problem}
 In der aktuellen Version werden Trainingsdaten über 1024 Spiele ermittelt, welche das Modell dann in 100 Epochen mit einer Batch Size 8 trainiert.
 \\\\
-Der wiederholte Aufbau des MCTS benötigt allerdings viel Zeit. Denn jeder Knoten benötigt eine Kopie der \textit{Environment}-Instanz. Das Kopieren dieser sowie die zahlreichen Predictions durch das Modell scheinen nach einer Analyse der Laufzeit am aufwändigsten zu sein und bremsen das Sammeln von Trainingsdaten so stark, dass dierse Ansatz nicht für dieses Projekt ausgewählt wurde.
+Der wiederholte Aufbau des MCTS benötigt allerdings viel Zeit. Denn jeder Knoten benötigt eine Kopie der \textit{Environment}-Instanz. Das Kopieren dieser sowie die zahlreichen Vorhersagen durch das Modell scheinen nach einer Analyse der Laufzeit am aufwändigsten zu sein und bremsen das Sammeln von Trainingsdaten so stark, dass dierse Ansatz nicht für dieses Projekt ausgewählt wurde.
 
 \subsection{Regelbasierter Ansatz}
 
 Neben den Machine Learning Ansätzen wäre auch ein regelbasierter Ansatz denkbar. Anstatt ein Modell auf das Problem zu trainieren, werden feste Regeln im Code implementiert, die das Programm abarbeitet.
 \\\\
-Bei vielen Gebäuden macht es keinen Sinn, diese irgendwie zu platzieren. Minen sollten beispielsweise an Lagerstätten angeschlossen werden, woran dann eine Fabrik oder ein Förderband angeschlossen wird. Wenn die Position der Fabrik steht, könnte mit Pathfinding-Algorithmen die Fabrik mit den gegebenen Lagerstätten verbunden werden.
+Bei vielen Gebäuden macht es keinen Sinn, diese beliebig zu platzieren. Minen sollten beispielsweise an Lagerstätten angeschlossen werden, woran dann eine Fabrik oder ein Förderband angeschlossen wird. Wenn die Position der Fabrik steht, könnte mit Pathfinding-Algorithmen die Fabrik mit den gegebenen Lagerstätten verbunden werden.
 \\\\
-Das ideale Setzen der Fabrik ist auch als Mensch nicht einfach. Es sollte möglichst Nahe bei allen benötigten Lagerstätten sein, ohne mögliche Wege zu blockieren, die evt. für andere Produkte gebraucht werden. Daher ist es schwierig eine gute Metrik zu finden, wie idealerweise eine Fabrik gebaut werden soll. Häufig ist auch die Anzahl der möglichen Fabrik-Positionen auch auf wenige begrenzt.
+Das ideale Setzen der Fabrik ist auch als Mensch nicht einfach. Es sollte möglichst Nahe bei allen benötigten Lagerstätten sein, ohne mögliche Wege zu blockieren, die gegebenenfalls für andere Produkte gebraucht werden. Daher ist es schwierig eine gute Metrik zu finden, wie idealerweise eine Fabrik platziert werden soll. Häufig ist die Anzahl der möglichen Fabrik-Positionen auch auf wenige Möglichkeiten begrenzt.
 \\\\
-Ein regelbasierter Algorithmus würde, um ein Produkt zu lösen, als erstes die Fabrik und die Minen an den Lagerstätten zu setzen und anschließend versuchen diese miteinander zu verbinden. 
-Die Auswahl, wann welches Produkt gebaut werden soll und welche überhaupt gebaut werden sollen, würde sich errechnen lassen.  
+Ein regelbasierter Algorithmus würde, um ein Produkt zu erstellen, als erstes die Fabrik und die Minen an den Lagerstätten zu setzen und anschließend versuchen diese miteinander zu verbinden. 
+Welche Produkte produziert werden sollen ließe sich berechnen und optimieren, um die erreichte Punktzahl zu maximieren.

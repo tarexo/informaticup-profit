@@ -1,32 +1,34 @@
-\section{Evaluation}\label{cap:evaluation}
-Grundsätzlich lässt sich sagen, dass das Ergebnis des Projekts gut ist. Ein Großteil der Aufgaben wird gelöst, einige auch mit sehr hoher Punktzahl und geringer Rundenzahl.
+\section{Evaluation und Diskussion}\label{cap:evaluation}
+Grundsätzlich lässt sich sagen, dass das Ergebnis des Projekts positiv zu bewerten ist. Ein Großteil der Aufgaben wird gelöst, einige auch mit sehr hoher Punktzahl und geringer Rundenzahl.
 \\\\
-Zum Evaluieren des Programms wurden 23 Tasks verwendet. Vier davon sind vom InformatiCup 2023 zur Verfügung gestellt worden, der Rest wurde selbst erstellt. Diese wurden in zwei Kategorien aufgeteilt: einfach und schwer. Die einfachen Aufgaben hatten nur ein einzelnes Produkt, welches es zu lösen gab. Bei den schweren Aufgaben mussten mehrere Produkte gelöst werden. Eine Tabelle mit den Ergebnissen befindet sich im Anhang in Kapitel \ref{cap:statistik}. Es wird dabei bewertet, wie nah das Programm an den optimalen Score herangekommen ist. Hierbei muss jedoch festgehalten werden, dass es nicht immer möglich ist, die optimale Punktzahl zu erreichen. Der Optimal Score soll nur einen Hinweis liefern, wie die Punktzahl interpretiert werden kann. 
+Zum Evaluieren des Programms wurden 23 Tasks verwendet. Vier davon sind vom InformatiCup 2023 zur Verfügung gestellt worden, der Rest wurde selbst erstellt. Diese wurden in zwei Kategorien aufgeteilt: einfach und schwer. Die einfachen Aufgaben hatten nur ein einzelnes Produkt definiert, die schweren mehrere. Eine Tabelle mit den Ergebnissen befindet sich im Anhang in Kapitel \ref{cap:statistik}. Es wird dabei bewertet, wie nah das Programm an den optimalen Score herangekommen ist. Hierbei muss jedoch festgehalten werden, dass es nicht immer möglich ist, die optimale Punktzahl zu erreichen. Der Optimal Score soll nur einen Hinweis liefern, wie die Punktzahl interpretiert werden kann. 
 \\\\
-Von den 23 Aufgaben konnte das Programm bei 21 mindestens ein Produkt lösen und somit Punkte erzielen. Die beiden nicht lösbaren Aufgaben sind die Aufgaben 8 und 18, welche sich im Anhang im Abschnitt \ref{cap:not_solvable_task} befinden.
-\\\\
+Von den 23 Aufgaben konnte das Programm bei 21 mindestens ein Produkt produzieren und somit Punkte erzielen. Die beiden nicht lösbaren Aufgaben sind die Aufgaben 8 und 18, welche sich im Anhang im Abschnitt \ref{cap:not_solvable_task} befinden.
+
+
 Die Aufgabe 8 besteht aus einer Art Zick-Zack-Weg, durch den Förderbänder gelegt werden müssen. Der problematische Teil ist in Abbildung \ref{fig:not_solvable_task8} im Anhang mit einem roten Rahmen markiert. Das Program versucht so schnell wie möglich nach rechts (in Richtung der Fabrik) zu gehen, wodurch es in den Aussparungen der Hindernisse läuft. Dieser falsche Schritt kann dann nicht mehr rückgängig gemacht werden. Die Abbildung \ref{fig:problematic_step} soll zeigen, wie dieser falsche Schritt zur nicht Lösung des Problems führen konnte.
-\bild{.2}{problematic_step.jpg}{Problematisch Teil der Aufgabe 8}{fig:problematic_step}
 Da das Programm versucht, immer möglichst direkt in die Richtung der Fabrik zu laufen, wurde diese Konstruktion in der Aufgabe dem Programm zum Verhängnis.
+\bild{.2}{problematic_step.jpg}{Problematisch Teil der Aufgabe 8}{fig:problematic_step}
 \\\\
 Die zweite nicht lösbare Aufgabe mit der Nummer 18 kann nur durch eine sehr spezifische Gebäude-Kombination gelöst werden. Die Fabrik kann nur an einer Position gesetzt werden, ebenso wie die Minen zu den Lagerstätten. Während die Verbindung von Lagerstätte 0 zur Fabrik mehrere Förderband Kombinationen zulässt, muss die Verbindung von Lagerstätte 1 zur Fabrik mit einem Förderband des Subtypen 4 erstellt werden. Wird vom Agenten fälschlicherweise der Subtyp 1 gewählt, was eine legale Aktion ist, so ist es nicht mehr möglich, die Fabrik mit Förderbänder zu erreichen. \\
 Hier ist das Hauptproblem, dass die zwei untergeordneten Agenten nicht miteinander kommunizieren. Der erste Agent erreicht sein Ziel, ohne dabei zu beachten, dass dabei der Weg für den zweiten Agenten versperrt wird. Das gemeinsame Ziel, Produkte zu produzieren, schlägt fehl. 
 \\\\
+In einzelnen Aufgaben lässt sich außerdem eine suboptimale-Strategie des untergeordneten Agenten feststellen. 
+Wenn sich die Fabrik direkt hinter einem Hindernis befindet, weiß der untergeordnete Agent nicht in welche Richtung er laufen soll. Dies führt dazu, dass eine nicht-optimale Schleife mit überkreuzten Förderbändern entstehen kann (vgl Abb. \ref{fig:conveyor-loop}, entnommen aus Lösung der Aufgabe 15). Der Agenten kann lokal gute Entscheidungen treffen, ihm fehlt jedoch der große Überblick über die Gesamtaufgabe.
+\bild{.7}{conveyor-loop.png}{Darstellung einer Förderband-Schleife}{fig:conveyor-loop}
+
 In den 21 gelösten Aufgaben konnte 11 mal der Optimal Score tatsächlich erreicht werden. Besonders hervorzuheben ist die erste der vorgegebenen Aufgaben.  Hier konnte das Programm nicht nur den Optimal Score erreichen, sondern auch eine geringere Rundenanzahl erzielen, als die von den Teammitgliedern erstellte manuelle Lösung. Das Programm erreichte 410 Punkte mit 26 Runden, während die manuelle Lösung 410 bei 43 Runden erzielte. Wenn das Programm eine Lösung gefunden hat, versucht es diese Lösung weiter zu optimieren, um die Punktzahl zu erhöhen und die Rundenzahl zu verringern. Es wird versucht mehrere Minen zu platzieren und diese mit bereits bestehenden Förderbandverbindungen zu verbinden. Dadurch konnte das Programm eine sehr gute Leistung bei dieser Aufgabe erzielen.
 Die gelöste Aufgabe wird im Anhang in \ref{cap:solved_solutions} in der Abbildung \ref{fig:task1_solved} dargestellt.
 \\\\
 Des Weiteren soll die Aufgabe 22 hervorgehoben werden.  Diese hat ebenso die bestmögliche Punktzahl erreicht. Die Aufgabe wird im Anhang in Abschnitt \ref{cap:solved_solutions} in Abbildung \ref{fig:task22_solved} dargestellt. Die beste Lösung für diese Aufgabe zu finden, ist aus menschlicher Sicht nicht intuitiv. Es gibt viele Produkte, die die gleichen Ressourcen benötigen. Der naive Ansatz, alle gegebenen Produkte zu produzieren, ist bei dieser Aufgabe nicht der beste Weg. Die einzelnen Produkte müssen sich Ressourcen teilen, daher ist die beste Variante nur das Produkt 3 zu produzieren, da mit diesem Produkt die meisten Punkte erzielt werden können. Der Optimal Score berechnet neben der besten Punktzahl auch die beste Produktkombination aus. Mit diesem Wissen kann der Agent bei vielen Produkten die beste Produktkombination auswählen, was bei Aufgabe 22 dazu führt, dass nicht einmal versucht wird, die Produkte 0-2 herzustellen. Das Produzieren von Produkt 3 führt zur besten Punktzahl. Die Aufgabe 22 wurde als optionale Beispielaufgabe abgegeben.
 \\\\
-In manchen Situationen, wenn sich die Fabrik direkt hinter einem Hindernis befindet, weiß der untergeordnete Agent nicht in welche Richtung er laufen soll. Dies führt dazu, dass eine nicht-optimale Schleife mit überkreuzten Förderbändern entstehen kann (vgl Abb. \ref{fig:conveyor-loop}, entnommen aus Lösung der Aufgabe 15). Der Agenten kann lokal gute Entscheidungen treffen, ihm fehlt jedoch der große Überblick über die Gesamtaufgabe.
-\bild{.7}{conveyor-loop.png}{Darstellung einer Förderband-Schleife}{fig:conveyor-loop}
 
-
-In 17 Aufgaben wurde eine Punktezahl erreicht, die 50\% oder höher als die jeweiligen Optimal Scores waren. Nur in 6 Fällen lag die erspielte Punktezahl darunter. Durchschnittlich wurden 70\% des Optimalen Scores erreicht, was durchaus ein gutes Ergebnis ist.
+In 17 Aufgaben wurde eine Punktezahl erreicht, die 50\% oder höher als die jeweiligen Optimal Scores waren. Nur in 6 Fällen lag die erspielte Punktezahl darunter. Durchschnittlich wurden 70\% des Optimalen Scores erreicht, was als gutes Ergebnis bewertet werden kann.
 \\\\
 Der Zeitaspekt in der Lösung wird zwar beachtet, aber nicht aktiv bei den erstellten Lösungen überprüft. Der Grund dafür ist, dass die Implementierung, die die Zeit berücksichtigt, erst spät hinzugefügt wurde. Beim Erstellen der Tasks wurde daher auch diesem Punkt wenig Beachtung geschenkt. Weshalb ein Standardwert von 300 Sekunden in allen Tasks verwendet wurde. Dieser Wert konnte von 22 der 23 Aufgaben eingehalten werden, nur die Aufgabe 21 hat diesen Wert mit 395,25 Sekunden überschritten. 
-Aufgabe 21 ist ein Spielfeld mit Größe $100 x 100$, was dem größtmöglichen Spielfeld entspricht. Außerdem umfasst diese Aufgabe große Lagerstätten, wodurch es viele möglich platzierbare Minen gibt. Allgemein kann beobachtet werden, dass größere Spielfelder auch mehr Zeit zum Lösen brauchen. 
+Aufgabe 21 ist ein Spielfeld mit Größe $100 \times 100$, was dem größtmöglichen Spielfeld entspricht. Außerdem umfasst diese Aufgabe große Lagerstätten, wodurch es viele möglich platzierbare Minen gibt. Allgemein kann beobachtet werden, dass größere Spielfelder auch mehr Zeit zum Lösen brauchen. 
 \\\\
-Durchschnittlich hat das Programm für alle Aufgaben 31 Sekunden. Wenn Aufgabe 21 nicht mitgezählt wird, sind es 14,4 Sekunden. 
+Durchschnittlich hat das Programm für alle Aufgaben 31 Sekunden. Wenn die Aufgabe 21 in dieser Rechnung ausgeschlossen wird, reduziert sich dieser Wert auf 14,4 Sekunden.
 
 
 

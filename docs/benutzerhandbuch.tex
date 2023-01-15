@@ -1,32 +1,32 @@
 \section{Benutzerhandbuch}\label{cap:benutzerhandbuch}
-Dieses Kapitel soll erklären wie mit dem Projekt weitergearbeitet werden kann und wie Änderungen, gerade am Model des untergeordneten Agenten vorgenommen werden können. Ebenso wird erläutert wie der Code in dem abgegebenen Docker-Container auszuführen ist.
+Dieses Kapitel soll erklären wie mit dem Projekt weitergearbeitet werden kann und wie Änderungen, gerade am Modell des untergeordneten Agenten vorgenommen werden können. Ebenso wird erläutert wie der Code in dem bereitgestellten Docker-Container auszuführen ist.
 \\\\
 \textbf{Einstellungen}\\
-Alle Hyperparameter der Agenten, Einstellungen für den Task Manager, sowie weitere Debug Informationen lassen sich gesammelt in der settings.py Datei einstellen. 
-Es kann beispielsweise eine andere Modell-Architektur für den untergeordneten Agenten gewählt oder die Hinderniswahrscheinlichkeit des Task Generators angepasst werden. Auch das zuvor erwähnte vereinfachte Spiel kann durch Setzen von \mbox{SIMPLE\textunderscore{}GAME = True}
+Alle Hyperparameter der Agenten, Einstellungen für den Task Manager, sowie weitere Debug Informationen lassen sich gesammelt in der \textit{settings.py} Datei einstellen. 
+Es kann beispielsweise eine andere Modell-Architektur für den untergeordneten Agenten gewählt oder die Hinderniswahrscheinlichkeit des Task Generators angepasst werden. Auch das zuvor erwähnte vereinfachte Spiel kann durch Setzen von \textit{\mbox{SIMPLE\textunderscore{}GAME = True}}
 aktiviert werden. 
 \\\\
 \textbf{Trainieren eines untergeordneten Agenten}\\
-Im Anschluss an eine Änderung in settings.py muss ein neuer untergeordneter Agent mittels train\textunderscore{}model.py trainiert werden. Dies kann je nach Einstellungen und verwendeter Hardware mehrere Stunden in Anspruch nehmen. Um die Trainingszeit zu verringern, sollte in Betracht gezogen werden, die maximale Episodenzahl in \mbox{settings.py} zu reduzieren.
+Im Anschluss an eine Änderung in \textit{settings.py} muss ein neuer untergeordneter Agent mittels \textit{train\textunderscore{}model.py} trainiert werden. Dies kann je nach Einstellungen und verwendeter Hardware mehrere Stunden in Anspruch nehmen. Um die Trainingszeit zu verringern, sollte in Betracht gezogen werden, die maximale Episodenzahl in \textit{\mbox{settings.py}} zu reduzieren.
 \\\\
 \textbf{Evaluation von untergeordneten Agenten}\\
-Nachdem mehrere Agenten trainiert wurden, kann mithilfe von evaluate\textunderscore{}model.py überprüft werden, welches Modell die meisten Aufgaben des Task Generators lösen kann und sich somit am besten in einem Hindernis-Labyrinth bewegt. Standardmäßig wird auf verschiedenen Spielfeldgrößen von 20x20, 30x30 und 50x50 evaluiert.
+Nachdem mehrere Agenten trainiert wurden, kann mithilfe von \textit{evaluate\textunderscore{}model.py} überprüft werden, welches Modell die meisten Aufgaben des Task Generators lösen kann und sich somit am besten in einem Hindernis-Labyrinth bewegt. Standardmäßig wird auf verschiedenen Spielfeldgrößen von $20\times20$, $30\times30$ und $50\times50$ evaluiert.
 Das Ergebnis dient nur als relativer Anhaltspunkt. Es sagt nichts darüber aus, wie gut der Agent mit “echten” Aufgaben zurechtkommt, da die Aufgaben des Task Generators sich von Menschen erstellten Aufgaben unterscheiden. 
 \\\\
 \textbf{Lösen von Aufgaben}\\
-Wird solve\textunderscore{}game.py mit einem Pfad zu einer json-Datei aufgerufen, wird nur diese Aufgabe gelöst. Alternativ kann mit “solve” als Parameter auch eine Aufgabe über die Standardeingabe eingelesen werden. Es werden alle Ausgaben auf die Standardausgabe unterdrückt, bis zum Schluss eine Lösung als Liste von platzierbaren Gebäuden zurückgegeben wird. 
+Wird \textit{solve\textunderscore{}game.py} mit einem Pfad zu einer JSON-Datei aufgerufen, wird nur diese Aufgabe gelöst. Alternativ kann mit “solve” als Parameter auch eine Aufgabe über die Standardeingabe eingelesen werden. Es werden alle Ausgaben auf die Standardausgabe unterdrückt, bis zum Schluss eine Lösung als Liste von platzierbaren Gebäuden zurückgegeben wird. 
 \\\\
-Das Ausführen von solve\textunderscore{}game.py ohne weitere Parameter bewirkt, dass automatisch alle zuvor definierten Aufgaben nacheinander gelöst werden. Hierbei werden auch die initiale Lösung sowie jede Verbesserung davon auf der Standardausgabe ausgegeben. Um sich einen ausführlichen Lösungsweg anzeigen zu lassen, sollte in settings.py DEBUG=True gesetzt werden. Damit werden auch fehlgeschlagene Verbindungswege schrittweise angezeigt.
+Das Ausführen von \textit{solve\textunderscore{}game.py} ohne weitere Parameter bewirkt, dass automatisch alle zuvor definierten Aufgaben nacheinander gelöst werden. Hierbei werden auch die initiale Lösung sowie jede Verbesserung davon auf der Standardausgabe ausgegeben. Um sich einen ausführlichen Lösungsweg anzeigen zu lassen, sollte in \textit{settings.py DEBUG=True} gesetzt werden. Damit werden auch fehlgeschlagene Verbindungswege schrittweise angezeigt.
 \newpage
 \textbf{Unittests}\\
-Durch Aufruf von all\textunderscore{}unit\textunderscore{}test.py werden alle in 4.3.4 angegebenen Unittests durchlaufen und auf mögliche Fehler hingewiesen.
+Durch Aufruf von \textit{all\textunderscore{}unit\textunderscore{}test.py} werden alle in 4.3.4 angegebenen Unittests durchlaufen und auf mögliche Fehler hingewiesen.
 \\\\
 \textbf{Docker}\\
-Das Dockerfile nutzt als Baseimage tensorflow/tensorflow, welches über www.docker.io bezogen werden kann. Dieses Image bietet bereits die meisten Pakete, die für das Projekt benötigt werden.
+Das Dockerfile nutzt als Baseimage \textit{tensorflow/tensorflow:2.11.0}, welches über die öffentliche Registry \textit{hub.docker.com} bezogen werden kann. Dieses Image bietet bereits die meisten Pakete, die für das Projekt benötigt werden.
 \\\\
-Die noch nicht vorinstallierten Pakete werden während des Builds nachinstalliert. Die Pakete werden in der Datei requirements.txt aufgelistet, welche sich im selben Ordner wie das Dockerfile befinden muss.
+Die noch nicht vorinstallierten Pakete werden während des Builds nachinstalliert. Die Pakete werden in der Datei \textit{requirements.txt} aufgelistet, welche sich im selben Ordner wie das Dockerfile befinden muss.
 \\\\
-Als Entrypoint nutzt das Image den Befehl python solve\textunderscore{}game.py solve. Dieses Skript erwartet über die Standardeingabe ein JSON-String, versucht das Problem zu lösen und gibt, ebenfalls über die Standardausgabe, die Lösung als JSON aus.
+Als Entrypoint nutzt das Image den Befehl python \textit{solve\textunderscore{}game.py} solve. Dieses Skript erwartet über die Standardeingabe ein JSON-String, versucht das Problem zu lösen und gibt, ebenfalls über die Standardausgabe, die Lösung als JSON aus.
 \\
 Um das Image erfolgreich zu bauen, muss folgende Ordnerstruktur vorliegen:
 \begin{itemize}
@@ -43,14 +43,15 @@ Mit
 \begin{verbatim}docker build . --tag <tag_name>\end{verbatim}
 lässt sich ein Build triggern. 
 \\
-Ein Container zu starten nutzt man folgenden Befehl:
+Um einen Container zu starten, wird folgender Befehl genutzt:
 \begin{verbatim}docker run -i --rm --network none --cpus 2.000 --memory 2G
 	 --memory-swap 2g <tag_name>\end{verbatim}
 
-Das Skript wird direkt gestartet und eine Eingabeaufforderung erscheint. 
-Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem man Pipes nutzt:
-\begin{verbatim}echo "{ ‘Aufgabe’: 123}" | docker run -i --rm --network none --cpus 
-	2.000 --memory 2G --memory-swap 2g <tag_name>\end{verbatim}
+Im Anschluss erwartet die Standardeingabe eine Aufgaben im JSON-Format. Das Programm errechnet eine Lösung und gibt diese bei der Standardausgabe als Liste von platzierbaren Objekten zurück. Dies kann mit einem großen Spielfeld mehrere Minuten dauern.
+\\
+Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem Pipes verwendet werden.
+\begin{verbatim}echo ‘{"width":40,"height":20,"objects": ... }’ | docker run 
+	-i --rm --network none --cpus 2.000 --memory 2G --memory-swap 2g <tag_name>\end{verbatim}
 
 
 
