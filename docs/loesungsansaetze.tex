@@ -56,19 +56,19 @@ Die action-state-function q (Gleichung \ref{eq:q}), auch q-function, bestimmt wi
 	q_\pi(s,a) = E(G_t|S_t=s, A_t=a)
 \end{equation}
 Die q-function gibt sogennnante q-values für jede mögliche Aktion aus, anhand dessen bestimmt werden kann welche Aktion der Agent aussuchen soll. \zitat{S.279f}{QLearning92}\zitat{S.58}{SB20}
-Das Ziel von Q-learning ist die beste policy $\pi*$ zu finden. Die optimale policy wird über das finden der optimalen Funktionen $q*$ und $v*$ bestimmt. \zitat{S.281f}{QLearning92}
+Das Ziel von Q-learning ist die beste policy $\pi^*$ zu finden. Die optimale policy wird über das finden der optimalen Funktionen $q^*$ und $v^*$ bestimmt. \zitat{S.281f}{QLearning92}
 \\\\
 Um zu bestimmen, ob eine Policy besser ist als eine andere, werden die v werde angeschaut. Eine Policy $\pi$ ist besser als eine Policy $\pi’$ andere wenn $v_\pi(s) >= v_\pi’(s)$ ist, für alle $s \in S$. 
-Gesucht ist also $v_\pi*(s) =max v_\pi(s)$
+Gesucht ist also $v_\pi^*(s) =max v_\pi(s)$
 Das gleiche gilt auch für die q Funktion.
-$q_\pi*(s,a) = max q_\pi(s,a)$.\zitat{S.62}{SB20}
+$q_\pi^*(s,a) = max q_\pi(s,a)$.\zitat{S.62}{SB20}
 \\
 Um die Optimalen Funktionen v und q zu finden müssen beide die Bellman-Gleichung erfüllen \zitat{S.73}{SB20}. Das zeigen die Gleichung \ref{eq:value_opt} und \ref{eq:q_opt}
 \begin{equation}\label{eq:value_opt}
-v_\pi*(s) = max E[R_{t+1}+ \gamma{}v_\pi*(S_{t+1})|S_t= s, A_t=a]
+v_\pi^*(s) = max E[R_{t+1}+ \gamma{}v_\pi^*(S_{t+1})|S_t= s, A_t=a]
 \end{equation}
 \begin{equation}\label{eq:q_opt}
-q_\pi*(s,a) = E[R_{t+1} + \gamma{}maxq_\pi*(S_{t+1},a’)|S_t= s, A_t=a] 
+q_\pi^*(s,a) = E[R_{t+1} + \gamma{}maxq_\pi^*(S_{t+1},a’)|S_t= s, A_t=a] 
 \end{equation}
 Im Q Learning werden die q Werte für jeden State s und für jede Aktion a gespeichert und Schritt für Schritt angepasst bis die beste Policy gefunden wurde. Anfangs sind alle Werte mit 0 initialisiert.
 Für das Lernen der Policy wird eine Exploitation(Ausnutzung) Exploration(Erkundung) Methode verwendet. Anfangs soll das Programm seine Umgebung erkunden und sie damit kennenlernen, da es Anfangs nicht weiß, welche Aktionen zu einem Reward führen. Dieses Verhalten wird auch Exploration genannt. Bei der Exploitation nutzt das Programm das gelernte Wissen, um die Summe der Rewards zu maximieren. \zitat{S.26}{SB20}
@@ -126,7 +126,7 @@ Der Aufbau des Baums verläuft in Iterationen. Eine Iteration ist dabei in folge
 	\begin{equation}N = N + 1\end{equation}
 	\begin{equation}Q = W / N\end{equation}
 \end{enumerate}
-	Die Phasen 1-3 werden beliebig oft wiederholt (in AlphaGo 1.600x, in unserer Implementation 160x). Anschließend ermittelt der MCTS die bestmögliche Aktion wie folgt.
+	Die Phasen 1-3 werden beliebig oft wiederholt (in AlphaGo 1.600x, in der Implementation dieses Projektes 160x). Anschließend ermittelt der MCTS die bestmögliche Aktion wie folgt.
 \begin{enumerate}\setcounter{enumi}{3}
 	\item \textbf{DECISION}\\
 	Ausschlaggebend dafür, welche Aktion vom Wurzelknoten aus gewählt wird, ist die Häufigkeit der Besuche N der Nachfolger. 
@@ -151,7 +151,7 @@ Das Modell erhält im Training Batches der Erfahrungswerte. Als Input dient der 
 \\\\
 Der Actor soll nun möglichst der Aktionverteilung des MCTS Nahe kommen. Hierfür wird der Cross Entropy loss genutzt.
 \\\\
-Der Critic wiederum soll im gegebenen Zustand möglich genau vorhersagen können, ob das Modell das Spiel gewinnt oder verliert. Hierfür nutzen wir den Mean Squared Error (MSE) zwischen der Vorhersage des Modells und des tatsächlichen Outcomes, welcher in den Erfahrungswerten \textit{game\textunderscore{}outcome} gegeben ist.
+Der Critic wiederum soll im gegebenen Zustand möglich genau vorhersagen können, ob das Modell das Spiel gewinnt oder verliert. Hierfür wird der Mean Squared Error (MSE) zwischen der Vorhersage des Modells und des tatsächlichen Outcomes genutzt, welcher in den Erfahrungswerten \textit{game\textunderscore{}outcome} gegeben ist.
 
 \subsubsection*{Problem}
 In der aktuellen Version werden Trainingsdaten über 1024 Spiele ermittelt, welche das Modell dann in 100 Epochen mit einer Batch Size 8 trainiert.

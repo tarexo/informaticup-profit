@@ -47,7 +47,7 @@ Ein Verbinder hat drei Eingänge (+) und einen Ausgang (-). Auch hier gibt es vi
 Für jede Fabrik ist definiert, wie viele und welche Ressourcen gebraucht werden, um ein Produkt herzustellen. Da es maximal acht Produkte geben kann, gibt es von der Fabrik insgesamt acht verschiedene Subtypen, für jedes Produkt einen. Jede Fabrik ist $5x5$ groß. Die äußeren Felder sind Eingänge für Ressourcen, insgesamt 16.
 \\
 Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen von den Lagerstätten zur Fabrik befördert. Die Abbildung \ref{fig:factory} zeigt, wie so ein Aufbau aussehen kann. Im Beispiel benötigt das Produkt 0 die Ressourcen 0 und 1.
-\bild{0.5}{solved_task.jpg}{Darstellung der acht Förderband-Subtypen}{fig:factory}
+\bild{0.5}{solved_task.jpg}{Darstellung einer fertigen Lösung}{fig:factory}
 
 \subsection{Spielablauf}
 Das Spiel läuft rundenbasiert ab. Jede Runde beginnt mit einer “Beginn der Runde”-Aktion und endet mit einer “Ende der Runde”-Aktion.
@@ -85,11 +85,11 @@ Jedes Objekt kann durch einen JSON-String dargestellt werden, der die Eigenschaf
 		\begin{tabular}{ | l | l | } 
 			\hline
 			\textbf{Objekt}& \textbf{JSON}\\  \hline
-			Mine & \{"type":"mine", "subtype":0, "x":0, "y":0\}\\ \hline
-			Förderband & \{"type":"conveyor", "subtype":0, "x":0, "y":0\} \\ \hline
-			Verbinder & \{"type":"combiner", "subtype":0, "x":0, "y":0\} \\ \hline
-			Fabrik & \{"type":"factory", "subtype":0, "x":0, "y":0\}\\ \hline
-			Lagerstätte & \{"type":"deposit", "subtype":0, "x":0, "y":0, "width":1, "height":1\}  \\ \hline
+			Mine & \{"type":"mine", \dq{}subtype":0, "x":0, "y":0\}\\ \hline
+			Förderband & \{"type":"conveyor", \dq{}subtype":0, "x":0, "y":0\} \\ \hline
+			Verbinder & \{"type":"combiner", \dq{}subtype":0, "x":0, "y":0\} \\ \hline
+			Fabrik & \{"type":"factory", \dq{}subtype":0, "x":0, "y":0\}\\ \hline
+			Lagerstätte & \{"type":"deposit", \dq{}subtype":0, "x":0, "y":0, "width":1, "height":1\}  \\ \hline
 			Hindernisse & \{"type":"obstacle", "x":0, "y":0, "width":1, "height":1\}\\\hline
 		\end{tabular}
 		

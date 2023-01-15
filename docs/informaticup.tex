@@ -8,7 +8,8 @@
 \usepackage[
 colorlinks=true,
 urlcolor=blue,
-linkcolor=black
+linkcolor=black,
+citecolor = black
 ]{hyperref}
 
 \usepackage[a4paper,margin=3cm, headsep=24pt, headheight=2cm]{geometry}
@@ -52,13 +53,18 @@ linkcolor=black
 	\renewcommand{\headrulewidth}{0.5pt}
 	\setcounter{page}{0}
 	\fancyhead[C]{\bfseries\sffamily\thepage}
-	\pagenumbering{arabic}
+	\pagenumbering{Roman}
 	
 	\tableofcontents
-	%\newpage
+	\newpage
+	\cleardoublepage
+	\addcontentsline{toc}{section}{Abbildungsverzeichnis}
 	\listoffigures
+	\newpage
+	\addcontentsline{toc}{section}{Tabellenverzeichnis}
 	\listoftables
 	%Einleitung
+	
 	\include{einleitung}
 	\include{aufgabenbeschreibung}
 	
