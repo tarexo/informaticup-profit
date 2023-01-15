@@ -15,8 +15,8 @@ Um unser Programm über einen Docker-Container laufen zu lassen, müssen folgend
 
 Im Anschluss erwartet die Standardeingabe eine Aufgabe im json-Format. Das Programm errechnet eine Lösung und gibt diese über die Standardausgabe als Liste von platzierbaren Objekten zurück. Dies kann bei Aufgaben mit einem größen Spielfeld mehrere Minuten dauern.
 
-Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem man Pipes nutzt:  
-`echo {"width":40,"height":20,"objects": ... } | docker run -i --rm --network none --cpus 2.000 --memory 2G --memory-swap 2g <tag_name>`
+Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem man Pipes nutzt (die JSON-Aufgabe muss dabei unter Linux in Hochkommas gesetzt werden):  
+`echo '{"width":40,"height":20,"objects": ... }' | docker run -i --rm --network none --cpus 2.000 --memory 2G --memory-swap 2g <tag_name>`
 
 ## Einstellungen
 Um unsere Lösung anzupassen können einfach die Einstellungen verändert werden.
