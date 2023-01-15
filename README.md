@@ -19,7 +19,7 @@ Alternativ lässt sich eine Eingabe auch direkt an den Container geben, indem ma
 `echo '{"width":40,"height":20,"objects": ... }' | docker run -i --rm --network none --cpus 2.000 --memory 2G --memory-swap 2g <tag_name>`
 
 ## Einstellungen
-Um unsere Lösung anzupassen können einfach die Einstellungen verändert werden.
+Um unsere Lösung anzupassen, können einfach die Einstellungen verändert werden.
 
 Alle Hyperparameter der Agenten, Einstellungen für den Task Manager, sowie weitere Debug Informationen lassen sich gesammelt in der `settings.py` Datei einstellen. 
 Es kann beispielsweise eine andere Modell-Architektur für den untergeordneten Agenten gewählt oder die Hinderniswahrscheinlichkeit des Task Generators angepasst werden. Auch das zuvor erwähnte vereinfachte Spiel kann durch Setzen von `SIMPLE_GAME = True` aktiviert werden. 
