@@ -19,7 +19,7 @@ Die Abbildung \ref{fig:task1} zeigt ein mögliches Spielfeld. In diesem Beispiel
 
 
 \subsubsection*{Lagerstätte}
-Die Menge an Ressourcen einer Lagerstätte wird durch die Größe der Lagerstätte festgelegt.  Diese wird  auf das Fünffache der Anzahl an Lagerstättenfelder gesetzt. Ist also eine Lagerstätte $3 \times 3$ groß dann enthält es $3\cdot 3 \cdot 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7).
+Die Menge an Ressourcen einer Lagerstätte wird durch die Größe der Lagerstätte festgelegt.  Diese wird  auf das Fünffache der Anzahl an Lagerstättenfelder gesetzt. Ist also eine Lagerstätte $3 \times 3$ groß dann enthält es $3\cdot 3 \cdot 5 = 45$ Ressourcen eines bestimmten Subtyps. Insgesamt gibt es 8 Subtypen (0-7). Die äußeren Felder sind Ausgänge (-), an denen Minen anliegen können.
 
 \subsubsection*{Hindernisse}
 Hindernisse im Spielfeld stellen Felder dar, in denen kein anderes Gebäude gebaut werden kann. Diese sind beliebig groß, haben aber immer eine rechteckige Form. 
@@ -53,6 +53,8 @@ Mit einer Kombination aus Mine, Förderband und Verbinder werden die Ressourcen 
 \subsection{Spielablauf}
 Das Spiel läuft rundenbasiert ab. Jede Runde beginnt mit einer “Beginn der Runde”-Aktion und endet mit einer “Ende der Runde”-Aktion.
 Die Tabelle \ref{tab:object_actions} definiert die Aktionen der einzelnen Objekte. 
+Das Spielfeld hat neben der Feldgröße und den vorhandenen Objekten auch das Attribut “turns”. Dieses Attribut gibt die maximal erlaubte Anzahl an Spielrunden an.
+
 \begin{table}[htp]
 \begin{center}
 \begin{tabular}{ | p{2cm} | p{5cm} | p{6,5cm}| } 
@@ -67,8 +69,8 @@ Die Tabelle \ref{tab:object_actions} definiert die Aktionen der einzelnen Objekt
 \caption{Beschreibung der Aktionen der einzelnen Objekte}\label{tab:object_actions}
 \end{center}
 \end{table}
-Das Spielfeld hat neben der Feldgröße und den vorhandenen Objekten auch das Attribut “turns”. Dieses Attribut gibt die maximal erlaubte Anzahl an Spielrunden an.
-\\\\\
+
+
 Pro Runde werden Ressourcen von Lagerstätten mit Hilfe von Minen abgebaut und Stück für Stück über die gebauten Förderbänder und gegebenenfalls Verbinder zu einer Fabrik befördert. 
 Die Produktion einer Fabrik stoppt, wenn die für das Produkt benötigten Ressourcen vollständig abgebaut und zu dieser Fabrik befördert sind.
 Ist das bei allen gebauten Fabriken der Fall, so endet das Spiel und der Spieler erhält eine Gesamtpunktzahl und die Anzahl der dafür benötigten Runden. Das Spiel kann auch vorzeitig beendet werden, wenn die vordefinierte maximale Rundenanzahl erreicht wird.
