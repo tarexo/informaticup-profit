@@ -12,6 +12,22 @@ import collections
 import statistics
 import os
 
+from matplotlib import pyplot as plt
+
+
+def setup_matplotlib():
+    plt.ion()
+    ax = plt.gca()
+    ax.set_ylim([0.0, 1.0])
+    plt.show()
+
+
+def plot(train_history, val_history):
+    plt.plot(*zip(*train_history), "b")
+    plt.plot(*zip(*val_history), "g")
+    plt.draw()
+    plt.pause(0.001)
+
 
 def determine_difficulty(mean_reward):
     if mean_reward <= INCREASE_DIFFICULTY_AT:
@@ -27,23 +43,31 @@ def determine_difficulty(mean_reward):
 def train(env, model, max_episodes):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
 
-    mean_test_reward = 0.0
+    mean_val_reward = 0.0
     mean_train_reward = 0.0
-    test_rewards = collections.deque(maxlen=min_episodes // model_test_frequency)
+    val_rewards = collections.deque(maxlen=min_episodes // model_val_frequency)
     train_rewards = collections.deque(maxlen=min_episodes)
+
+    train_history = []
+    val_history = []
 
     progress = tqdm.trange(max_episodes)
     for episode in progress:
-        difficulty = determine_difficulty(mean_test_reward)
+        difficulty = determine_difficulty(mean_val_reward)
         if model.architecture_name == "A-C":
             exploration_rate = 0.05
         else:
             exploration_rate = FINAL_EXPLORATION_RATE ** (episode / max_episodes)
 
-        if episode % model_test_frequency == 0:
-            test_reward = evaluate(env, model, difficulty, num_episodes=1)
-            test_rewards.append(test_reward)
-            mean_test_reward = statistics.mean(test_rewards)
+        if episode % model_val_frequency == 0:
+            val_reward = evaluate(env, model, difficulty, num_episodes=1)
+            val_rewards.append(val_reward)
+            mean_val_reward = statistics.mean(val_rewards)
+
+            train_history.append([episode, mean_train_reward])
+            val_history.append([episode, mean_val_reward])
+
+            plot(train_history, val_history)
 
         if episode % model_sanity_check_frequency == 0:
             check_model_sanity(env, model, difficulty)
@@ -63,11 +87,11 @@ def train(env, model, max_episodes):
         progress_info["diff"] = "%.2f" % difficulty
         progress_info["ε"] = "%.2f" % exploration_rate
         progress_info["train_reward"] = "%.2f" % mean_train_reward
-        progress_info["test_reward"] = "%.2f" % mean_test_reward
+        progress_info["val_reward"] = "%.2f" % mean_val_reward
         progress.set_postfix(progress_info)
 
         if (
-            mean_test_reward > solved_reward_threshold
+            mean_val_reward > solved_reward_threshold
             and difficulty == 1.0
             and episode > min_episodes
         ):
@@ -125,7 +149,7 @@ if __name__ == "__main__":
 
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
-    model_test_frequency = 10
+    model_val_frequency = 10
     model_sanity_check_frequency = 100
     model_save_frequency = 2500
 
