@@ -3,7 +3,6 @@ from model.architecture import ActorCritic, DeepQNetwork
 from evaluate_models import *
 from helper.profiling import profile
 from environment.setup import set_default_options, make_gym
-
 import numpy as np
 import tensorflow as tf
 
@@ -11,7 +10,11 @@ import tqdm
 import collections
 import statistics
 import os
+from datetime import datetime
 
+logdir = "logs"# + datetime.now().strftime("%Y%m%d-%H%M%S")
+file_writer = tf.summary.create_file_writer(logdir)
+file_writer.set_as_default()
 
 def determine_difficulty(mean_reward):
     if mean_reward <= INCREASE_DIFFICULTY_AT:
@@ -26,7 +29,6 @@ def determine_difficulty(mean_reward):
 @profile
 def train(env, model, max_episodes):
     optimizer = tf.keras.optimizers.Adam(LEARNING_RATE)
-
     mean_test_reward = 0.0
     mean_train_reward = 0.0
     test_rewards = collections.deque(maxlen=min_episodes // model_test_frequency)
@@ -59,11 +61,17 @@ def train(env, model, max_episodes):
         train_rewards.append(episode_reward)
         mean_train_reward = statistics.mean(train_rewards)
 
+        with file_writer.as_default():
+            tf.summary.scalar("train/train_reward", mean_train_reward, step=episode)
+            tf.summary.scalar("val/val_reward", mean_test_reward, step=episode)
+            tf.summary.scalar("train/epsilon", exploration_rate, step=episode)
+
         progress_info = collections.OrderedDict()
         progress_info["diff"] = "%.2f" % difficulty
         progress_info["ε"] = "%.2f" % exploration_rate
         progress_info["train_reward"] = "%.2f" % mean_train_reward
         progress_info["test_reward"] = "%.2f" % mean_test_reward
+
         progress.set_postfix(progress_info)
 
         if (
@@ -74,9 +82,8 @@ def train(env, model, max_episodes):
             break
 
 
-def train_model(width, height, field_of_vision, transfer_model_path=None):
+def train_model(width, height, field_of_vision, transfer_model_path=None, logdir ="logs"):
     env = make_gym(width, height, field_of_vision)
-
     if MODEL_ID == "DQN":
         model = DeepQNetwork(env)
     elif MODEL_ID == "A-C":
@@ -122,7 +129,7 @@ def train_transfer_models(width, height):
 
 if __name__ == "__main__":
     set_default_options()
-
+    logdir = "logs"
     min_episodes = max(500, int(0.2 * MAX_EPISODES))
     solved_reward_threshold = 0.98 * SUCCESS_REWARD
     model_test_frequency = 10
@@ -132,4 +139,4 @@ if __name__ == "__main__":
     width = height = 30
     field_of_vision = 15
     transfer_model_path = None
-    train_model(width, height, field_of_vision, transfer_model_path)
+    train_model(width, height, field_of_vision, transfer_model_path,logdir)

@@ -1,4 +1,4 @@
-GYM_ID = "Profit"
+GYM_ID = "Profit-v0"
 PRINT_ROUND_LOG = False
 DEBUG = False
 
